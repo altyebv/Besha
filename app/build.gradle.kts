@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -88,6 +89,9 @@ dependencies {
 
     // Coroutines - ADDED
     implementation(libs.kotlinx.coroutines.android)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
 
 
 

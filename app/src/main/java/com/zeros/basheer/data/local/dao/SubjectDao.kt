@@ -1,9 +1,9 @@
 package com.zeros.basheer.data.local.dao
 
-
 import androidx.room.*
 import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.StudentPath
+import com.zeros.basheer.data.relations.SubjectWithUnits
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,6 +16,10 @@ interface SubjectDao {
 
     @Query("SELECT * FROM subjects WHERE id = :subjectId")
     suspend fun getSubjectById(subjectId: String): Subject?
+
+    @Transaction
+    @Query("SELECT * FROM subjects WHERE id = :subjectId")
+    suspend fun getSubjectWithUnits(subjectId: String): SubjectWithUnits?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubject(subject: Subject)
