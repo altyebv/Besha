@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.zeros.basheer.data.local.AppDatabase
 import com.zeros.basheer.data.local.dao.*
+import com.zeros.basheer.data.repository.BasheerRepository
 import com.zeros.basheer.data.repository.DatabaseSeeder
-import com.zeros.basheer.data.repository.LessonRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,47 +31,72 @@ object DatabaseModule {
             .build()
     }
 
+    // Core content DAOs
     @Provides
-    fun provideSubjectDao(database: AppDatabase): SubjectDao {
-        return database.subjectDao()
-    }
+    fun provideSubjectDao(database: AppDatabase): SubjectDao = database.subjectDao()
+
 
     @Provides
-    fun provideUnitDao(database: AppDatabase): UnitDao {
-        return database.unitDao()
-    }
+    fun provideContentVariantDao(database: AppDatabase): ContentVariantDao = database.contentVariantDao()
+
 
     @Provides
-    fun provideLessonDao(database: AppDatabase): LessonDao {
-        return database.lessonDao()
-    }
+    fun provideUnitDao(database: AppDatabase): UnitDao = database.unitDao()
 
     @Provides
-    fun provideProgressDao(database: AppDatabase): ProgressDao {
-        return database.progressDao()
-    }
+    fun provideLessonDao(database: AppDatabase): LessonDao = database.lessonDao()
 
     @Provides
-    fun provideConceptDao(database: AppDatabase): ConceptDao {
-        return database.conceptDao()
-    }
+    fun provideSectionDao(database: AppDatabase): SectionDao = database.sectionDao()
 
     @Provides
-    fun provideConceptReviewDao(database: AppDatabase): ConceptReviewDao {
-        return database.conceptReviewDao()
-    }
+    fun provideBlockDao(database: AppDatabase): BlockDao = database.blockDao()
 
-    // Add DatabaseSeeder provider HERE (inside DatabaseModule object)
+    // Concepts & categorization DAOs
     @Provides
-    @Singleton
-    fun provideDatabaseSeeder(
-        subjectDao: SubjectDao,
-        unitDao: UnitDao,
-        lessonDao: LessonDao,
-        conceptDao: ConceptDao
-    ): DatabaseSeeder {
-        return DatabaseSeeder(subjectDao, unitDao, lessonDao, conceptDao)
-    }
+    fun provideConceptDao(database: AppDatabase): ConceptDao = database.conceptDao()
+
+    @Provides
+    fun provideTagDao(database: AppDatabase): TagDao = database.tagDao()
+
+    @Provides
+    fun provideConceptTagDao(database: AppDatabase): ConceptTagDao = database.conceptTagDao()
+
+    @Provides
+    fun provideSectionConceptDao(database: AppDatabase): SectionConceptDao = database.sectionConceptDao()
+
+    // Quiz system DAOs
+    @Provides
+    fun provideQuestionDao(database: AppDatabase): QuestionDao = database.questionDao()
+
+    @Provides
+    fun provideQuestionConceptDao(database: AppDatabase): QuestionConceptDao = database.questionConceptDao()
+
+    @Provides
+    fun provideExamDao(database: AppDatabase): ExamDao = database.examDao()
+
+    @Provides
+    fun provideExamQuestionDao(database: AppDatabase): ExamQuestionDao = database.examQuestionDao()
+
+    // Feed DAO
+    @Provides
+    fun provideFeedItemDao(database: AppDatabase): FeedItemDao = database.feedItemDao()
+
+    // Progress tracking DAOs
+    @Provides
+    fun provideProgressDao(database: AppDatabase): ProgressDao = database.progressDao()
+
+    @Provides
+    fun provideConceptReviewDao(database: AppDatabase): ConceptReviewDao = database.conceptReviewDao()
+
+    @Provides
+    fun provideQuizAttemptDao(database: AppDatabase): QuizAttemptDao = database.quizAttemptDao()
+
+    @Provides
+    fun provideQuestionResponseDao(database: AppDatabase): QuestionResponseDao = database.questionResponseDao()
+
+    @Provides
+    fun provideSectionProgressDao(database: AppDatabase): SectionProgressDao = database.sectionProgressDao()
 }
 
 @Module
@@ -80,21 +105,77 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideLessonRepository(
+    fun provideBasheerRepository(
         subjectDao: SubjectDao,
         unitDao: UnitDao,
         lessonDao: LessonDao,
-        progressDao: ProgressDao,
+        sectionDao: SectionDao,
+        blockDao: BlockDao,
         conceptDao: ConceptDao,
-        conceptReviewDao: ConceptReviewDao
-    ): LessonRepository {
-        return LessonRepository(
-            subjectDao,
-            unitDao,
-            lessonDao,
-            progressDao,
-            conceptDao,
-            conceptReviewDao
+        tagDao: TagDao,
+        conceptTagDao: ConceptTagDao,
+        sectionConceptDao: SectionConceptDao,
+        questionDao: QuestionDao,
+        questionConceptDao: QuestionConceptDao,
+        examDao: ExamDao,
+        examQuestionDao: ExamQuestionDao,
+        progressDao: ProgressDao,
+        conceptReviewDao: ConceptReviewDao,
+        quizAttemptDao: QuizAttemptDao,
+        questionResponseDao: QuestionResponseDao
+    ): BasheerRepository {
+        return BasheerRepository(
+            subjectDao = subjectDao,
+            unitDao = unitDao,
+            lessonDao = lessonDao,
+            sectionDao = sectionDao,
+            blockDao = blockDao,
+            conceptDao = conceptDao,
+            tagDao = tagDao,
+            conceptTagDao = conceptTagDao,
+            sectionConceptDao = sectionConceptDao,
+            questionDao = questionDao,
+            questionConceptDao = questionConceptDao,
+            examDao = examDao,
+            examQuestionDao = examQuestionDao,
+            progressDao = progressDao,
+            conceptReviewDao = conceptReviewDao,
+            quizAttemptDao = quizAttemptDao,
+            questionResponseDao = questionResponseDao
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabaseSeeder(
+        subjectDao: SubjectDao,
+        unitDao: UnitDao,
+        lessonDao: LessonDao,
+        sectionDao: SectionDao,
+        blockDao: BlockDao,
+        conceptDao: ConceptDao,
+        tagDao: TagDao,
+        conceptTagDao: ConceptTagDao,
+        sectionConceptDao: SectionConceptDao,
+        questionDao: QuestionDao,
+        questionConceptDao: QuestionConceptDao,
+        examDao: ExamDao,
+        examQuestionDao: ExamQuestionDao
+    ): DatabaseSeeder {
+        return DatabaseSeeder(
+            subjectDao = subjectDao,
+            unitDao = unitDao,
+            lessonDao = lessonDao,
+            sectionDao = sectionDao,
+            blockDao = blockDao,
+            conceptDao = conceptDao,
+            tagDao = tagDao,
+            conceptTagDao = conceptTagDao,
+            sectionConceptDao = sectionConceptDao,
+            questionDao = questionDao,
+            questionConceptDao = questionConceptDao,
+            examDao = examDao,
+            examQuestionDao = examQuestionDao
         )
     }
 }

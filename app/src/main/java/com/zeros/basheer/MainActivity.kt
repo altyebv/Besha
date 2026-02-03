@@ -35,11 +35,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 // Seed data on first launch
-                LaunchedEffect(Unit) {
-                    withContext(Dispatchers.IO) {
-                        seeder.seedInitialData()
-                    }
-                }
+//                LaunchedEffect(Unit) {
+//                    withContext(Dispatchers.IO) {
+//                        seeder.seedInitialData()
+//                    }
+//                }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),

@@ -41,7 +41,6 @@ interface ProgressDao {
     @Query("DELETE FROM user_progress")
     suspend fun deleteAllProgress()
 
-    // Helper function to mark lesson as completed
     @Transaction
     suspend fun markLessonCompleted(lessonId: String) {
         val existing = getProgressByLessonOnce(lessonId)
@@ -58,6 +57,23 @@ interface ProgressDao {
                     lessonId = lessonId,
                     completed = true,
                     completedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+
+    @Transaction
+    suspend fun markSectionCompleted(lessonId: String, sectionId: String) {
+        val existing = getProgressByLessonOnce(lessonId)
+        if (existing != null) {
+            val sections = existing.completedSections.split(",").filter { it.isNotEmpty() }.toMutableSet()
+            sections.add(sectionId)
+            updateProgress(existing.copy(completedSections = sections.joinToString(",")))
+        } else {
+            insertProgress(
+                UserProgress(
+                    lessonId = lessonId,
+                    completedSections = sectionId
                 )
             )
         }

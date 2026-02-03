@@ -2,6 +2,9 @@ package com.zeros.basheer.data.local.dao
 
 import androidx.room.*
 import com.zeros.basheer.data.models.Lesson
+import com.zeros.basheer.data.relations.LessonFull
+import com.zeros.basheer.data.relations.LessonWithProgress
+import com.zeros.basheer.data.relations.LessonWithSections
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -23,8 +26,21 @@ interface LessonDao {
     """)
     fun getLessonsBySubject(subjectId: String): Flow<List<Lesson>>
 
-    @Query("SELECT * FROM lessons WHERE tags LIKE '%' || :tag || '%'")
-    fun getLessonsByTag(tag: String): Flow<List<Lesson>>
+    @Transaction
+    @Query("SELECT * FROM lessons WHERE id = :lessonId")
+    suspend fun getLessonWithSections(lessonId: String): LessonWithSections?
+
+    @Transaction
+    @Query("SELECT * FROM lessons WHERE id = :lessonId")
+    suspend fun getLessonFull(lessonId: String): LessonFull?
+
+    @Transaction
+    @Query("SELECT * FROM lessons WHERE id = :lessonId")
+    fun getLessonFullFlow(lessonId: String): Flow<LessonFull?>
+
+    @Transaction
+    @Query("SELECT * FROM lessons WHERE id = :lessonId")
+    suspend fun getLessonWithProgress(lessonId: String): LessonWithProgress?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLesson(lesson: Lesson)

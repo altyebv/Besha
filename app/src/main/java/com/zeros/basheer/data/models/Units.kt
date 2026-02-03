@@ -1,6 +1,5 @@
 package com.zeros.basheer.data.models
 
-
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -19,9 +18,11 @@ import androidx.room.PrimaryKey
     indices = [Index("subjectId")]
 )
 data class Units(
-    @PrimaryKey val id: String, // e.g., "geo_unit_1"
+    @PrimaryKey 
+    val id: String,                         // e.g., "geo_u1"
     val subjectId: String,
-    val title: String, // "الوحدة الأولى: الجغرافيا الطبيعية"
+    val title: String,                      // "الوحدة الأولى: الجغرافيا الطبيعية"
     val order: Int,
-    val description: String? = null
+    val description: String? = null,
+    val estimatedHours: Float? = null       // Estimated study time for entire unit
 )

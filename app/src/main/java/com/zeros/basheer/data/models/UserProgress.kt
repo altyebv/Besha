@@ -5,6 +5,11 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/**
+ * Tracks user progress at the LESSON level.
+ * 
+ * Also tracks which sections have been completed for partial progress.
+ */
 @Entity(
     tableName = "user_progress",
     foreignKeys = [
@@ -18,10 +23,12 @@ import androidx.room.PrimaryKey
     indices = [Index("lessonId")]
 )
 data class UserProgress(
-    @PrimaryKey val lessonId: String,
+    @PrimaryKey 
+    val lessonId: String,
     val completed: Boolean = false,
     val lastAccessedAt: Long = System.currentTimeMillis(),
-    val highlightedSections: String = "", // JSON array of highlighted text ranges
-    val notes: String = "",
-    val completedAt: Long? = null
+    val completedAt: Long? = null,
+    val completedSections: String = "",     // Comma-separated section IDs
+    val timeSpentSeconds: Int = 0,          // Total time spent on this lesson
+    val notes: String = ""                  // User's personal notes
 )
