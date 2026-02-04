@@ -25,10 +25,11 @@ class DatabaseSeeder @Inject constructor(
     private val questionDao: QuestionDao,
     private val questionConceptDao: QuestionConceptDao,
     private val examDao: ExamDao,
-    private val examQuestionDao: ExamQuestionDao
+    private val examQuestionDao: ExamQuestionDao,
+    private val feedItemDao: FeedItemDao
 ) {
-    private val json = Json { 
-        ignoreUnknownKeys = true 
+    private val json = Json {
+        ignoreUnknownKeys = true
         isLenient = true
     }
 
@@ -71,13 +72,13 @@ class DatabaseSeeder @Inject constructor(
         // 4. Insert units, lessons, sections, blocks
         data.units.forEach { unit ->
             unitDao.insertUnit(unit.toEntity(data.subject.id))
-            
+
             unit.lessons.forEach { lesson ->
                 lessonDao.insertLesson(lesson.toEntity(unit.id))
-                
+
                 lesson.sections.forEach { section ->
                     sectionDao.insertSection(section.toEntity(lesson.id))
-                    
+
                     // Insert section-concept links
                     section.conceptIds.forEachIndexed { index, conceptId ->
                         sectionConceptDao.insert(
@@ -88,7 +89,7 @@ class DatabaseSeeder @Inject constructor(
                             )
                         )
                     }
-                    
+
                     // Insert blocks
                     section.blocks.forEach { block ->
                         blockDao.insertBlock(block.toEntity(section.id))
@@ -124,6 +125,11 @@ class DatabaseSeeder @Inject constructor(
                 )
             }
         }
+
+        // 7. Insert feed items
+        data.feedItems.forEach { feedItem ->
+            feedItemDao.insertFeedItem(feedItem.toEntity(data.subject.id))
+        }
     }
 }
 
@@ -139,7 +145,8 @@ data class BasheerExportData(
     val concepts: List<ConceptJson> = emptyList(),
     val units: List<UnitJson> = emptyList(),
     val questions: List<QuestionJson> = emptyList(),
-    val exams: List<ExamJson> = emptyList()
+    val exams: List<ExamJson> = emptyList(),
+    val feedItems: List<FeedItemJson> = emptyList()
 )
 
 @Serializable
@@ -330,5 +337,36 @@ data class ExamJson(
         schoolName = schoolName,
         duration = duration,
         totalPoints = totalPoints
+    )
+}
+@Serializable
+data class FeedItemJson(
+    val id: String,
+    val conceptId: String,
+    val type: String,
+    val contentAr: String,
+    val contentEn: String? = null,
+    val imageUrl: String? = null,
+    val interactionType: String? = null,
+    val correctAnswer: String? = null,
+    val options: String? = null,
+    val explanation: String? = null,
+    val priority: Int = 1,
+    val order: Int = 0
+) {
+    fun toEntity(subjectId: String) = FeedItem(
+        id = id,
+        conceptId = conceptId,
+        subjectId = subjectId,
+        type = FeedItemType.valueOf(type),
+        contentAr = contentAr,
+        contentEn = contentEn,
+        imageUrl = imageUrl,
+        interactionType = interactionType?.let { InteractionType.valueOf(it) },
+        correctAnswer = correctAnswer,
+        options = options,
+        explanation = explanation,
+        priority = priority,
+        order = order
     )
 }

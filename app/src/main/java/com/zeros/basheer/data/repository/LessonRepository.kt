@@ -45,6 +45,15 @@ class LessonRepository @Inject constructor(
     fun getLessonByIdFlow(id: String): Flow<Lesson?> =
         lessonDao.getLessonByIdFlow(id)
 
+    suspend fun getLessonFull(lessonId: String): com.zeros.basheer.data.relations.LessonFull? =
+        lessonDao.getLessonFull(lessonId)
+
+    fun getLessonFullFlow(lessonId: String): Flow<com.zeros.basheer.data.relations.LessonFull?> =
+        lessonDao.getLessonFullFlow(lessonId)
+
+    suspend fun getConceptById(conceptId: String): Concept? =
+        conceptDao.getConceptById(conceptId)
+
     // Progress
     fun getProgressByLesson(lessonId: String): Flow<UserProgress?> =
         progressDao.getProgressByLesson(lessonId)
