@@ -160,7 +160,8 @@ object RepositoryModule {
         questionDao: QuestionDao,
         questionConceptDao: QuestionConceptDao,
         examDao: ExamDao,
-        examQuestionDao: ExamQuestionDao
+        examQuestionDao: ExamQuestionDao,
+        feedItemDao: FeedItemDao
     ): DatabaseSeeder {
         return DatabaseSeeder(
             subjectDao = subjectDao,
@@ -175,7 +176,8 @@ object RepositoryModule {
             questionDao = questionDao,
             questionConceptDao = questionConceptDao,
             examDao = examDao,
-            examQuestionDao = examQuestionDao
+            examQuestionDao = examQuestionDao,
+            feedItemDao = feedItemDao,
         )
     }
 }

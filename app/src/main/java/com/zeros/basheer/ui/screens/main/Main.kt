@@ -24,7 +24,7 @@ import com.zeros.basheer.ui.viewmodels.SubjectWithProgress
 
 @Composable
 fun MainScreen(
-    onLessonClick: (String) -> Unit,
+    onSubjectClick: (String) -> Unit,  // Changed: navigate to lessons with subjectId
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -50,7 +50,7 @@ fun MainScreen(
                 // User Stats Banner
                 item {
                     UserStatsBanner(
-                        userName = "بشير", // Hardcoded for now
+                        userName = "بشير",
                         completedLessons = state.completedLessonsCount,
                         totalLessons = state.subjects.sumOf { it.totalLessons }
                     )
@@ -61,15 +61,8 @@ fun MainScreen(
                     SubjectCard(
                         subjectWithProgress = subjectWithProgress,
                         onClick = {
-                            // Navigate to first lesson of first unit
-                            // For now, we'll get the first lesson from the repository
-                            // In a real app, you'd navigate to a subject detail screen
-                            // For prototype: just open first lesson
-                            if (subjectWithProgress.totalLessons > 0) {
-                                // We'll need to get the first lesson ID
-                                // For now, hardcoded to geo_lesson_1_1
-                                onLessonClick("geo_lesson_1_1")
-                            }
+                            // Navigate to lessons screen
+                            onSubjectClick(subjectWithProgress.subject.id)
                         }
                     )
                 }

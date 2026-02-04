@@ -1,6 +1,5 @@
 package com.zeros.basheer.ui.navigation
 
-
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -26,8 +25,10 @@ fun BasheerNavHost(
     ) {
         composable(Screen.Main.route) {
             MainScreen(
-                onLessonClick = { lessonId ->
-                    navController.navigate(Screen.LessonReader.createRoute(lessonId))
+                onSubjectClick = { subjectId ->
+                    // Navigate to lessons screen
+                    // For now, just go to lessons (later can pass subjectId)
+                    navController.navigate(Screen.Lessons.route)
                 }
             )
         }
