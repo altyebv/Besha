@@ -74,4 +74,11 @@ class Converters {
 
     @TypeConverter
     fun toRating(value: String): Rating = Rating.valueOf(value)
+
+    // StreakLevel
+    @TypeConverter
+    fun fromStreakLevel(value: StreakLevel): String = value.name
+
+    @TypeConverter
+    fun toStreakLevel(value: String): StreakLevel = StreakLevel.valueOf(value)
 }

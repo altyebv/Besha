@@ -14,8 +14,14 @@ class LessonRepository @Inject constructor(
     private val progressDao: ProgressDao,
     private val conceptDao: ConceptDao,
     private val conceptReviewDao: ConceptReviewDao,
-    private val feedItemDao: FeedItemDao
+    private val feedItemDao: FeedItemDao,
+    private val dailyActivityDao: DailyActivityDao
 ) {
+    
+    // Lazy initialization of StreakManager
+    val streakManager: StreakManager by lazy { 
+        StreakManager(dailyActivityDao) 
+    }
 
     // Subjects
     fun getAllSubjects(): Flow<List<Subject>> = subjectDao.getAllSubjects()
@@ -97,4 +103,44 @@ class LessonRepository @Inject constructor(
 
     fun getRandomMiniQuizzes(subjectId: String, limit: Int = 5): Flow<List<FeedItem>> =
         feedItemDao.getRandomMiniQuizzes(subjectId, limit)
+
+    // ==================== Streak & Activity ====================
+    
+    fun getStreakStatusFlow(): Flow<StreakStatus> = 
+        streakManager.getStreakStatusFlow()
+    
+    suspend fun getStreakStatus(): StreakStatus = 
+        streakManager.getStreakStatus()
+    
+    fun getTodayActivityFlow(): Flow<DailyActivity?> = 
+        streakManager.getTodayActivityFlow()
+    
+    fun getRecentActivity(days: Int = 30): Flow<List<DailyActivity>> = 
+        streakManager.getRecentActivity(days)
+    
+    suspend fun recordLessonCompleted() {
+        streakManager.recordLessonCompleted()
+    }
+    
+    suspend fun recordCardsReviewed(count: Int = 1) {
+        streakManager.recordCardsReviewed(count)
+    }
+    
+    suspend fun recordQuestionsAnswered(count: Int = 1) {
+        streakManager.recordQuestionsAnswered(count)
+    }
+    
+    suspend fun recordExamCompleted() {
+        streakManager.recordExamCompleted()
+    }
+    
+    suspend fun recordTimeSpent(seconds: Long) {
+        streakManager.recordTimeSpent(seconds)
+    }
+    
+    // Aggregate stats
+    fun getTotalLessonsCompleted(): Flow<Int> = streakManager.getTotalLessonsCompleted()
+    fun getTotalCardsReviewed(): Flow<Int> = streakManager.getTotalCardsReviewed()
+    fun getTotalQuestionsAnswered(): Flow<Int> = streakManager.getTotalQuestionsAnswered()
+    fun getTotalTimeSpent(): Flow<Long> = streakManager.getTotalTimeSpent()
 }
