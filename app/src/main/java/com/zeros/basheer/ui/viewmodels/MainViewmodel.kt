@@ -2,6 +2,9 @@ package com.zeros.basheer.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.data.models.DailyActivity
+import com.zeros.basheer.data.models.StreakLevel
+import com.zeros.basheer.data.models.StreakStatus
 import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.repository.LessonRepository
@@ -20,7 +23,17 @@ data class SubjectWithProgress(
 data class MainScreenState(
     val subjects: List<SubjectWithProgress> = emptyList(),
     val completedLessonsCount: Int = 0,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    
+    // Streak data
+    val streakStatus: StreakStatus = StreakStatus(
+        currentStreak = 0,
+        longestStreak = 0,
+        todayLevel = StreakLevel.COLD,
+        lastActiveDate = null,
+        isAtRisk = false
+    ),
+    val todayActivity: DailyActivity? = null
 )
 
 @HiltViewModel
@@ -33,12 +46,14 @@ class MainViewModel @Inject constructor(
 
     init {
         loadData()
+        observeStreakStatus()
+        observeTodayActivity()
     }
 
     private fun loadData() {
         viewModelScope.launch {
             // Start with loading state
-            _state.value = MainScreenState(isLoading = true)
+            _state.update { it.copy(isLoading = true) }
 
             // Collect all subjects
             repository.getAllSubjects().collect { subjects ->
@@ -74,11 +89,29 @@ class MainViewModel @Inject constructor(
                 val totalCompleted = repository.getCompletedLessonsCount().first()
 
                 // Update state
-                _state.value = MainScreenState(
-                    subjects = subjectsWithProgress,
-                    completedLessonsCount = totalCompleted,
-                    isLoading = false
-                )
+                _state.update { current ->
+                    current.copy(
+                        subjects = subjectsWithProgress,
+                        completedLessonsCount = totalCompleted,
+                        isLoading = false
+                    )
+                }
+            }
+        }
+    }
+    
+    private fun observeStreakStatus() {
+        viewModelScope.launch {
+            repository.getStreakStatusFlow().collect { status ->
+                _state.update { it.copy(streakStatus = status) }
+            }
+        }
+    }
+    
+    private fun observeTodayActivity() {
+        viewModelScope.launch {
+            repository.getTodayActivityFlow().collect { activity ->
+                _state.update { it.copy(todayActivity = activity) }
             }
         }
     }
