@@ -102,6 +102,11 @@ class FeedsViewModel @Inject constructor(
             cardsViewed = it.cardsViewed + 1
         )}
         
+        // Record card reviewed for streak tracking
+        viewModelScope.launch {
+            repository.recordCardsReviewed(1)
+        }
+        
         // Check if session is complete
         if (currentIndex >= totalCards - 1) {
             _state.update { it.copy(sessionComplete = true) }
