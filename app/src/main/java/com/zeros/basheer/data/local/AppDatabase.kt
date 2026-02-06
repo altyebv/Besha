@@ -39,9 +39,10 @@ import com.zeros.basheer.data.models.*
         ConceptReview::class,
         QuizAttempt::class,
         QuestionResponse::class,
-        SectionProgress::class
+        SectionProgress::class,
+        DailyActivity::class
     ],
-    version = 1,  // Bumped version for new schema
+    version = 2,  // Bumped for DailyActivity entity
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -75,4 +76,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun quizAttemptDao(): QuizAttemptDao
     abstract fun questionResponseDao(): QuestionResponseDao
     abstract fun sectionProgressDao(): SectionProgressDao
+    abstract fun dailyActivityDao(): DailyActivityDao
 }

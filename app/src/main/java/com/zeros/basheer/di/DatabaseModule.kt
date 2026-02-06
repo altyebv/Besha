@@ -97,6 +97,9 @@ object DatabaseModule {
 
     @Provides
     fun provideSectionProgressDao(database: AppDatabase): SectionProgressDao = database.sectionProgressDao()
+
+    @Provides
+    fun provideDailyActivityDao(database: AppDatabase): DailyActivityDao = database.dailyActivityDao()
 }
 
 @Module
