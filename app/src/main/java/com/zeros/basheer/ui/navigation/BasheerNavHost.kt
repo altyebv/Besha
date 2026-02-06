@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.zeros.basheer.ui.screens.feeds.FeedsScreen
 import com.zeros.basheer.ui.screens.lab.LabScreen
 import com.zeros.basheer.ui.screens.lessons.LessonsScreen
 import com.zeros.basheer.ui.screens.main.MainScreen
@@ -38,6 +39,12 @@ fun BasheerNavHost(
                 onLessonClick = { lessonId ->
                     navController.navigate(Screen.LessonReader.createRoute(lessonId))
                 }
+            )
+        }
+
+        composable(Screen.Feeds.route) {
+            FeedsScreen(
+                onClose = { navController.popBackStack() }
             )
         }
 

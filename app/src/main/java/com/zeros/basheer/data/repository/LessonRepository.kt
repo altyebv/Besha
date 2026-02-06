@@ -13,7 +13,8 @@ class LessonRepository @Inject constructor(
     private val lessonDao: LessonDao,
     private val progressDao: ProgressDao,
     private val conceptDao: ConceptDao,
-    private val conceptReviewDao: ConceptReviewDao
+    private val conceptReviewDao: ConceptReviewDao,
+    private val feedItemDao: FeedItemDao
 ) {
 
     // Subjects
@@ -86,4 +87,14 @@ class LessonRepository @Inject constructor(
 
     suspend fun recordConceptReview(conceptId: String, rating: Rating) =
         conceptReviewDao.recordReview(conceptId, rating)
+
+    // Feed Items
+    fun getFeedItemsBySubject(subjectId: String): Flow<List<FeedItem>> =
+        feedItemDao.getFeedItemsBySubject(subjectId)
+
+    fun getFeedItemsDueForReview(limit: Int = 20): Flow<List<FeedItem>> =
+        feedItemDao.getFeedItemsDueForReview(System.currentTimeMillis(), limit)
+
+    fun getRandomMiniQuizzes(subjectId: String, limit: Int = 5): Flow<List<FeedItem>> =
+        feedItemDao.getRandomMiniQuizzes(subjectId, limit)
 }

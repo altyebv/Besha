@@ -4,10 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -35,6 +37,12 @@ val bottomNavItems = listOf(
         label = "الدروس",
         selectedIcon = Icons.Filled.MenuBook,
         unselectedIcon = Icons.Outlined.MenuBook
+    ),
+    BottomNavItem(
+        route = "feeds",
+        label = "مراجعة",
+        selectedIcon = Icons.Filled.PlayCircle,
+        unselectedIcon = Icons.Outlined.PlayCircle
     ),
     BottomNavItem(
         route = "lab",
