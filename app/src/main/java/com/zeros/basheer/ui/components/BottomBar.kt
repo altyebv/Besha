@@ -5,12 +5,12 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PlayCircle
-import androidx.compose.material.icons.outlined.Science
+import androidx.compose.material.icons.outlined.Quiz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,10 +45,10 @@ val bottomNavItems = listOf(
         unselectedIcon = Icons.Outlined.PlayCircle
     ),
     BottomNavItem(
-        route = "lab",
-        label = "المعمل",
-        selectedIcon = Icons.Filled.Science,
-        unselectedIcon = Icons.Outlined.Science
+        route = "quizbank",
+        label = "الامتحانات",
+        selectedIcon = Icons.Filled.Quiz,
+        unselectedIcon = Icons.Outlined.Quiz
     ),
     BottomNavItem(
         route = "profile",
