@@ -1,13 +1,19 @@
 package com.zeros.basheer.ui.screens.main
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -16,15 +22,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zeros.basheer.data.models.StreakLevel
+import com.zeros.basheer.data.models.StreakStatus
 import com.zeros.basheer.ui.viewmodels.MainViewModel
 import com.zeros.basheer.ui.viewmodels.SubjectWithProgress
 
 @Composable
 fun MainScreen(
-    onSubjectClick: (String) -> Unit,  // Changed: navigate to lessons with subjectId
+    onSubjectClick: (String) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -47,13 +57,37 @@ fun MainScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // User Stats Banner
+                // Streak Banner (NEW)
+                item {
+                    StreakBanner(
+                        streakStatus = state.streakStatus
+                    )
+                }
+                
+                // User Stats Banner (Updated)
                 item {
                     UserStatsBanner(
                         userName = "بشير",
                         completedLessons = state.completedLessonsCount,
-                        totalLessons = state.subjects.sumOf { it.totalLessons }
+                        totalLessons = state.subjects.sumOf { it.totalLessons },
+                        streakStatus = state.streakStatus
                     )
+                }
+                
+                // Today's Recommendation (NEW - placeholder for smart routing)
+                if (state.streakStatus.todayLevel == StreakLevel.COLD && state.subjects.isNotEmpty()) {
+                    item {
+                        TodayRecommendation(
+                            isAtRisk = state.streakStatus.isAtRisk,
+                            currentStreak = state.streakStatus.currentStreak,
+                            onStartClick = {
+                                // Navigate to first subject for now
+                                state.subjects.firstOrNull()?.let { 
+                                    onSubjectClick(it.subject.id) 
+                                }
+                            }
+                        )
+                    }
                 }
 
                 // Subjects List
@@ -61,7 +95,6 @@ fun MainScreen(
                     SubjectCard(
                         subjectWithProgress = subjectWithProgress,
                         onClick = {
-                            // Navigate to lessons screen
                             onSubjectClick(subjectWithProgress.subject.id)
                         }
                     )
@@ -72,15 +105,185 @@ fun MainScreen(
 }
 
 @Composable
+fun StreakBanner(
+    streakStatus: StreakStatus,
+    modifier: Modifier = Modifier
+) {
+    val flameColor by animateColorAsState(
+        targetValue = when (streakStatus.todayLevel) {
+            StreakLevel.FLAME -> Color(0xFFFF6B35)  // Bright orange
+            StreakLevel.SPARK -> Color(0xFFFFB347)  // Warm yellow
+            StreakLevel.COLD -> Color(0xFF9E9E9E)   // Gray
+        },
+        animationSpec = tween(500),
+        label = "flameColor"
+    )
+    
+    val bgColor by animateColorAsState(
+        targetValue = when (streakStatus.todayLevel) {
+            StreakLevel.FLAME -> Color(0xFFFF6B35).copy(alpha = 0.1f)
+            StreakLevel.SPARK -> Color(0xFFFFB347).copy(alpha = 0.1f)
+            StreakLevel.COLD -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        },
+        animationSpec = tween(500),
+        label = "bgColor"
+    )
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = bgColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Streak info
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Flame icon
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(flameColor.copy(alpha = 0.2f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (streakStatus.currentStreak > 0) 
+                            Icons.Filled.LocalFireDepartment 
+                        else 
+                            Icons.Outlined.LocalFireDepartment,
+                        contentDescription = "Streak",
+                        tint = flameColor,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                
+                Column {
+                    Text(
+                        text = "${streakStatus.currentStreak} يوم",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = when (streakStatus.todayLevel) {
+                            StreakLevel.FLAME -> "🔥 أحسنت! واصل التقدم"
+                            StreakLevel.SPARK -> "✨ نشاط خفيف اليوم"
+                            StreakLevel.COLD -> if (streakStatus.isAtRisk) 
+                                "⚠️ سلسلتك في خطر!" 
+                            else 
+                                "ابدأ التعلم اليوم"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            // Longest streak badge
+            if (streakStatus.longestStreak > 0) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "${streakStatus.longestStreak}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "أطول سلسلة",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TodayRecommendation(
+    isAtRisk: Boolean,
+    currentStreak: Int,
+    onStartClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val containerColor = if (isAtRisk) {
+        Color(0xFFFF6B35).copy(alpha = 0.1f)
+    } else {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+    }
+    
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (isAtRisk) "حافظ على سلسلتك!" else "مرحباً بعودتك",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isAtRisk) Color(0xFFFF6B35) else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = if (isAtRisk) {
+                        "أكمل درساً أو راجع ${10} بطاقات للحفاظ على سلسلة $currentStreak يوم"
+                    } else {
+                        "ابدأ درساً جديداً أو راجع ما تعلمته"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Button(
+                onClick = onStartClick,
+                colors = if (isAtRisk) {
+                    ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF6B35)
+                    )
+                } else {
+                    ButtonDefaults.buttonColors()
+                }
+            ) {
+                Text(if (isAtRisk) "ابدأ الآن" else "تابع")
+            }
+        }
+    }
+}
+
+@Composable
 fun UserStatsBanner(
     userName: String,
     completedLessons: Int,
-    totalLessons: Int
+    totalLessons: Int,
+    streakStatus: StreakStatus
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp),
+            .height(140.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -97,7 +300,7 @@ fun UserStatsBanner(
                         )
                     )
                 )
-                .padding(24.dp)
+                .padding(20.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -118,7 +321,7 @@ fun UserStatsBanner(
                     )
                 }
 
-                // Stats
+                // Stats row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
