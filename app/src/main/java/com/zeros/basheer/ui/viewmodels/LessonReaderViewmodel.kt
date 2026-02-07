@@ -174,12 +174,25 @@ class LessonReaderViewModel @Inject constructor(
         viewModelScope.launch {
             saveReadingTime()
             repository.markLessonCompleted(lessonId)
-            
+
+            // ← ADD THIS: Update progress percentage
+            repository.updateLessonProgress(lessonId)
+
             // Record for streak tracking
             repository.recordLessonCompleted()
             repository.recordTimeSpent(_state.value.readingTimeSeconds)
         }
     }
+
+//    fun markSectionComplete(sectionId: String) {
+//        viewModelScope.launch {
+//            // Existing code to mark section
+//            progressDao.markSectionCompleted(lessonId, sectionId)  // or repository.markSectionCompleted()
+//
+//            // ← ADD THIS: Recalculate progress after each section
+//            repository.updateLessonProgress(lessonId)
+//        }
+//    }
 
     fun toggleProgressOverlay() {
         _state.update { it.copy(showProgressOverlay = !it.showProgressOverlay) }
