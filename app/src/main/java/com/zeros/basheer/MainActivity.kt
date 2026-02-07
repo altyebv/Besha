@@ -30,11 +30,13 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var seeder: DatabaseSeeder
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             try {
                 seeder.seedFromAssets(this@MainActivity, "geography.json")
+               seeder.seedQuizBankFromAssets(this@MainActivity)
                 Log.d("Basheer", "Database seeded successfully!")
             } catch (e: Exception) {
                 Log.e("Seeds", "Seeding failed", e)
