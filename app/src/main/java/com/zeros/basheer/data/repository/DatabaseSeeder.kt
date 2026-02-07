@@ -1,15 +1,45 @@
 package com.zeros.basheer.data.repository
 
 import android.content.Context
+import com.google.gson.Gson
 import com.zeros.basheer.data.local.dao.*
-import com.zeros.basheer.data.models.*
+
+import com.zeros.basheer.data.models.Lesson
+import com.zeros.basheer.data.models.QuestionStats
+import com.zeros.basheer.data.models.Section
+import com.zeros.basheer.data.models.Units
+import com.zeros.basheer.data.models.Subject
+import com.zeros.basheer.data.models.Concept
+import com.zeros.basheer.data.models.Tag
+import com.zeros.basheer.data.models.Block
+import com.zeros.basheer.data.models.BlockType
+import com.zeros.basheer.data.models.CognitiveLevel
+import com.zeros.basheer.data.models.ConceptTag
+import com.zeros.basheer.data.models.ConceptType
+import com.zeros.basheer.data.models.Exam
+import com.zeros.basheer.data.models.ExamQuestion
+import com.zeros.basheer.data.models.ExamSource
+import com.zeros.basheer.data.models.FeedItem
+import com.zeros.basheer.data.models.FeedItemType
+import com.zeros.basheer.data.models.InteractionType
+import com.zeros.basheer.data.models.PracticeGenerationType
+import com.zeros.basheer.data.models.PracticeSession
+import com.zeros.basheer.data.models.PracticeSessionStatus
+import com.zeros.basheer.data.models.Question
+import com.zeros.basheer.data.models.QuestionConcept
+import com.zeros.basheer.data.models.QuestionSource
+import com.zeros.basheer.data.models.QuestionType
+import com.zeros.basheer.data.models.SectionConcept
+import com.zeros.basheer.data.models.StudentPath
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Handles seeding the database from JSON files exported by the React authoring tool.
+ * Unified seeder that handles both lesson content AND quiz bank data.
  */
 @Singleton
 class DatabaseSeeder @Inject constructor(
@@ -26,15 +56,21 @@ class DatabaseSeeder @Inject constructor(
     private val questionConceptDao: QuestionConceptDao,
     private val examDao: ExamDao,
     private val examQuestionDao: ExamQuestionDao,
-    private val feedItemDao: FeedItemDao
+    private val feedItemDao: FeedItemDao,
+    private val practiceSessionDao: PracticeSessionDao,
+    private val questionStatsDao: QuestionStatsDao
 ) {
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
     }
 
+    private val gson = Gson()
+
+    // ==================== LESSON CONTENT SEEDING ====================
+
     /**
-     * Seed database from a JSON string (from assets or network)
+     * Seed lesson content from JSON string (from React authoring tool)
      */
     suspend fun seedFromJson(jsonString: String) {
         val data = json.decodeFromString<BasheerExportData>(jsonString)
@@ -42,7 +78,7 @@ class DatabaseSeeder @Inject constructor(
     }
 
     /**
-     * Seed database from assets file
+     * Seed lesson content from assets file
      */
     suspend fun seedFromAssets(context: Context, fileName: String) {
         val jsonString = context.assets.open(fileName).bufferedReader().use { it.readText() }
@@ -50,7 +86,7 @@ class DatabaseSeeder @Inject constructor(
     }
 
     /**
-     * Seed database from parsed data
+     * Seed database from parsed lesson data
      */
     suspend fun seedFromData(data: BasheerExportData) {
         // 1. Insert subject
@@ -131,11 +167,175 @@ class DatabaseSeeder @Inject constructor(
             feedItemDao.insertFeedItem(feedItem.toEntity(data.subject.id))
         }
     }
+
+    // ==================== QUIZ BANK SEEDING ====================
+
+    /**
+     * Seed quiz bank mock data from assets (for testing/demo)
+     * Reads from: assets/quiz_bank_mock_data.json
+     */
+    suspend fun seedQuizBankFromAssets(context: Context) = withContext(Dispatchers.IO) {
+        try {
+            val inputStream = context.assets.open("Exams.json")
+            val reader = inputStream.bufferedReader()
+            val mockData = gson.fromJson(reader, QuizBankMockData::class.java)
+            reader.close()
+
+            seedQuizBankData(mockData)
+            println("✅ Quiz Bank seeded successfully from assets")
+        } catch (e: Exception) {
+            println("❌ Failed to seed Quiz Bank: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * Seed quiz bank data
+     */
+    private suspend fun seedQuizBankData(mockData: QuizBankMockData) {
+        // Subjects (if not already exists from lesson seeding)
+        mockData.subjects.forEach { subject ->
+            try {
+                subjectDao.insertSubject(
+                    Subject(
+                        id = subject.id,
+                        nameAr = subject.nameAr,
+                        nameEn = subject.nameEn,
+                        path = StudentPath.LITERARY
+                    )
+                )
+            } catch (e: Exception) {
+                // Subject might already exist from lesson seeding - that's fine
+            }
+        }
+
+        // Units (if not already exists)
+        mockData.units.forEach { unit ->
+            try {
+                unitDao.insertUnit(
+                    Units(
+                        id = unit.id,
+                        subjectId = unit.subjectId,
+                        title = unit.nameAr,
+                        order = unit.order
+                    )
+                )
+            } catch (e: Exception) {
+                // Unit might already exist
+            }
+        }
+
+        // Exams
+        mockData.exams.forEach { exam ->
+            examDao.insertExam(
+                Exam(
+                    id = exam.id,
+                    subjectId = exam.subjectId,
+                    titleAr = exam.titleAr,
+                    titleEn = exam.titleEn,
+                    source = ExamSource.valueOf(exam.source),
+                    year = exam.year,
+                    schoolName = exam.schoolName,
+                    duration = exam.duration,
+                    totalPoints = exam.totalPoints,
+                    description = exam.description
+                )
+            )
+        }
+
+        // Questions
+        mockData.questions.forEach { question ->
+            questionDao.insertQuestion(
+                Question(
+                    id = question.id,
+                    subjectId = question.subjectId,
+                    unitId = question.unitId,
+                    lessonId = question.lessonId,
+                    type = QuestionType.valueOf(question.type),
+                    textAr = question.textAr,
+                    textEn = question.textEn,
+                    correctAnswer = question.correctAnswer,
+                    options = question.options,
+                    explanation = question.explanation,
+                    imageUrl = question.imageUrl,
+                    tableData = question.tableData,
+                    source = QuestionSource.valueOf(question.source),
+                    sourceExamId = question.sourceExamId,
+                    sourceDetails = question.sourceDetails,
+                    sourceYear = question.sourceYear,
+                    difficulty = question.difficulty,
+                    cognitiveLevel = CognitiveLevel.valueOf(question.cognitiveLevel),
+                    points = question.points,
+                    estimatedSeconds = question.estimatedSeconds,
+                    feedEligible = question.feedEligible
+                )
+            )
+        }
+
+        // Link questions to exams
+        mockData.questions.forEachIndexed { index, question ->
+            if (question.sourceExamId != null) {
+                examQuestionDao.insert(
+                    ExamQuestion(
+                        examId = question.sourceExamId,
+                        questionId = question.id,
+                        order = index + 1,
+                        points = question.points
+                    )
+                )
+            }
+        }
+
+        // Practice sessions
+        mockData.practiceSessions.forEach { session ->
+            practiceSessionDao.insertSession(
+                PracticeSession(
+                    id = session.id,
+                    subjectId = session.subjectId,
+                    generationType = PracticeGenerationType.valueOf(session.generationType),
+                    filterUnitIds = session.filterUnitIds,
+                    filterLessonIds = session.filterLessonIds,
+                    filterConceptIds = session.filterConceptIds,
+                    filterQuestionTypes = session.filterQuestionTypes,
+                    filterDifficulty = session.filterDifficulty,
+                    filterSource = session.filterSource,
+                    questionCount = session.questionCount,
+                    timeLimitSeconds = session.timeLimitSeconds,
+                    shuffled = session.shuffled,
+                    difficultyDistribution = session.difficultyDistribution,
+                    status = PracticeSessionStatus.valueOf(session.status),
+                    currentQuestionIndex = session.currentQuestionIndex,
+                    correctCount = session.correctCount,
+                    wrongCount = session.wrongCount,
+                    skippedCount = session.skippedCount,
+                    score = session.score,
+                    startedAt = session.startedAt,
+                    completedAt = session.completedAt,
+                    totalTimeSeconds = session.totalTimeSeconds
+                )
+            )
+        }
+
+        // Question stats
+        mockData.questionStats.forEach { stats ->
+            questionStatsDao.upsertStats(
+                QuestionStats(
+                    questionId = stats.questionId,
+                    timesAsked = stats.timesAsked,
+                    timesCorrect = stats.timesCorrect,
+                    avgTimeSeconds = stats.averageTimeSeconds.toFloat(), // Convert Int to Float
+                    successRate = stats.successRate,
+                    lastShownInFeed = stats.lastShownInFeed,
+                    feedShowCount = 0,  // Default value
+                    lastAskedAt = null,  // Default value
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
 }
 
-// ==========================================
-// JSON DATA CLASSES (for parsing)
-// ==========================================
+// ==================== LESSON CONTENT JSON CLASSES ====================
 
 @Serializable
 data class BasheerExportData(
@@ -339,6 +539,7 @@ data class ExamJson(
         totalPoints = totalPoints
     )
 }
+
 @Serializable
 data class FeedItemJson(
     val id: String,
@@ -370,3 +571,100 @@ data class FeedItemJson(
         order = order
     )
 }
+
+// ==================== QUIZ BANK JSON CLASSES (for Gson) ====================
+
+data class QuizBankMockData(
+    val subjects: List<QuizBankSubjectJson>,
+    val units: List<QuizBankUnitJson>,
+    val exams: List<QuizBankExamJson>,
+    val questions: List<QuizBankQuestionJson>,
+    val practiceSessions: List<PracticeSessionJson>,
+    val questionStats: List<QuestionStatsJson>
+)
+
+data class QuizBankSubjectJson(
+    val id: String,
+    val nameAr: String,
+    val nameEn: String?,
+    val iconUrl: String?
+)
+
+data class QuizBankUnitJson(
+    val id: String,
+    val subjectId: String,
+    val nameAr: String,
+    val nameEn: String?,
+    val order: Int
+)
+
+data class QuizBankExamJson(
+    val id: String,
+    val subjectId: String,
+    val titleAr: String,
+    val titleEn: String?,
+    val source: String,
+    val year: Int?,
+    val schoolName: String?,
+    val duration: Int?,
+    val totalPoints: Int?,
+    val description: String?
+)
+
+data class QuizBankQuestionJson(
+    val id: String,
+    val subjectId: String,
+    val unitId: String?,
+    val lessonId: String?,
+    val type: String,
+    val textAr: String,
+    val textEn: String?,
+    val correctAnswer: String,
+    val options: String?,
+    val explanation: String?,
+    val imageUrl: String?,
+    val tableData: String?,
+    val source: String,
+    val sourceExamId: String?,
+    val sourceDetails: String?,
+    val sourceYear: Int?,
+    val difficulty: Int,
+    val cognitiveLevel: String,
+    val points: Int,
+    val estimatedSeconds: Int,
+    val feedEligible: Boolean
+)
+
+data class PracticeSessionJson(
+    val id: Long,
+    val subjectId: String,
+    val generationType: String,
+    val filterUnitIds: String?,
+    val filterLessonIds: String?,
+    val filterConceptIds: String?,
+    val filterQuestionTypes: String?,
+    val filterDifficulty: String?,
+    val filterSource: String?,
+    val questionCount: Int,
+    val timeLimitSeconds: Int?,
+    val shuffled: Boolean,
+    val difficultyDistribution: String?,
+    val status: String,
+    val currentQuestionIndex: Int,
+    val correctCount: Int,
+    val wrongCount: Int,
+    val skippedCount: Int,
+    val score: Float?,
+    val startedAt: Long,
+    val completedAt: Long?,
+    val totalTimeSeconds: Int?
+)
+
+data class QuestionStatsJson(
+    val questionId: String,
+    val timesAsked: Int,
+    val timesCorrect: Int,
+    val successRate: Float,
+    val averageTimeSeconds: Int,
+    val lastShownInFeed: Long
+)
