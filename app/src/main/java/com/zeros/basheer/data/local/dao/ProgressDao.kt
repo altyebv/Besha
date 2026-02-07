@@ -35,6 +35,7 @@ interface ProgressDao {
     @Update
     suspend fun updateProgress(progress: UserProgress)
 
+
     @Query("DELETE FROM user_progress WHERE lessonId = :lessonId")
     suspend fun deleteProgress(lessonId: String)
 
@@ -77,5 +78,27 @@ interface ProgressDao {
                 )
             )
         }
+    }
+    @Transaction
+    suspend fun updateProgressFromSections(lessonId: String, totalSections: Int) {
+        val existing = getProgressByLessonOnce(lessonId) ?: return
+
+        val completedCount = existing.completedSections
+            .split(",")
+            .filter { it.isNotEmpty() }
+            .size
+
+        val calculatedProgress = if (totalSections > 0) {
+            completedCount.toFloat() / totalSections
+        } else {
+            0f
+        }
+
+        updateProgress(
+            existing.copy(
+                progress = calculatedProgress,
+                completed = calculatedProgress >= 1.0f
+            )
+        )
     }
 }

@@ -30,5 +30,6 @@ data class UserProgress(
     val completedAt: Long? = null,
     val completedSections: String = "",     // Comma-separated section IDs
     val timeSpentSeconds: Int = 0,          // Total time spent on this lesson
-    val notes: String = ""                  // User's personal notes
+    val notes: String = "",                  // User's personal notes
+    val progress: Float = 0f
 )
