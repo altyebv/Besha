@@ -12,6 +12,12 @@ interface QuestionConceptDao {
     @Query("SELECT * FROM question_concepts WHERE conceptId = :conceptId")
     fun getByConceptId(conceptId: String): Flow<List<QuestionConcept>>
 
+    @Query("SELECT conceptId FROM question_concepts WHERE questionId IN (:questionIds)")
+    suspend fun getConceptsForQuestions(questionIds: List<String>): List<String>
+
+    @Query("SELECT questionId FROM question_concepts WHERE conceptId IN (:conceptIds)")
+    suspend fun getQuestionsForConcepts(conceptIds: List<String>): List<String>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(questionConcept: QuestionConcept)
 
