@@ -100,6 +100,12 @@ object DatabaseModule {
 
     @Provides
     fun provideDailyActivityDao(database: AppDatabase): DailyActivityDao = database.dailyActivityDao()
+
+    @Provides
+    fun provideQuestionStatsDao(database: AppDatabase): QuestionStatsDao = database.questionStatsDao()
+
+    @Provides
+    fun providePracticeSessionDao(database: AppDatabase): PracticeSessionDao = database.practiceSessionDao()
 }
 
 @Module
@@ -164,7 +170,9 @@ object RepositoryModule {
         questionConceptDao: QuestionConceptDao,
         examDao: ExamDao,
         examQuestionDao: ExamQuestionDao,
-        feedItemDao: FeedItemDao
+        feedItemDao: FeedItemDao,
+        practiceSessionDao: PracticeSessionDao,
+        questionStatsDao: QuestionStatsDao
     ): DatabaseSeeder {
         return DatabaseSeeder(
             subjectDao = subjectDao,
@@ -181,6 +189,8 @@ object RepositoryModule {
             examDao = examDao,
             examQuestionDao = examQuestionDao,
             feedItemDao = feedItemDao,
+            practiceSessionDao = practiceSessionDao,
+            questionStatsDao = questionStatsDao
         )
     }
 }

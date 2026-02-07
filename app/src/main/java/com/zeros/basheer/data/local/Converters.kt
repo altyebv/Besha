@@ -81,4 +81,32 @@ class Converters {
 
     @TypeConverter
     fun toStreakLevel(value: String): StreakLevel = StreakLevel.valueOf(value)
+
+    // QuestionSource
+    @TypeConverter
+    fun fromQuestionSource(value: QuestionSource): String = value.name
+
+    @TypeConverter
+    fun toQuestionSource(value: String): QuestionSource = QuestionSource.valueOf(value)
+
+    // CognitiveLevel
+    @TypeConverter
+    fun fromCognitiveLevel(value: CognitiveLevel): String = value.name
+
+    @TypeConverter
+    fun toCognitiveLevel(value: String): CognitiveLevel = CognitiveLevel.valueOf(value)
+
+    // PracticeGenerationType
+    @TypeConverter
+    fun fromPracticeGenerationType(value: PracticeGenerationType): String = value.name
+
+    @TypeConverter
+    fun toPracticeGenerationType(value: String): PracticeGenerationType = PracticeGenerationType.valueOf(value)
+
+    // PracticeSessionStatus
+    @TypeConverter
+    fun fromPracticeSessionStatus(value: PracticeSessionStatus): String = value.name
+
+    @TypeConverter
+    fun toPracticeSessionStatus(value: String): PracticeSessionStatus = PracticeSessionStatus.valueOf(value)
 }
