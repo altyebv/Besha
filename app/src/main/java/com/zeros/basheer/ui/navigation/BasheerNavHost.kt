@@ -11,6 +11,7 @@ import com.zeros.basheer.ui.screens.feeds.FeedsScreen
 import com.zeros.basheer.ui.screens.quizbank.QuizBankScreen
 import com.zeros.basheer.ui.screens.lessons.LessonsScreen
 import com.zeros.basheer.ui.screens.main.MainScreen
+import com.zeros.basheer.ui.screens.practice.PracticeSessionScreen
 import com.zeros.basheer.ui.screens.profile.ProfileScreen
 import com.zeros.basheer.ui.screens.reader.LessonReaderScreen
 
@@ -30,7 +31,8 @@ fun BasheerNavHost(
                     // Navigate to lessons screen
                     // For now, just go to lessons (later can pass subjectId)
                     navController.navigate(Screen.Lessons.route)
-                }
+                },
+                navController = navController
             )
         }
 
@@ -49,7 +51,7 @@ fun BasheerNavHost(
         }
 
         composable(Screen.QuizBank.route) {
-            QuizBankScreen()
+            QuizBankScreen(navController = navController)
         }
 
         composable(Screen.Profile.route) {
@@ -66,6 +68,20 @@ fun BasheerNavHost(
             LessonReaderScreen(
                 lessonId = lessonId,
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "practice/{sessionId}",
+            arguments = listOf(
+                navArgument("sessionId") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            PracticeSessionScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onSessionComplete = { sessionId ->
+                    // Already handled internally - results screen shows
+                }
             )
         }
     }
