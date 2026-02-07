@@ -22,6 +22,9 @@ room = "2.7.1"
 hilt = "2.52"
 hiltNavigationCompose = "1.2.0"
 
+# gson
+gson = "2.10.1"
+
 # DataStore
 datastore = "1.1.1"
 
@@ -43,6 +46,10 @@ espressoCore = "3.7.0"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+
+#gson
+google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
 
 # Compose BOM & UI
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
