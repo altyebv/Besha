@@ -3,11 +3,13 @@ package com.zeros.basheer.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.data.models.DailyActivity
+import com.zeros.basheer.domain.model.ScoredRecommendation
 import com.zeros.basheer.data.models.StreakLevel
 import com.zeros.basheer.data.models.StreakStatus
 import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.repository.LessonRepository
+import com.zeros.basheer.domain.recommendation.RecommendationEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,14 +19,19 @@ data class SubjectWithProgress(
     val subject: Subject,
     val totalLessons: Int,
     val completedLessons: Int,
-    val units: List<Units>
+    val units: List<Units>,
+    val score: Float = 0f, // For smart ordering
+    val nextLessonTitle: String? = null,
+    val lastStudied: Long? = null
 )
 
 data class MainScreenState(
     val subjects: List<SubjectWithProgress> = emptyList(),
     val completedLessonsCount: Int = 0,
+    val totalLessonsCount: Int = 0,
+    val overallProgress: Float = 0f,
     val isLoading: Boolean = true,
-    
+
     // Streak data
     val streakStatus: StreakStatus = StreakStatus(
         currentStreak = 0,
@@ -33,12 +40,18 @@ data class MainScreenState(
         lastActiveDate = null,
         isAtRisk = false
     ),
-    val todayActivity: DailyActivity? = null
+    val todayActivity: DailyActivity? = null,
+
+    // Smart recommendations
+    val topRecommendation: ScoredRecommendation? = null,
+    val secondaryRecommendations: List<ScoredRecommendation> = emptyList(),
+    val focusCardDismissed: Boolean = false
 )
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repository: LessonRepository
+    private val repository: LessonRepository,
+    private val recommendationEngine: RecommendationEngine
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainScreenState())
@@ -48,6 +61,7 @@ class MainViewModel @Inject constructor(
         loadData()
         observeStreakStatus()
         observeTodayActivity()
+        loadRecommendations()
     }
 
     private fun loadData() {
@@ -58,6 +72,8 @@ class MainViewModel @Inject constructor(
             // Collect all subjects
             repository.getAllSubjects().collect { subjects ->
                 val subjectsWithProgress = mutableListOf<SubjectWithProgress>()
+                var totalLessons = 0
+                var totalCompleted = 0
 
                 // For each subject, calculate its progress
                 for (subject in subjects) {
@@ -66,6 +82,7 @@ class MainViewModel @Inject constructor(
 
                     // Get lessons
                     val lessons = repository.getLessonsBySubject(subject.id).first()
+                    totalLessons += lessons.size
 
                     // Get completed lessons
                     val completedLessons = repository.getCompletedLessons().first()
@@ -74,32 +91,51 @@ class MainViewModel @Inject constructor(
                     val completedCount = completedLessons.count { progress ->
                         lessons.any { it.id == progress.lessonId }
                     }
+                    totalCompleted += completedCount
+
+                    // Find next lesson
+                    val recentLessons = repository.getRecentlyAccessedLessons(10).first()
+                    val nextLesson = recentLessons
+                        .filter { progress -> lessons.any { it.id == progress.lessonId } }
+                        .firstOrNull { progress -> !progress.completed }
+                        ?.let { progress -> lessons.find { it.id == progress.lessonId } }
+
+                    val lastStudied = recentLessons
+                        .filter { progress -> lessons.any { it.id == progress.lessonId } }
+                        .maxByOrNull { it.lastAccessedAt }
+                        ?.lastAccessedAt
 
                     subjectsWithProgress.add(
                         SubjectWithProgress(
                             subject = subject,
                             totalLessons = lessons.size,
                             completedLessons = completedCount,
-                            units = units
+                            units = units,
+                            nextLessonTitle = nextLesson?.title,
+                            lastStudied = lastStudied
                         )
                     )
                 }
 
-                // Get total completed lessons count
-                val totalCompleted = repository.getCompletedLessonsCount().first()
+                // Calculate overall progress
+                val overallProgress = if (totalLessons > 0) {
+                    totalCompleted.toFloat() / totalLessons
+                } else 0f
 
                 // Update state
                 _state.update { current ->
                     current.copy(
                         subjects = subjectsWithProgress,
                         completedLessonsCount = totalCompleted,
+                        totalLessonsCount = totalLessons,
+                        overallProgress = overallProgress,
                         isLoading = false
                     )
                 }
             }
         }
     }
-    
+
     private fun observeStreakStatus() {
         viewModelScope.launch {
             repository.getStreakStatusFlow().collect { status ->
@@ -107,7 +143,7 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-    
+
     private fun observeTodayActivity() {
         viewModelScope.launch {
             repository.getTodayActivityFlow().collect { activity ->
@@ -116,7 +152,57 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Load smart recommendations from engine
+     */
+    private fun loadRecommendations() {
+        viewModelScope.launch {
+            try {
+                val recommendations = recommendationEngine.getTopRecommendations(limit = 3)
+
+                _state.update { current ->
+                    current.copy(
+                        topRecommendation = recommendations.firstOrNull(),
+                        secondaryRecommendations = recommendations.drop(1)
+                    )
+                }
+
+                // Update subject ordering based on recommendation scores
+                updateSubjectOrdering(recommendations)
+            } catch (e: Exception) {
+                // If recommendations fail, don't crash - just continue without them
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * Update subject card ordering based on recommendation scores
+     */
+    private fun updateSubjectOrdering(recommendations: List<ScoredRecommendation>) {
+        _state.update { current ->
+            val scoreMap = recommendations
+                .groupBy { it.subject.id }
+                .mapValues { (_, recs) -> recs.maxOf { it.score } }
+
+            val orderedSubjects = current.subjects
+                .map { it.copy(score = scoreMap[it.subject.id] ?: 0f) }
+                .sortedByDescending { it.score }
+
+            current.copy(subjects = orderedSubjects)
+        }
+    }
+
+    /**
+     * Dismiss the top recommendation (show next one tomorrow)
+     */
+    fun dismissFocusCard() {
+        _state.update { it.copy(focusCardDismissed = true) }
+        // TODO: Persist dismissal to preferences
+    }
+
     fun refreshData() {
         loadData()
+        loadRecommendations()
     }
 }
