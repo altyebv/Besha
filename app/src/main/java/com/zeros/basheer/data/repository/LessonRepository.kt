@@ -17,10 +17,10 @@ class LessonRepository @Inject constructor(
     private val feedItemDao: FeedItemDao,
     private val dailyActivityDao: DailyActivityDao
 ) {
-    
+
     // Lazy initialization of StreakManager
-    val streakManager: StreakManager by lazy { 
-        StreakManager(dailyActivityDao) 
+    val streakManager: StreakManager by lazy {
+        StreakManager(dailyActivityDao)
     }
 
     // Subjects
@@ -71,11 +71,44 @@ class LessonRepository @Inject constructor(
     fun getCompletedLessonsCount(): Flow<Int> =
         progressDao.getCompletedLessonsCount()
 
+    // ==================== ADD THIS METHOD ====================
+    fun getRecentlyAccessedLessons(limit: Int = 5): Flow<List<UserProgress>> =
+        progressDao.getRecentlyAccessedLessons(limit)
+    // ========================================================
+
     suspend fun markLessonCompleted(lessonId: String) =
         progressDao.markLessonCompleted(lessonId)
 
     suspend fun updateProgress(progress: UserProgress) =
         progressDao.updateProgress(progress)
+
+    /**
+     * Update lesson progress based on completed sections
+     */
+    suspend fun updateLessonProgress(lessonId: String) {
+        val lessonFull = lessonDao.getLessonFull(lessonId)
+        val totalSections = lessonFull?.sections?.size ?: 1
+
+        val existing = progressDao.getProgressByLessonOnce(lessonId) ?: return
+
+        val completedCount = existing.completedSections
+            .split(",")
+            .filter { it.isNotEmpty() }
+            .size
+
+        val calculatedProgress = if (totalSections > 0) {
+            completedCount.toFloat() / totalSections
+        } else {
+            0f
+        }
+
+        progressDao.updateProgress(
+            existing.copy(
+                progress = calculatedProgress,
+                completed = calculatedProgress >= 1.0f
+            )
+        )
+    }
 
     // Concepts
     fun getConceptsBySubject(subjectId: String): Flow<List<Concept>> =
@@ -105,39 +138,39 @@ class LessonRepository @Inject constructor(
         feedItemDao.getRandomMiniQuizzes(subjectId, limit)
 
     // ==================== Streak & Activity ====================
-    
-    fun getStreakStatusFlow(): Flow<StreakStatus> = 
+
+    fun getStreakStatusFlow(): Flow<StreakStatus> =
         streakManager.getStreakStatusFlow()
-    
-    suspend fun getStreakStatus(): StreakStatus = 
+
+    suspend fun getStreakStatus(): StreakStatus =
         streakManager.getStreakStatus()
-    
-    fun getTodayActivityFlow(): Flow<DailyActivity?> = 
+
+    fun getTodayActivityFlow(): Flow<DailyActivity?> =
         streakManager.getTodayActivityFlow()
-    
-    fun getRecentActivity(days: Int = 30): Flow<List<DailyActivity>> = 
+
+    fun getRecentActivity(days: Int = 30): Flow<List<DailyActivity>> =
         streakManager.getRecentActivity(days)
-    
+
     suspend fun recordLessonCompleted() {
         streakManager.recordLessonCompleted()
     }
-    
+
     suspend fun recordCardsReviewed(count: Int = 1) {
         streakManager.recordCardsReviewed(count)
     }
-    
+
     suspend fun recordQuestionsAnswered(count: Int = 1) {
         streakManager.recordQuestionsAnswered(count)
     }
-    
+
     suspend fun recordExamCompleted() {
         streakManager.recordExamCompleted()
     }
-    
+
     suspend fun recordTimeSpent(seconds: Long) {
         streakManager.recordTimeSpent(seconds)
     }
-    
+
     // Aggregate stats
     fun getTotalLessonsCompleted(): Flow<Int> = streakManager.getTotalLessonsCompleted()
     fun getTotalCardsReviewed(): Flow<Int> = streakManager.getTotalCardsReviewed()
