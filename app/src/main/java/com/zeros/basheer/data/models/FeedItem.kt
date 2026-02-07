@@ -8,16 +8,19 @@ import androidx.room.PrimaryKey
 /**
  * Curated feed content for spaced repetition and quick review.
  *
- * FeedItems are MANUALLY created - you decide what's "feed-worthy":
- * - Key definitions that must stick
- * - Important formulas
- * - Historical dates
- * - Common exam concepts
+ * FeedItems can be either:
+ * 1. CURATED CONTENT: Manually created definitions, facts, formulas, tips
+ *    - Uses contentAr, correctAnswer, options, explanation fields directly
+ * 
+ * 2. QUESTION BANK LINK: References a Question from the bank
+ *    - Uses questionId to pull content dynamically
+ *    - Enables T/F and MCQ from the bank to appear in feeds
  *
  * The feed algorithm shows items based on:
  * 1. Concepts the student has seen (via SectionConcept)
  * 2. ConceptReview.nextReviewAt for spaced repetition
  * 3. FeedItem.priority for importance weighting
+ * 4. QuestionStats.lastShownInFeed to avoid repetition
  */
 @Entity(
     tableName = "feed_items",
@@ -38,6 +41,7 @@ import androidx.room.PrimaryKey
     indices = [
         Index("conceptId"),
         Index("subjectId"),
+        Index("questionId"),
         Index("type")
     ]
 )
@@ -48,16 +52,21 @@ data class FeedItem(
     val subjectId: String,                   // Denormalized for easier filtering
     val type: FeedItemType,
 
-    // Content
+    // Content - used when questionId is null (curated content)
     val contentAr: String,                   // The actual content to display (Arabic)
     val contentEn: String? = null,           // Optional English version
     val imageUrl: String? = null,            // Optional image/diagram
 
-    // For interactive types (MINI_QUIZ)
+    // For interactive types (MINI_QUIZ) - used when questionId is null
     val interactionType: InteractionType? = null,
     val correctAnswer: String? = null,       // For T/F: "true"/"false", MCQ: correct option
     val options: String? = null,             // JSON array for MCQ options
     val explanation: String? = null,         // Why this answer is correct
+
+    // Question Bank Link - when set, content is pulled from Question table
+    // This enables T/F and MCQ from the bank to appear in feeds
+    // Note: No foreign key constraint to allow flexibility
+    val questionId: String? = null,
 
     // Metadata
     val priority: Int = 1,                   // 1-5, higher = show more often
@@ -86,3 +95,8 @@ enum class InteractionType {
     MCQ,             // Multiple choice selection
     MATCH            // Match items (drag and drop)
 }
+
+/**
+ * Extension to determine if this FeedItem uses Question Bank or inline content.
+ */
+fun FeedItem.usesQuestionBank(): Boolean = questionId != null

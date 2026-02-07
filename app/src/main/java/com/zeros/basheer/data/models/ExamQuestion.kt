@@ -36,5 +36,7 @@ data class ExamQuestion(
     val examId: String,
     val questionId: String,
     val order: Int,                         // Question order within the exam
-    val sectionLabel: String? = null        // "السؤال الأول", "القسم أ", etc.
+    val sectionLabel: String? = null,        // "السؤال الأول", "القسم أ", etc.
+    val points: Int? = null                 // Points awarded for this question
+
 )

@@ -8,6 +8,11 @@ import androidx.room.PrimaryKey
 /**
  * Quiz questions of all types.
  * Questions are first-class citizens - they link to concepts and can be reused across exams.
+ * 
+ * The Question Bank is organized by:
+ * 1. SOURCE: Where did this question come from? (ministry, school, revision sheet, etc.)
+ * 2. CURRICULUM: What does it test? (subject, unit, lesson, concepts)
+ * 3. CHARACTERISTICS: What kind of question? (type, difficulty, cognitive level)
  */
 @Entity(
     tableName = "questions",
@@ -23,20 +28,30 @@ import androidx.room.PrimaryKey
             parentColumns = ["id"],
             childColumns = ["unitId"],
             onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = Lesson::class,
+            parentColumns = ["id"],
+            childColumns = ["lessonId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
         Index("subjectId"),
         Index("unitId"),
+        Index("lessonId"),
         Index("type"),
-        Index("difficulty")
+        Index("difficulty"),
+        Index("source"),
+        Index("sourceExamId")
     ]
 )
 data class Question(
     @PrimaryKey
     val id: String,                         // e.g., "geo_q_001"
     val subjectId: String,
-    val unitId: String? = null,             // Optional: which unit this question is from
+    val unitId: String? = null,             // Which unit this question is from
+    val lessonId: String? = null,           // Optional: specific lesson for fine-grained filtering
     val type: QuestionType,
     val textAr: String,                     // Question text in Arabic
     val textEn: String? = null,             // Optional English version
@@ -50,12 +65,29 @@ data class Question(
     val imageUrl: String? = null,           // For figure-based questions
     val tableData: String? = null,          // For table questions: JSON
     
-    // Metadata
+    // Source tracking - "Where did this question come from?"
+    val source: QuestionSource = QuestionSource.ORIGINAL,
+    val sourceExamId: String? = null,       // If from an exam, which one?
+    val sourceDetails: String? = null,      // Extra info: "مراجعة أستاذ أحمد", school name, etc.
+    val sourceYear: Int? = null,            // Year of source exam/sheet
+    
+    // Characteristics
     val difficulty: Int = 1,                // 1-5 scale
+    val cognitiveLevel: CognitiveLevel = CognitiveLevel.RECALL,
     val points: Int = 1,                    // Point value in exam
-    val estimatedSeconds: Int = 60          // Expected time to answer
+    val estimatedSeconds: Int = 60,         // Expected time to answer
+    
+    // Feed eligibility - can this question appear in review feeds?
+    val feedEligible: Boolean = true,       // Only T/F and MCQ should be true
+    
+    // Metadata
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )
 
+/**
+ * Types of questions supported.
+ */
 enum class QuestionType {
     TRUE_FALSE,         // صح/خطأ - Swipe left/right in feeds
     MCQ,                // اختر الإجابة الصحيحة - Multiple choice
@@ -68,4 +100,33 @@ enum class QuestionType {
     FIGURE,             // من الشكل - Figure-based question
     COMPARE,            // قارن بين - Comparison question
     ORDER               // رتب - Put in correct order
+}
+
+/**
+ * Where did this question originate from?
+ */
+enum class QuestionSource {
+    MINISTRY_FINAL,     // امتحان الشهادة النهائي
+    MINISTRY_SEMIFINAL, // امتحان نصف السنة
+    SCHOOL_EXAM,        // امتحانات المدارس
+    REVISION_SHEET,     // أوراق المراجعة
+    TEACHER_CONTRIB,    // أسئلة من معلمين
+    ORIGINAL            // أسئلة جديدة للتطبيق
+}
+
+/**
+ * Bloom's taxonomy cognitive levels.
+ */
+enum class CognitiveLevel {
+    RECALL,      // تذكر - Just remember the fact
+    UNDERSTAND,  // فهم - Explain in own words
+    APPLY,       // تطبيق - Use in new situation
+    ANALYZE      // تحليل - Break down, compare
+}
+
+/**
+ * Helper to check if a question type is suitable for feeds.
+ */
+fun QuestionType.isFeedEligible(): Boolean {
+    return this == QuestionType.TRUE_FALSE || this == QuestionType.MCQ
 }

@@ -17,6 +17,9 @@ interface SubjectDao {
     @Query("SELECT * FROM subjects WHERE id = :subjectId")
     suspend fun getSubjectById(subjectId: String): Subject?
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(subject: Subject)
+
     @Transaction
     @Query("SELECT * FROM subjects WHERE id = :subjectId")
     suspend fun getSubjectWithUnits(subjectId: String): SubjectWithUnits?

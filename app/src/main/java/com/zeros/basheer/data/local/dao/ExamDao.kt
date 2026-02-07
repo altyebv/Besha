@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExamDao {
+    @Query("SELECT * FROM exams ORDER BY year DESC, source")
+    fun getAllExams(): Flow<List<Exam>>
+
     @Query("SELECT * FROM exams WHERE subjectId = :subjectId ORDER BY year DESC")
     fun getExamsBySubject(subjectId: String): Flow<List<Exam>>
 
@@ -39,4 +42,7 @@ interface ExamDao {
 
     @Query("DELETE FROM exams WHERE subjectId = :subjectId")
     suspend fun deleteExamsBySubject(subjectId: String)
+
+    @Query("DELETE FROM exams")
+    suspend fun deleteAll()
 }
