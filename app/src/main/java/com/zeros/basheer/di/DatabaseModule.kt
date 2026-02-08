@@ -11,6 +11,8 @@ import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionProgressDao
 import com.zeros.basheer.feature.progress.data.dao.ProgressDao
+import com.zeros.basheer.feature.subject.data.dao.SubjectDao
+import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

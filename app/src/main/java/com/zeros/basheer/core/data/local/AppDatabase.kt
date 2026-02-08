@@ -22,9 +22,9 @@ import com.zeros.basheer.data.local.dao.QuizAttemptDao
 import com.zeros.basheer.data.local.dao.SectionConceptDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionProgressDao
-import com.zeros.basheer.data.local.dao.SubjectDao
+import com.zeros.basheer.feature.subject.data.dao.SubjectDao
 import com.zeros.basheer.data.local.dao.TagDao
-import com.zeros.basheer.data.local.dao.UnitDao
+import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import com.zeros.basheer.data.models.Concept
 import com.zeros.basheer.data.models.ConceptReview
 import com.zeros.basheer.data.models.ConceptTag

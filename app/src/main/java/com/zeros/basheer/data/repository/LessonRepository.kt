@@ -9,6 +9,8 @@ import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import com.zeros.basheer.feature.streak.domain.model.DailyActivity
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.progress.domain.model.UserProgress
+import com.zeros.basheer.feature.subject.data.dao.SubjectDao
+import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
