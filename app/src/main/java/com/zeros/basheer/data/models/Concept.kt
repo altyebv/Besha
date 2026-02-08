@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
+import com.zeros.basheer.feature.subject.domain.model.Subject
 
 /**
  * A key concept/definition in a subject.
@@ -19,7 +21,7 @@ import androidx.room.PrimaryKey
     tableName = "concepts",
     foreignKeys = [
         ForeignKey(
-            entity = Subject::class,
+            entity = SubjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["subjectId"],
             onDelete = ForeignKey.CASCADE

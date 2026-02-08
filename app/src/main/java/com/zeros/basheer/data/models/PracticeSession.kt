@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
+import com.zeros.basheer.feature.subject.domain.model.Subject
 
 /**
  * Tracks a practice session - a set of questions answered outside of a formal exam.
@@ -20,7 +22,7 @@ import androidx.room.PrimaryKey
     tableName = "practice_sessions",
     foreignKeys = [
         ForeignKey(
-            entity = Subject::class,
+            entity = SubjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["subjectId"],
             onDelete = ForeignKey.CASCADE

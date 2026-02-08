@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
             entity = LessonEntity::class,
             parentColumns = ["id"],
             childColumns = ["lessonId"],
-            onDelete = ForeignKey.Companion.CASCADE
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [Index("lessonId")]

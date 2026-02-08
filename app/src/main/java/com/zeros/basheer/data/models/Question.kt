@@ -5,6 +5,10 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
+import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
+import com.zeros.basheer.feature.subject.data.entity.UnitEntity
+import com.zeros.basheer.feature.subject.domain.model.Subject
+import com.zeros.basheer.feature.subject.domain.model.Units
 
 /**
  * Quiz questions of all types.
@@ -19,13 +23,13 @@ import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
     tableName = "questions",
     foreignKeys = [
         ForeignKey(
-            entity = Subject::class,
+            entity = SubjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["subjectId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Units::class,
+            entity = UnitEntity::class,
             parentColumns = ["id"],
             childColumns = ["unitId"],
             onDelete = ForeignKey.SET_NULL

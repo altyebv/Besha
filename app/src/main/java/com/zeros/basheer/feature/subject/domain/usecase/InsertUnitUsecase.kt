@@ -1,6 +1,6 @@
 package com.zeros.basheer.feature.subject.domain.usecase
 
-import com.zeros.basheer.feature.subject.domain.model.Unit
+import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import javax.inject.Inject
 
@@ -13,14 +13,14 @@ class InsertUnitsUseCase @Inject constructor(
     /**
      * Insert a single unit
      */
-    suspend operator fun invoke(unit: Unit) {
-        repository.insertUnit(unit)
+    suspend operator fun invoke(units: Units) {
+        repository.insertUnit(units)
     }
 
     /**
      * Insert multiple units (batch operation)
      */
-    suspend fun insertMany(units: List<Unit>) {
+    suspend fun insertMany(units: List<Units>) {
         repository.insertUnits(units)
     }
 }

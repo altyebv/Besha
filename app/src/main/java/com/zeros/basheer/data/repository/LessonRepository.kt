@@ -9,18 +9,20 @@ import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import com.zeros.basheer.feature.streak.domain.model.DailyActivity
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.progress.domain.model.UserProgress
-import com.zeros.basheer.feature.subject.data.dao.SubjectDao
-import com.zeros.basheer.feature.subject.data.dao.UnitDao
+import com.zeros.basheer.feature.subject.domain.model.Subject
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
+import com.zeros.basheer.feature.subject.domain.model.Units
+import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
+
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class LessonRepository @Inject constructor(
-    private val subjectDao: SubjectDao,
-    private val unitDao: UnitDao,
     private val lessonDao: LessonDao,
     private val progressRepository: ProgressRepository,  // NEW - replaced ProgressDao
+    private val subjectRepository: SubjectRepository,
     private val conceptDao: ConceptDao,
     private val conceptReviewDao: ConceptReviewDao,
     private val feedItemDao: FeedItemDao,
@@ -28,20 +30,20 @@ class LessonRepository @Inject constructor(
 ) {
 
     // Subjects
-    fun getAllSubjects(): Flow<List<Subject>> = subjectDao.getAllSubjects()
+    fun getAllSubjects(): Flow<List<Subject>> = subjectRepository.getAllSubjects()
 
     fun getSubjectsByPath(path: StudentPath): Flow<List<Subject>> =
-        subjectDao.getSubjectsByPath(path)
+        subjectRepository.getSubjectsByPath(path)
 
     suspend fun getSubjectById(id: String): Subject? =
-        subjectDao.getSubjectById(id)
+        subjectRepository.getSubjectById(id)
 
     // Units
     fun getUnitsBySubject(subjectId: String): Flow<List<Units>> =
-        unitDao.getUnitsBySubject(subjectId)
+        subjectRepository.getUnitsBySubject(subjectId)
 
     suspend fun getUnitById(id: String): Units? =
-        unitDao.getUnitById(id)
+        subjectRepository.getUnitById(id)
 
     // Lessons
     fun getLessonsByUnit(unitId: String): Flow<List<LessonEntity>> =

@@ -11,8 +11,6 @@ import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionProgressDao
 import com.zeros.basheer.feature.progress.data.dao.ProgressDao
-import com.zeros.basheer.feature.subject.data.dao.SubjectDao
-import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,16 +37,10 @@ object DatabaseModule {
     }
 
     // Core content DAOs
-    @Provides
-    fun provideSubjectDao(database: AppDatabase): SubjectDao = database.subjectDao()
-
+    // SubjectDao and UnitDao now provided by SubjectModule
 
     @Provides
     fun provideContentVariantDao(database: AppDatabase): ContentVariantDao = database.contentVariantDao()
-
-
-    @Provides
-    fun provideUnitDao(database: AppDatabase): UnitDao = database.unitDao()
 
     @Provides
     fun provideLessonDao(database: AppDatabase): LessonDao = database.lessonDao()
@@ -121,8 +113,7 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideBasheerRepository(
-        subjectDao: SubjectDao,
-        unitDao: UnitDao,
+        subjectRepository: com.zeros.basheer.feature.subject.domain.repository.SubjectRepository,
         lessonDao: LessonDao,
         sectionDao: SectionDao,
         blockDao: BlockDao,
@@ -140,8 +131,7 @@ object RepositoryModule {
         questionResponseDao: QuestionResponseDao
     ): BasheerRepository {
         return BasheerRepository(
-            subjectDao = subjectDao,
-            unitDao = unitDao,
+            subjectRepository = subjectRepository,
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,
@@ -163,8 +153,7 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideDatabaseSeeder(
-        subjectDao: SubjectDao,
-        unitDao: UnitDao,
+        subjectRepository: com.zeros.basheer.feature.subject.domain.repository.SubjectRepository,
         lessonDao: LessonDao,
         sectionDao: SectionDao,
         blockDao: BlockDao,
@@ -181,8 +170,7 @@ object RepositoryModule {
         questionStatsDao: QuestionStatsDao
     ): DatabaseSeeder {
         return DatabaseSeeder(
-            subjectDao = subjectDao,
-            unitDao = unitDao,
+            subjectRepository = subjectRepository,
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,

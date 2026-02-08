@@ -24,13 +24,13 @@ import androidx.room.PrimaryKey
             entity = SectionEntity::class,
             parentColumns = ["id"],
             childColumns = ["sectionId"],
-            onDelete = ForeignKey.Companion.CASCADE
+            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = LessonEntity::class,
             parentColumns = ["id"],
             childColumns = ["lessonId"],
-            onDelete = ForeignKey.Companion.CASCADE
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
