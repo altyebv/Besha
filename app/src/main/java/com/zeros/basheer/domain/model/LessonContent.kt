@@ -1,6 +1,6 @@
 package com.zeros.basheer.domain.model
 
-import com.zeros.basheer.data.models.BlockType
+import com.zeros.basheer.feature.lesson.data.entity.BlockType
 
 /**
  * UI-ready lesson content model.
