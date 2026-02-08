@@ -4,7 +4,7 @@ package com.zeros.basheer.feature.subject.domain.model
 /**
  * Clean domain model for Unit (no Room annotations)
  */
-data class Unit(
+data class Units(
     val id: String,
     val subjectId: String,
     val title: String,
