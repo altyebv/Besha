@@ -16,12 +16,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.zeros.basheer.domain.model.SectionUiModel
+import com.zeros.basheer.domain.model.LessonContent
+//import com.zeros.basheer.feature.lesson.domain.model.LessonContent
 import com.zeros.basheer.ui.components.blocks.BlockRenderer
 import com.zeros.basheer.ui.components.common.ConceptModal
 import com.zeros.basheer.ui.components.common.LessonCompleteCard
 import com.zeros.basheer.ui.components.common.SectionHeader
-import com.zeros.basheer.ui.viewmodels.LessonReaderViewModel
+import com.zeros.basheer.feature.lesson.presentation.LessonReaderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,7 +151,7 @@ fun LessonReaderScreen(
 
 @Composable
 private fun LessonContent(
-    lessonContent: com.zeros.basheer.domain.model.LessonContent,
+    lessonContent: LessonContent,
     hasReachedEnd: Boolean,
     isCompleted: Boolean,
     readingTimeSeconds: Long,
