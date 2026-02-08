@@ -1,28 +1,22 @@
-package com.zeros.basheer.data.models
+package com.zeros.basheer.feature.concept.data.entity
+
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 
-/**
- * Junction table linking Concepts to Tags.
- * 
- * Enables queries like:
- *   - "Which concepts have the 'maps' tag?"
- *   - "What tags does this concept have?"
- */
 @Entity(
     tableName = "concept_tags",
     primaryKeys = ["conceptId", "tagId"],
     foreignKeys = [
         ForeignKey(
-            entity = Concept::class,
+            entity = ConceptEntity::class,
             parentColumns = ["id"],
             childColumns = ["conceptId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Tag::class,
+            entity = TagEntity::class,
             parentColumns = ["id"],
             childColumns = ["tagId"],
             onDelete = ForeignKey.CASCADE
@@ -33,7 +27,7 @@ import androidx.room.Index
         Index("tagId")
     ]
 )
-data class ConceptTag(
+data class ConceptTagEntity(
     val conceptId: String,
     val tagId: String
 )
