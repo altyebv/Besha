@@ -11,10 +11,7 @@ import com.zeros.basheer.data.models.QuestionResponse
 import com.zeros.basheer.data.models.QuestionType
 import com.zeros.basheer.data.models.QuizAttempt
 import com.zeros.basheer.data.models.Rating
-import com.zeros.basheer.data.models.StudentPath
-import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.Tag
-import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.relations.*
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
@@ -24,16 +21,17 @@ import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.feature.progress.data.dao.ProgressDao
 import com.zeros.basheer.feature.progress.data.entity.UserProgressEntity
-import com.zeros.basheer.feature.subject.data.dao.SubjectDao
-import com.zeros.basheer.feature.subject.data.dao.UnitDao
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
+import com.zeros.basheer.feature.subject.domain.model.Subject
+import com.zeros.basheer.feature.subject.domain.model.Units
+import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BasheerRepository @Inject constructor(
-    private val subjectDao: SubjectDao,
-    private val unitDao: UnitDao,
+    private val subjectRepository: SubjectRepository,
     private val lessonDao: LessonDao,
     private val sectionDao: SectionDao,
     private val blockDao: BlockDao,
@@ -53,16 +51,16 @@ class BasheerRepository @Inject constructor(
     // ==========================================
     // SUBJECTS
     // ==========================================
-    fun getAllSubjects(): Flow<List<Subject>> = subjectDao.getAllSubjects()
-    fun getSubjectsByPath(path: StudentPath): Flow<List<Subject>> = subjectDao.getSubjectsByPath(path)
-    suspend fun getSubjectById(id: String): Subject? = subjectDao.getSubjectById(id)
+    fun getAllSubjects(): Flow<List<Subject>> = subjectRepository.getAllSubjects()
+    fun getSubjectsByPath(path: StudentPath): Flow<List<Subject>> = subjectRepository.getSubjectsByPath(path)
+    suspend fun getSubjectById(id: String): Subject? = subjectRepository.getSubjectById(id)
 
     // ==========================================
     // UNITS
     // ==========================================
-    fun getUnitsBySubject(subjectId: String): Flow<List<Units>> = unitDao.getUnitsBySubject(subjectId)
-    fun getUnitsWithLessons(subjectId: String): Flow<List<UnitWithLessons>> = unitDao.getUnitsWithLessons(subjectId)
-    suspend fun getUnitById(id: String): Units? = unitDao.getUnitById(id)
+    fun getUnitsBySubject(subjectId: String): Flow<List<Units>> = subjectRepository.getUnitsBySubject(subjectId)
+    // Note: getUnitsWithLessons moved to LessonRepository since it involves Lesson relations
+    suspend fun getUnitById(id: String): Units? = subjectRepository.getUnitById(id)
 
     // ==========================================
     // LESSONS
@@ -101,7 +99,7 @@ class BasheerRepository @Inject constructor(
     fun getQuestionsBySubject(subjectId: String): Flow<List<Question>> = questionDao.getQuestionsBySubject(subjectId)
     fun getQuestionsByUnit(unitId: String): Flow<List<Question>> = questionDao.getQuestionsByUnit(unitId)
     fun getQuestionsByConcept(conceptId: String): Flow<List<Question>> = questionDao.getQuestionsByConcept(conceptId)
-    suspend fun getQuestionsForConcepts(conceptIds: List<String>, limit: Int): List<Question> = 
+    suspend fun getQuestionsForConcepts(conceptIds: List<String>, limit: Int): List<Question> =
         questionDao.getQuestionsForConcepts(conceptIds, limit)
     suspend fun getFilteredQuestions(
         subjectId: String,
@@ -135,10 +133,10 @@ class BasheerRepository @Inject constructor(
     // ==========================================
     // CONCEPT REVIEWS (Spaced Repetition)
     // ==========================================
-    fun getConceptsDueForReviewFlow(limit: Int = 20): Flow<List<ConceptReview>> = 
+    fun getConceptsDueForReviewFlow(limit: Int = 20): Flow<List<ConceptReview>> =
         conceptReviewDao.getConceptsDueForReview(limit = limit)
     fun getConceptsDueCount(): Flow<Int> = conceptReviewDao.getConceptsDueCount()
-    suspend fun recordConceptReview(conceptId: String, rating: Rating) = 
+    suspend fun recordConceptReview(conceptId: String, rating: Rating) =
         conceptReviewDao.recordReview(conceptId, rating)
 
     // ==========================================
@@ -146,9 +144,9 @@ class BasheerRepository @Inject constructor(
     // ==========================================
     fun getAttemptsByExam(examId: String): Flow<List<QuizAttempt>> = quizAttemptDao.getAttemptsByExam(examId)
     suspend fun startQuizAttempt(examId: String): Long = quizAttemptDao.insertAttempt(QuizAttempt(examId = examId))
-    suspend fun completeQuizAttempt(attemptId: Long, score: Int, totalPoints: Int, timeSpentSeconds: Int) = 
+    suspend fun completeQuizAttempt(attemptId: Long, score: Int, totalPoints: Int, timeSpentSeconds: Int) =
         quizAttemptDao.completeAttempt(attemptId, score, totalPoints, timeSpentSeconds)
-    suspend fun getAttemptWithResponses(attemptId: Long): QuizAttemptWithResponses? = 
+    suspend fun getAttemptWithResponses(attemptId: Long): QuizAttemptWithResponses? =
         quizAttemptDao.getAttemptWithResponses(attemptId)
 
     // ==========================================
