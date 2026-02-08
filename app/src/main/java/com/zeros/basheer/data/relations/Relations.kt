@@ -7,6 +7,9 @@ import com.zeros.basheer.data.models.*
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
+import com.zeros.basheer.feature.subject.data.entity.UnitEntity
+import com.zeros.basheer.feature.subject.domain.model.Subject
+import com.zeros.basheer.feature.subject.domain.model.Units
 
 // ============================================
 // CONTENT RELATIONS
@@ -116,7 +119,7 @@ data class ConceptWithTags(
 data class SubjectWithUnits(
     @Embedded val subject: Subject,
     @Relation(
-        entity = Units::class,
+        entity = UnitEntity::class,
         parentColumn = "id",
         entityColumn = "subjectId"
     )

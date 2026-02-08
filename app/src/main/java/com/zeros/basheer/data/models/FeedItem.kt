@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
+import com.zeros.basheer.feature.subject.domain.model.Subject
 
 /**
  * Curated feed content for spaced repetition and quick review.
@@ -32,7 +34,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Subject::class,
+            entity = SubjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["subjectId"],
             onDelete = ForeignKey.CASCADE

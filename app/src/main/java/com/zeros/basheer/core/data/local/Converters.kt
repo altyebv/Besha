@@ -14,7 +14,8 @@ import com.zeros.basheer.data.models.QuestionSource
 import com.zeros.basheer.data.models.QuestionType
 import com.zeros.basheer.data.models.Rating
 import com.zeros.basheer.feature.streak.data.entity.StreakLevel
-import com.zeros.basheer.data.models.StudentPath
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
+
 import com.zeros.basheer.data.models.VariantType
 
 class Converters {

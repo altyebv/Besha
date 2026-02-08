@@ -1,6 +1,7 @@
 package com.zeros.basheer.domain.model
 
-import com.zeros.basheer.data.models.Subject
+import com.zeros.basheer.feature.subject.domain.model.Subject
+
 
 /**
  * Recommendation types that can be shown to users

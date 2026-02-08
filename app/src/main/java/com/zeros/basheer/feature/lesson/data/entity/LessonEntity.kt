@@ -4,16 +4,16 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.zeros.basheer.data.models.Units
+import com.zeros.basheer.feature.subject.data.entity.UnitEntity
 
 @Entity(
     tableName = "lessons",
     foreignKeys = [
         ForeignKey(
-            entity = Units::class,
+            entity = UnitEntity::class,
             parentColumns = ["id"],
             childColumns = ["unitId"],
-            onDelete = ForeignKey.Companion.CASCADE
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [Index("unitId")]

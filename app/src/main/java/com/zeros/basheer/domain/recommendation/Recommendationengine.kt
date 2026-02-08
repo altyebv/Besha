@@ -4,6 +4,7 @@ import com.zeros.basheer.data.models.*
 import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.data.repository.QuizBankRepository
 import com.zeros.basheer.domain.model.*
+import com.zeros.basheer.feature.subject.domain.model.Subject
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -3,8 +3,8 @@ package com.zeros.basheer.ui.screens.lessons
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
-import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.repository.LessonRepository
+import com.zeros.basheer.feature.subject.domain.model.Units
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

@@ -2,13 +2,20 @@ package com.zeros.basheer.data.repository
 
 import android.content.Context
 import com.google.gson.Gson
-import com.zeros.basheer.data.local.dao.*
-
+import com.zeros.basheer.data.local.dao.ConceptDao
+import com.zeros.basheer.data.local.dao.ConceptTagDao
+import com.zeros.basheer.data.local.dao.ExamDao
+import com.zeros.basheer.data.local.dao.ExamQuestionDao
+import com.zeros.basheer.data.local.dao.FeedItemDao
+import com.zeros.basheer.data.local.dao.PracticeSessionDao
+import com.zeros.basheer.data.local.dao.QuestionConceptDao
+import com.zeros.basheer.data.local.dao.QuestionDao
+import com.zeros.basheer.data.local.dao.QuestionStatsDao
+import com.zeros.basheer.data.local.dao.SectionConceptDao
+import com.zeros.basheer.data.local.dao.TagDao
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.data.models.QuestionStats
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
-import com.zeros.basheer.data.models.Units
-import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.Concept
 import com.zeros.basheer.data.models.Tag
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
@@ -30,12 +37,12 @@ import com.zeros.basheer.data.models.QuestionConcept
 import com.zeros.basheer.data.models.QuestionSource
 import com.zeros.basheer.data.models.QuestionType
 import com.zeros.basheer.data.models.SectionConcept
-import com.zeros.basheer.data.models.StudentPath
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
-import com.zeros.basheer.feature.subject.data.dao.SubjectDao
-import com.zeros.basheer.feature.subject.data.dao.UnitDao
+import com.zeros.basheer.feature.subject.domain.model.Subject
+import com.zeros.basheer.feature.subject.domain.model.Units
+import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -44,12 +51,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Unified seeder that handles both lesson content AND quiz bank data.
- */
+Unified seeder that handles both lesson content AND quiz bank data.
+*/
+
 @Singleton
 class DatabaseSeeder @Inject constructor(
-    private val subjectDao: SubjectDao,
-    private val unitDao: UnitDao,
+    private val subjectRepository: SubjectRepository,
     private val lessonDao: LessonDao,
     private val sectionDao: SectionDao,
     private val blockDao: BlockDao,
@@ -95,7 +102,7 @@ class DatabaseSeeder @Inject constructor(
      */
     suspend fun seedFromData(data: BasheerExportData) {
         // 1. Insert subject
-        subjectDao.insertSubject(data.subject.toEntity())
+        subjectRepository.insertSubject(data.subject.toEntity())
 
         // 2. Insert tags
         data.tags.forEach { tag ->
@@ -112,7 +119,7 @@ class DatabaseSeeder @Inject constructor(
 
         // 4. Insert units, lessons, sections, blocks
         data.units.forEach { unit ->
-            unitDao.insertUnit(unit.toEntity(data.subject.id))
+            subjectRepository.insertUnit(unit.toEntity(data.subject.id))
 
             unit.lessons.forEach { lesson ->
                 lessonDao.insertLesson(lesson.toEntity(unit.id))
@@ -201,12 +208,12 @@ class DatabaseSeeder @Inject constructor(
         // Subjects (if not already exists from lesson seeding)
         mockData.subjects.forEach { subject ->
             try {
-                subjectDao.insertSubject(
+                subjectRepository.insertSubject(
                     Subject(
                         id = subject.id,
                         nameAr = subject.nameAr,
                         nameEn = subject.nameEn,
-                        path = StudentPath.LITERARY
+                        path = com.zeros.basheer.feature.subject.data.entity.StudentPath.LITERARY
                     )
                 )
             } catch (e: Exception) {
@@ -217,7 +224,7 @@ class DatabaseSeeder @Inject constructor(
         // Units (if not already exists)
         mockData.units.forEach { unit ->
             try {
-                unitDao.insertUnit(
+                subjectRepository.insertUnit(
                     Units(
                         id = unit.id,
                         subjectId = unit.subjectId,
@@ -368,7 +375,7 @@ data class SubjectJson(
         id = id,
         nameAr = nameAr,
         nameEn = nameEn,
-        path = StudentPath.valueOf(path),
+        path = com.zeros.basheer.feature.subject.data.entity.StudentPath.valueOf(path),
         isMajor = isMajor,
         order = order,
         colorHex = colorHex

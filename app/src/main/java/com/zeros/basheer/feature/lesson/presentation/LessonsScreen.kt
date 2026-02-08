@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
-import com.zeros.basheer.data.models.Units
+import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.ui.screens.lessons.LessonsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,7 +1,6 @@
 package com.zeros.basheer.data.repository
 
 
-import com.zeros.basheer.data.local.dao.ConceptDao
 import com.zeros.basheer.data.local.dao.ExamDao
 import com.zeros.basheer.data.local.dao.ExamQuestionDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
@@ -10,7 +9,6 @@ import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.data.local.dao.QuestionConceptDao
 import com.zeros.basheer.data.local.dao.QuestionDao
 import com.zeros.basheer.data.local.dao.QuestionStatsDao
-import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import com.zeros.basheer.data.models.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -36,9 +34,7 @@ class QuizBankRepository @Inject constructor(
     private val examQuestionDao: ExamQuestionDao,
     private val practiceSessionDao: PracticeSessionDao,
     private val progressRepository: ProgressRepository,  // NEW - replaced ProgressDao
-    private val conceptDao: ConceptDao,
     private val lessonDao: LessonDao,
-    private val unitDao: UnitDao
 ) {
 
     // ==================== Exam Queries ====================
