@@ -2,8 +2,28 @@ package com.zeros.basheer.data.repository
 
 
 import com.zeros.basheer.data.local.dao.*
-import com.zeros.basheer.data.models.*
+import com.zeros.basheer.data.models.Concept
+import com.zeros.basheer.data.models.ConceptReview
+import com.zeros.basheer.data.models.Exam
+import com.zeros.basheer.data.models.ExamSource
+import com.zeros.basheer.data.models.Question
+import com.zeros.basheer.data.models.QuestionResponse
+import com.zeros.basheer.data.models.QuestionType
+import com.zeros.basheer.data.models.QuizAttempt
+import com.zeros.basheer.data.models.Rating
+import com.zeros.basheer.data.models.StudentPath
+import com.zeros.basheer.data.models.Subject
+import com.zeros.basheer.data.models.Tag
+import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.relations.*
+import com.zeros.basheer.feature.lesson.data.dao.BlockDao
+import com.zeros.basheer.feature.lesson.data.dao.LessonDao
+import com.zeros.basheer.feature.lesson.data.dao.SectionDao
+import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
+import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
+import com.zeros.basheer.feature.progress.data.dao.ProgressDao
+import com.zeros.basheer.feature.progress.data.entity.UserProgressEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,18 +65,18 @@ class BasheerRepository @Inject constructor(
     // ==========================================
     // LESSONS
     // ==========================================
-    fun getLessonsByUnit(unitId: String): Flow<List<Lesson>> = lessonDao.getLessonsByUnit(unitId)
-    fun getLessonsBySubject(subjectId: String): Flow<List<Lesson>> = lessonDao.getLessonsBySubject(subjectId)
-    suspend fun getLessonById(id: String): Lesson? = lessonDao.getLessonById(id)
-    fun getLessonByIdFlow(id: String): Flow<Lesson?> = lessonDao.getLessonByIdFlow(id)
+    fun getLessonsByUnit(unitId: String): Flow<List<LessonEntity>> = lessonDao.getLessonsByUnit(unitId)
+    fun getLessonsBySubject(subjectId: String): Flow<List<LessonEntity>> = lessonDao.getLessonsBySubject(subjectId)
+    suspend fun getLessonById(id: String): LessonEntity? = lessonDao.getLessonById(id)
+    fun getLessonByIdFlow(id: String): Flow<LessonEntity?> = lessonDao.getLessonByIdFlow(id)
     suspend fun getLessonFull(lessonId: String): LessonFull? = lessonDao.getLessonFull(lessonId)
     fun getLessonFullFlow(lessonId: String): Flow<LessonFull?> = lessonDao.getLessonFullFlow(lessonId)
 
     // ==========================================
     // SECTIONS & BLOCKS
     // ==========================================
-    fun getSectionsByLesson(lessonId: String): Flow<List<Section>> = sectionDao.getSectionsByLesson(lessonId)
-    fun getBlocksBySection(sectionId: String): Flow<List<Block>> = blockDao.getBlocksBySection(sectionId)
+    fun getSectionsByLesson(lessonId: String): Flow<List<SectionEntity>> = sectionDao.getSectionsByLesson(lessonId)
+    fun getBlocksBySection(sectionId: String): Flow<List<BlockEntity>> = blockDao.getBlocksBySection(sectionId)
 
     // ==========================================
     // CONCEPTS
@@ -103,12 +123,12 @@ class BasheerRepository @Inject constructor(
     // ==========================================
     // PROGRESS
     // ==========================================
-    fun getProgressByLesson(lessonId: String): Flow<UserProgress?> = progressDao.getProgressByLesson(lessonId)
-    fun getCompletedLessons(): Flow<List<UserProgress>> = progressDao.getCompletedLessons()
+    fun getProgressByLesson(lessonId: String): Flow<UserProgressEntity?> = progressDao.getProgressByLesson(lessonId)
+    fun getCompletedLessons(): Flow<List<UserProgressEntity>> = progressDao.getCompletedLessons()
     fun getCompletedLessonsCount(): Flow<Int> = progressDao.getCompletedLessonsCount()
     suspend fun markLessonCompleted(lessonId: String) = progressDao.markLessonCompleted(lessonId)
     suspend fun markSectionCompleted(lessonId: String, sectionId: String) = progressDao.markSectionCompleted(lessonId, sectionId)
-    suspend fun updateProgress(progress: UserProgress) = progressDao.updateProgress(progress)
+    suspend fun updateProgress(progress: UserProgressEntity) = progressDao.updateProgress(progress)
 
     // ==========================================
     // CONCEPT REVIEWS (Spaced Repetition)
