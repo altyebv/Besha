@@ -1,4 +1,4 @@
-package com.zeros.basheer.ui.screens.lessons
+package com.zeros.basheer.feature.lesson.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.data.models.Units
+import com.zeros.basheer.ui.screens.lessons.LessonsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
