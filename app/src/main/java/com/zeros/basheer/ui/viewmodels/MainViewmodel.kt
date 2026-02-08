@@ -2,14 +2,16 @@ package com.zeros.basheer.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.data.models.DailyActivity
+import com.zeros.basheer.feature.streak.domain.model.DailyActivity
 import com.zeros.basheer.domain.model.ScoredRecommendation
-import com.zeros.basheer.data.models.StreakLevel
-import com.zeros.basheer.data.models.StreakStatus
+import com.zeros.basheer.feature.streak.data.entity.StreakLevel
+import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.domain.recommendation.RecommendationEngine
+import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
+import com.zeros.basheer.feature.streak.domain.usecase.GetStreakStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -51,7 +53,9 @@ data class MainScreenState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: LessonRepository,
-    private val recommendationEngine: RecommendationEngine
+    private val recommendationEngine: RecommendationEngine,
+    private val getStreakStatusUseCase: GetStreakStatusUseCase,
+    private val streakRepository: StreakRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainScreenState())
@@ -138,7 +142,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeStreakStatus() {
         viewModelScope.launch {
-            repository.getStreakStatusFlow().collect { status ->
+            getStreakStatusUseCase.asFlow().collect { status ->  // NEW
                 _state.update { it.copy(streakStatus = status) }
             }
         }
@@ -146,7 +150,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeTodayActivity() {
         viewModelScope.launch {
-            repository.getTodayActivityFlow().collect { activity ->
+            streakRepository.getTodayActivityFlow().collect { activity ->  // NEW
                 _state.update { it.copy(todayActivity = activity) }
             }
         }
