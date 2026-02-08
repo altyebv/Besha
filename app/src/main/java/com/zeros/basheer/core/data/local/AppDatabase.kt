@@ -43,19 +43,19 @@ import com.zeros.basheer.data.models.QuizAttempt
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.data.models.SectionConcept
 import com.zeros.basheer.feature.lesson.data.entity.SectionProgressEntity
-import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.Tag
-import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.progress.data.dao.ProgressDao
 import com.zeros.basheer.feature.progress.data.entity.UserProgressEntity
 import com.zeros.basheer.feature.streak.data.entity.DailyActivityEntity
+import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
+import com.zeros.basheer.feature.subject.data.entity.UnitEntity
 
 @Database(
     entities = [
         // Core content
-        Subject::class,
-        Units::class,
+        SubjectEntity::class,
+        UnitEntity::class,
         LessonEntity::class,
         SectionEntity::class,
         BlockEntity::class,
