@@ -1,8 +1,21 @@
-package com.zeros.basheer.data.local
+package com.zeros.basheer.core.data.local
 
 import androidx.room.TypeConverter
-
-import com.zeros.basheer.data.models.*
+import com.zeros.basheer.feature.lesson.data.entity.BlockType
+import com.zeros.basheer.data.models.CognitiveLevel
+import com.zeros.basheer.data.models.ConceptType
+import com.zeros.basheer.data.models.ContentSource
+import com.zeros.basheer.data.models.ExamSource
+import com.zeros.basheer.data.models.FeedItemType
+import com.zeros.basheer.data.models.InteractionType
+import com.zeros.basheer.data.models.PracticeGenerationType
+import com.zeros.basheer.data.models.PracticeSessionStatus
+import com.zeros.basheer.data.models.QuestionSource
+import com.zeros.basheer.data.models.QuestionType
+import com.zeros.basheer.data.models.Rating
+import com.zeros.basheer.feature.streak.data.entity.StreakLevel
+import com.zeros.basheer.data.models.StudentPath
+import com.zeros.basheer.data.models.VariantType
 
 class Converters {
 
