@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.zeros.basheer.data.models.Lesson
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.data.models.Units
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,7 +80,7 @@ fun LessonsScreen(
                             key = { lesson -> lesson.id }
                         ) { lesson ->
                             LessonCard(
-                                lesson = lesson,
+                                lessonEntity = lesson,
                                 isCompleted = state.completedLessonIds.contains(lesson.id),
                                 onClick = { onLessonClick(lesson.id) }
                             )
@@ -120,7 +120,7 @@ private fun UnitHeader(
 
 @Composable
 private fun LessonCard(
-    lesson: Lesson,
+    lessonEntity: LessonEntity,
     isCompleted: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -148,7 +148,7 @@ private fun LessonCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = lesson.title,
+                    text = lessonEntity.title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
@@ -162,7 +162,7 @@ private fun LessonCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${lesson.estimatedMinutes} دقيقة",
+                        text = "${lessonEntity.estimatedMinutes} دقيقة",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
