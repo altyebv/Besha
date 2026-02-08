@@ -4,15 +4,15 @@ import android.content.Context
 import com.google.gson.Gson
 import com.zeros.basheer.data.local.dao.*
 
-import com.zeros.basheer.data.models.Lesson
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.data.models.QuestionStats
-import com.zeros.basheer.data.models.Section
+import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.models.Subject
 import com.zeros.basheer.data.models.Concept
 import com.zeros.basheer.data.models.Tag
-import com.zeros.basheer.data.models.Block
-import com.zeros.basheer.data.models.BlockType
+import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
+import com.zeros.basheer.feature.lesson.data.entity.BlockType
 import com.zeros.basheer.data.models.CognitiveLevel
 import com.zeros.basheer.data.models.ConceptTag
 import com.zeros.basheer.data.models.ConceptType
@@ -31,6 +31,9 @@ import com.zeros.basheer.data.models.QuestionSource
 import com.zeros.basheer.data.models.QuestionType
 import com.zeros.basheer.data.models.SectionConcept
 import com.zeros.basheer.data.models.StudentPath
+import com.zeros.basheer.feature.lesson.data.dao.BlockDao
+import com.zeros.basheer.feature.lesson.data.dao.LessonDao
+import com.zeros.basheer.feature.lesson.data.dao.SectionDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -434,7 +437,7 @@ data class LessonJson(
     val summary: String? = null,
     val sections: List<SectionJson> = emptyList()
 ) {
-    fun toEntity(unitId: String) = Lesson(
+    fun toEntity(unitId: String) = LessonEntity(
         id = id,
         unitId = unitId,
         title = title,
@@ -452,7 +455,7 @@ data class SectionJson(
     val conceptIds: List<String> = emptyList(),
     val blocks: List<BlockJson> = emptyList()
 ) {
-    fun toEntity(lessonId: String) = Section(
+    fun toEntity(lessonId: String) = SectionEntity(
         id = id,
         lessonId = lessonId,
         title = title,
@@ -470,7 +473,7 @@ data class BlockJson(
     val caption: String? = null,
     val metadata: String? = null
 ) {
-    fun toEntity(sectionId: String) = Block(
+    fun toEntity(sectionId: String) = BlockEntity(
         id = id,
         sectionId = sectionId,
         type = BlockType.valueOf(type),
