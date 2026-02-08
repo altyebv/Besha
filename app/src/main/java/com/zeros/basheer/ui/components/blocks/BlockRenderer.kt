@@ -2,7 +2,7 @@ package com.zeros.basheer.ui.components.blocks
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.zeros.basheer.data.models.BlockType
+import com.zeros.basheer.feature.lesson.data.entity.BlockType
 import com.zeros.basheer.domain.model.BlockUiModel
 
 /**

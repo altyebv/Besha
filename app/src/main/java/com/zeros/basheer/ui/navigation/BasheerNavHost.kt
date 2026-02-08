@@ -9,7 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.zeros.basheer.ui.screens.feeds.FeedsScreen
 import com.zeros.basheer.ui.screens.quizbank.QuizBankScreen
-import com.zeros.basheer.ui.screens.lessons.LessonsScreen
+import com.zeros.basheer.feature.lesson.presentation.LessonsScreen
 import com.zeros.basheer.ui.screens.main.MainScreen
 import com.zeros.basheer.ui.screens.practice.PracticeSessionScreen
 import com.zeros.basheer.ui.screens.profile.ProfileScreen

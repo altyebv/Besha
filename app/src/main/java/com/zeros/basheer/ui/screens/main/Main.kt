@@ -1,13 +1,9 @@
 package com.zeros.basheer.ui.screens.main
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,21 +15,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.zeros.basheer.data.models.StreakLevel
-import com.zeros.basheer.data.models.StreakStatus
+import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.domain.model.Recommendation
 import com.zeros.basheer.domain.model.ScoredRecommendation
 import com.zeros.basheer.ui.viewmodels.MainViewModel
 import com.zeros.basheer.ui.viewmodels.SubjectWithProgress
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun MainScreen(
