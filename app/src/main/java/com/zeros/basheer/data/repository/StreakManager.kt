@@ -1,9 +1,9 @@
 package com.zeros.basheer.data.repository
 
-import com.zeros.basheer.data.local.dao.DailyActivityDao
-import com.zeros.basheer.data.models.DailyActivity
-import com.zeros.basheer.data.models.StreakLevel
-import com.zeros.basheer.data.models.StreakStatus
+import com.zeros.basheer.feature.streak.data.dao.DailyActivityDao
+import com.zeros.basheer.feature.streak.data.entity.DailyActivityEntity
+import com.zeros.basheer.feature.streak.data.entity.StreakLevel
+import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -66,19 +66,19 @@ class StreakManager @Inject constructor(
     /**
      * Gets today's activity as a Flow.
      */
-    fun getTodayActivityFlow(): Flow<DailyActivity?> = 
+    fun getTodayActivityFlow(): Flow<DailyActivityEntity?> =
         dailyActivityDao.getActivityForDateFlow(getTodayDate())
     
     /**
      * Gets today's activity once.
      */
-    suspend fun getTodayActivity(): DailyActivity? =
+    suspend fun getTodayActivity(): DailyActivityEntity? =
         dailyActivityDao.getActivityForDate(getTodayDate())
     
     /**
      * Gets recent activity for calendar display.
      */
-    fun getRecentActivity(days: Int = 30): Flow<List<DailyActivity>> =
+    fun getRecentActivity(days: Int = 30): Flow<List<DailyActivityEntity>> =
         dailyActivityDao.getRecentActivity(days)
     
     /**
@@ -172,7 +172,7 @@ class StreakManager @Inject constructor(
      * Calculates current streak by counting consecutive active days
      * going backwards from today/yesterday.
      */
-    private fun calculateCurrentStreak(activities: List<DailyActivity>, today: String): Int {
+    private fun calculateCurrentStreak(activities: List<DailyActivityEntity>, today: String): Int {
         val activityMap = activities.associateBy { it.date }
         
         // Check if today is active
@@ -231,7 +231,7 @@ class StreakManager @Inject constructor(
     /**
      * Calculates the longest streak ever recorded.
      */
-    private fun calculateLongestStreak(activities: List<DailyActivity>): Int {
+    private fun calculateLongestStreak(activities: List<DailyActivityEntity>): Int {
         if (activities.isEmpty()) return 0
         
         // Sort by date descending (most recent first)

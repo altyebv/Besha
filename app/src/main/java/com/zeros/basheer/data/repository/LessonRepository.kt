@@ -2,6 +2,13 @@ package com.zeros.basheer.data.repository
 
 import com.zeros.basheer.data.local.dao.*
 import com.zeros.basheer.data.models.*
+import com.zeros.basheer.feature.lesson.data.dao.LessonDao
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
+import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
+import com.zeros.basheer.feature.streak.domain.model.StreakStatus
+import com.zeros.basheer.feature.streak.domain.model.DailyActivity
+import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
+import com.zeros.basheer.feature.progress.domain.model.UserProgress
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,17 +18,12 @@ class LessonRepository @Inject constructor(
     private val subjectDao: SubjectDao,
     private val unitDao: UnitDao,
     private val lessonDao: LessonDao,
-    private val progressDao: ProgressDao,
+    private val progressRepository: ProgressRepository,  // NEW - replaced ProgressDao
     private val conceptDao: ConceptDao,
     private val conceptReviewDao: ConceptReviewDao,
     private val feedItemDao: FeedItemDao,
-    private val dailyActivityDao: DailyActivityDao
+    private val streakRepository: StreakRepository
 ) {
-
-    // Lazy initialization of StreakManager
-    val streakManager: StreakManager by lazy {
-        StreakManager(dailyActivityDao)
-    }
 
     // Subjects
     fun getAllSubjects(): Flow<List<Subject>> = subjectDao.getAllSubjects()
@@ -40,16 +42,16 @@ class LessonRepository @Inject constructor(
         unitDao.getUnitById(id)
 
     // Lessons
-    fun getLessonsByUnit(unitId: String): Flow<List<Lesson>> =
+    fun getLessonsByUnit(unitId: String): Flow<List<LessonEntity>> =
         lessonDao.getLessonsByUnit(unitId)
 
-    fun getLessonsBySubject(subjectId: String): Flow<List<Lesson>> =
+    fun getLessonsBySubject(subjectId: String): Flow<List<LessonEntity>> =
         lessonDao.getLessonsBySubject(subjectId)
 
-    suspend fun getLessonById(id: String): Lesson? =
+    suspend fun getLessonById(id: String): LessonEntity? =
         lessonDao.getLessonById(id)
 
-    fun getLessonByIdFlow(id: String): Flow<Lesson?> =
+    fun getLessonByIdFlow(id: String): Flow<LessonEntity?> =
         lessonDao.getLessonByIdFlow(id)
 
     suspend fun getLessonFull(lessonId: String): com.zeros.basheer.data.relations.LessonFull? =
@@ -63,24 +65,24 @@ class LessonRepository @Inject constructor(
 
     // Progress
     fun getProgressByLesson(lessonId: String): Flow<UserProgress?> =
-        progressDao.getProgressByLesson(lessonId)
+        progressRepository.getProgressByLesson(lessonId)
 
     fun getCompletedLessons(): Flow<List<UserProgress>> =
-        progressDao.getCompletedLessons()
+        progressRepository.getCompletedLessons()
 
     fun getCompletedLessonsCount(): Flow<Int> =
-        progressDao.getCompletedLessonsCount()
+        progressRepository.getCompletedLessonsCount()
 
     // ==================== ADD THIS METHOD ====================
     fun getRecentlyAccessedLessons(limit: Int = 5): Flow<List<UserProgress>> =
-        progressDao.getRecentlyAccessedLessons(limit)
+        progressRepository.getRecentlyAccessedLessons(limit)
     // ========================================================
 
     suspend fun markLessonCompleted(lessonId: String) =
-        progressDao.markLessonCompleted(lessonId)
+        progressRepository.markLessonCompleted(lessonId)
 
     suspend fun updateProgress(progress: UserProgress) =
-        progressDao.updateProgress(progress)
+        progressRepository.updateProgress(progress)
 
     /**
      * Update lesson progress based on completed sections
@@ -89,7 +91,7 @@ class LessonRepository @Inject constructor(
         val lessonFull = lessonDao.getLessonFull(lessonId)
         val totalSections = lessonFull?.sections?.size ?: 1
 
-        val existing = progressDao.getProgressByLessonOnce(lessonId) ?: return
+        val existing = progressRepository.getProgressByLessonOnce(lessonId) ?: return
 
         val completedCount = existing.completedSections
             .split(",")
@@ -102,7 +104,7 @@ class LessonRepository @Inject constructor(
             0f
         }
 
-        progressDao.updateProgress(
+        progressRepository.updateProgress(
             existing.copy(
                 progress = calculatedProgress,
                 completed = calculatedProgress >= 1.0f
@@ -140,40 +142,40 @@ class LessonRepository @Inject constructor(
     // ==================== Streak & Activity ====================
 
     fun getStreakStatusFlow(): Flow<StreakStatus> =
-        streakManager.getStreakStatusFlow()
+        streakRepository.getStreakStatusFlow()
 
     suspend fun getStreakStatus(): StreakStatus =
-        streakManager.getStreakStatus()
+        streakRepository.getStreakStatus()
 
     fun getTodayActivityFlow(): Flow<DailyActivity?> =
-        streakManager.getTodayActivityFlow()
+        streakRepository.getTodayActivityFlow()
 
     fun getRecentActivity(days: Int = 30): Flow<List<DailyActivity>> =
-        streakManager.getRecentActivity(days)
+        streakRepository.getRecentActivity(days)
 
     suspend fun recordLessonCompleted() {
-        streakManager.recordLessonCompleted()
+        streakRepository.recordLessonCompleted()
     }
 
     suspend fun recordCardsReviewed(count: Int = 1) {
-        streakManager.recordCardsReviewed(count)
+        streakRepository.recordCardsReviewed(count)
     }
 
     suspend fun recordQuestionsAnswered(count: Int = 1) {
-        streakManager.recordQuestionsAnswered(count)
+        streakRepository.recordQuestionsAnswered(count)
     }
 
     suspend fun recordExamCompleted() {
-        streakManager.recordExamCompleted()
+        streakRepository.recordExamCompleted()
     }
 
     suspend fun recordTimeSpent(seconds: Long) {
-        streakManager.recordTimeSpent(seconds)
+        streakRepository.recordTimeSpent(seconds)
     }
 
     // Aggregate stats
-    fun getTotalLessonsCompleted(): Flow<Int> = streakManager.getTotalLessonsCompleted()
-    fun getTotalCardsReviewed(): Flow<Int> = streakManager.getTotalCardsReviewed()
-    fun getTotalQuestionsAnswered(): Flow<Int> = streakManager.getTotalQuestionsAnswered()
-    fun getTotalTimeSpent(): Flow<Long> = streakManager.getTotalTimeSpent()
+    fun getTotalLessonsCompleted(): Flow<Int> = streakRepository.getTotalLessonsCompleted()
+    fun getTotalCardsReviewed(): Flow<Int> = streakRepository.getTotalCardsReviewed()
+    fun getTotalQuestionsAnswered(): Flow<Int> = streakRepository.getTotalQuestionsAnswered()
+    fun getTotalTimeSpent(): Flow<Long> = streakRepository.getTotalTimeSpent()
 }
