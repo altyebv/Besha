@@ -2,7 +2,7 @@ package com.zeros.basheer.ui.screens.lessons
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.data.models.Lesson
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.data.models.Units
 import com.zeros.basheer.data.repository.LessonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class LessonsScreenState(
-    val units: List<Pair<Units, List<Lesson>>> = emptyList(),
+    val units: List<Pair<Units, List<LessonEntity>>> = emptyList(),
     val completedLessonIds: Set<String> = emptySet(),
     val isLoading: Boolean = true
 )
@@ -41,7 +41,7 @@ class LessonsViewModel @Inject constructor(
 
                 // Combine units and their lessons
                 repository.getUnitsBySubject(subject.id).collect { units ->
-                    val unitsWithLessons = mutableListOf<Pair<Units, List<Lesson>>>()
+                    val unitsWithLessons = mutableListOf<Pair<Units, List<LessonEntity>>>()
 
                     for (unit in units.sortedBy { it.order }) {
                         repository.getLessonsByUnit(unit.id).first().let { lessons ->
