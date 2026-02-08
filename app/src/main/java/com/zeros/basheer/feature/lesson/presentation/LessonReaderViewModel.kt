@@ -1,13 +1,17 @@
-package com.zeros.basheer.ui.viewmodels
+package com.zeros.basheer.feature.lesson.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.data.models.Concept
-import com.zeros.basheer.data.models.UserProgress
+import com.zeros.basheer.feature.progress.domain.model.UserProgress
 import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.domain.mapper.LessonMapper
+import com.zeros.basheer.core.domain.model.Result
 import com.zeros.basheer.domain.model.LessonContent
+//import com.zeros.basheer.feature.lesson.domain.model.LessonContent
+import com.zeros.basheer.feature.lesson.domain.usecase.GetLessonContentUseCase
+import com.zeros.basheer.feature.lesson.domain.usecase.MarkLessonCompleteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,15 +28,15 @@ data class LessonReaderState(
     val progress: UserProgress? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
-    
+
     // Concept modal
     val activeConcept: Concept? = null,
-    
+
     // Progress tracking
     val readingTimeSeconds: Long = 0,
     val scrollProgress: Float = 0f,
     val hasReachedEnd: Boolean = false,
-    
+
     // UI state
     val showProgressOverlay: Boolean = false
 )
@@ -40,6 +44,8 @@ data class LessonReaderState(
 @HiltViewModel
 class LessonReaderViewModel @Inject constructor(
     private val repository: LessonRepository,
+    private val getLessonContentUseCase: GetLessonContentUseCase,
+    private val markLessonCompleteUseCase: MarkLessonCompleteUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -54,42 +60,60 @@ class LessonReaderViewModel @Inject constructor(
     init {
         loadLesson()
     }
-
     private fun loadLesson() {
         viewModelScope.launch {
-            try {
-                // Load full lesson with sections and blocks
-                val lessonFull = repository.getLessonFull(lessonId)
-                if (lessonFull == null) {
+            // Use NEW use case
+            when (val result = getLessonContentUseCase(lessonId)) {
+                is Result.Success -> {
                     _state.update { it.copy(
-                        error = "الدرس غير موجود",
-                        isLoading = false
-                    )}
-                    return@launch
-                }
-
-                // Map to UI model
-                val lessonContent = LessonMapper.toLessonContent(lessonFull)
-
-                // Load progress
-                repository.getProgressByLesson(lessonId).collect { progress ->
-                    _state.update { it.copy(
-                        lessonContent = lessonContent,
-                        progress = progress,
+                        lessonContent = result.data,
                         isLoading = false
                     )}
                 }
-
-                // Update last accessed time
-                updateLastAccessed()
-            } catch (e: Exception) {
-                _state.update { it.copy(
-                    error = e.message ?: "حدث خطأ",
-                    isLoading = false
-                )}
+                is Result.Error -> {
+                    _state.update { it.copy(
+                        error = result.message,
+                        isLoading = false
+                    )}
+                }
             }
         }
     }
+//    private fun loadLesson() {
+//        viewModelScope.launch {
+//            try {
+//                // Load full lesson with sections and blocks
+//                val lessonFull = repository.getLessonFull(lessonId)
+//                if (lessonFull == null) {
+//                    _state.update { it.copy(
+//                        error = "الدرس غير موجود",
+//                        isLoading = false
+//                    )}
+//                    return@launch
+//                }
+//
+//                // Map to UI model
+//                val lessonContent = LessonMapper.toLessonContent(lessonFull)
+//
+//                // Load progress
+//                repository.getProgressByLesson(lessonId).collect { progress ->
+//                    _state.update { it.copy(
+//                        lessonContent = lessonContent,
+//                        progress = progress,
+//                        isLoading = false
+//                    )}
+//                }
+//
+//                // Update last accessed time
+//                updateLastAccessed()
+//            } catch (e: Exception) {
+//                _state.update { it.copy(
+//                    error = e.message ?: "حدث خطأ",
+//                    isLoading = false
+//                )}
+//            }
+//        }
+//    }
 
     private fun updateLastAccessed() {
         viewModelScope.launch {
@@ -114,7 +138,7 @@ class LessonReaderViewModel @Inject constructor(
     fun startTimeTracking() {
         if (isTrackingTime) return
         isTrackingTime = true
-        
+
         timeTrackingJob = viewModelScope.launch {
             while (isActive && isTrackingTime) {
                 delay(1000)
@@ -129,7 +153,7 @@ class LessonReaderViewModel @Inject constructor(
         isTrackingTime = false
         timeTrackingJob?.cancel()
         timeTrackingJob = null
-        
+
         // Save reading time to progress
         saveReadingTime()
     }
@@ -148,7 +172,7 @@ class LessonReaderViewModel @Inject constructor(
 
     fun onScrollProgressChanged(progress: Float) {
         _state.update { it.copy(scrollProgress = progress) }
-        
+
         // Check if user has reached the end (>95%)
         if (progress >= 0.95f && !_state.value.hasReachedEnd) {
             _state.update { it.copy(hasReachedEnd = true) }
@@ -175,7 +199,7 @@ class LessonReaderViewModel @Inject constructor(
             saveReadingTime()
             repository.markLessonCompleted(lessonId)
 
-            // ← ADD THIS: Update progress percentage
+            // Update progress percentage
             repository.updateLessonProgress(lessonId)
 
             // Record for streak tracking
@@ -184,15 +208,6 @@ class LessonReaderViewModel @Inject constructor(
         }
     }
 
-//    fun markSectionComplete(sectionId: String) {
-//        viewModelScope.launch {
-//            // Existing code to mark section
-//            progressDao.markSectionCompleted(lessonId, sectionId)  // or repository.markSectionCompleted()
-//
-//            // ← ADD THIS: Recalculate progress after each section
-//            repository.updateLessonProgress(lessonId)
-//        }
-//    }
 
     fun toggleProgressOverlay() {
         _state.update { it.copy(showProgressOverlay = !it.showProgressOverlay) }
