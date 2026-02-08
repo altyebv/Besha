@@ -1,7 +1,7 @@
 package com.zeros.basheer.domain.mapper
 
-import com.zeros.basheer.data.models.Block
-import com.zeros.basheer.data.models.BlockType
+import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
+import com.zeros.basheer.feature.lesson.data.entity.BlockType
 import com.zeros.basheer.data.relations.LessonFull
 import com.zeros.basheer.data.relations.SectionWithBlocksAndConcepts
 import com.zeros.basheer.domain.model.*
@@ -15,28 +15,28 @@ object LessonMapper {
     
     fun toLessonContent(lessonFull: LessonFull): LessonContent {
         return LessonContent(
-            id = lessonFull.lesson.id,
-            title = lessonFull.lesson.title,
-            estimatedMinutes = lessonFull.lesson.estimatedMinutes,
-            summary = lessonFull.lesson.summary,
+            id = lessonFull.lessonEntity.id,
+            title = lessonFull.lessonEntity.title,
+            estimatedMinutes = lessonFull.lessonEntity.estimatedMinutes,
+            summary = lessonFull.lessonEntity.summary,
             sections = lessonFull.sections
-                .sortedBy { it.section.order }
+                .sortedBy { it.sectionEntity.order }
                 .map { toSectionUiModel(it) }
         )
     }
     
     private fun toSectionUiModel(section: SectionWithBlocksAndConcepts): SectionUiModel {
         return SectionUiModel(
-            id = section.section.id,
-            title = section.section.title,
-            order = section.section.order,
+            id = section.sectionEntity.id,
+            title = section.sectionEntity.title,
+            order = section.sectionEntity.order,
             blocks = section.blocks
                 .sortedBy { it.order }
                 .map { toBlockUiModel(it) }
         )
     }
     
-    private fun toBlockUiModel(block: Block): BlockUiModel {
+    private fun toBlockUiModel(block: BlockEntity): BlockUiModel {
         return BlockUiModel(
             id = block.id,
             type = block.type,
@@ -48,7 +48,7 @@ object LessonMapper {
         )
     }
     
-    private fun parseMetadata(block: Block): BlockMetadata? {
+    private fun parseMetadata(block: BlockEntity): BlockMetadata? {
         val metadataJson = block.metadata ?: return getDefaultMetadata(block.type)
         
         return try {
