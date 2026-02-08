@@ -3,7 +3,7 @@ package com.zeros.basheer.feature.subject.domain.repository
 
 import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.subject.domain.model.Subject
-import com.zeros.basheer.feature.subject.domain.model.Unit
+import com.zeros.basheer.feature.subject.domain.model.Units
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -21,10 +21,10 @@ interface SubjectRepository {
     suspend fun deleteAllSubjects()
 
     // Unit operations
-    fun getUnitsBySubject(subjectId: String): Flow<List<Unit>>
-    suspend fun getUnitById(unitId: String): Unit?
-    suspend fun insertUnit(unit: Unit)
-    suspend fun insertUnits(units: List<Unit>)
-    suspend fun deleteUnit(unit: Unit)
+    fun getUnitsBySubject(subjectId: String): Flow<List<Units>>
+    suspend fun getUnitById(unitId: String): Units?
+    suspend fun insertUnit(units: Units)
+    suspend fun insertUnits(units: List<Units>)
+    suspend fun deleteUnit(units: Units)
     suspend fun deleteUnitsBySubject(subjectId: String)
 }
