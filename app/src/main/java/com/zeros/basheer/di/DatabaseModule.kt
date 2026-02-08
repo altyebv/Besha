@@ -2,10 +2,15 @@ package com.zeros.basheer.di
 
 import android.content.Context
 import androidx.room.Room
-import com.zeros.basheer.data.local.AppDatabase
+import com.zeros.basheer.core.data.local.AppDatabase
 import com.zeros.basheer.data.local.dao.*
 import com.zeros.basheer.data.repository.BasheerRepository
 import com.zeros.basheer.data.repository.DatabaseSeeder
+import com.zeros.basheer.feature.lesson.data.dao.BlockDao
+import com.zeros.basheer.feature.lesson.data.dao.LessonDao
+import com.zeros.basheer.feature.lesson.data.dao.SectionDao
+import com.zeros.basheer.feature.lesson.data.dao.SectionProgressDao
+import com.zeros.basheer.feature.progress.data.dao.ProgressDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -82,9 +87,9 @@ object DatabaseModule {
     @Provides
     fun provideFeedItemDao(database: AppDatabase): FeedItemDao = database.feedItemDao()
 
-    // Progress tracking DAOs
-    @Provides
-    fun provideProgressDao(database: AppDatabase): ProgressDao = database.progressDao()
+    // ProgressDao now provided by ProgressModule - removed duplicate
+
+    // Progress tracking DAOs (others)
 
     @Provides
     fun provideConceptReviewDao(database: AppDatabase): ConceptReviewDao = database.conceptReviewDao()
@@ -98,8 +103,7 @@ object DatabaseModule {
     @Provides
     fun provideSectionProgressDao(database: AppDatabase): SectionProgressDao = database.sectionProgressDao()
 
-    @Provides
-    fun provideDailyActivityDao(database: AppDatabase): DailyActivityDao = database.dailyActivityDao()
+    // DailyActivityDao now provided by StreakModule - removed duplicate
 
     @Provides
     fun provideQuestionStatsDao(database: AppDatabase): QuestionStatsDao = database.questionStatsDao()
