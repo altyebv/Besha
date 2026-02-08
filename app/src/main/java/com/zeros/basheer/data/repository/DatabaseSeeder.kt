@@ -34,6 +34,8 @@ import com.zeros.basheer.data.models.StudentPath
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
+import com.zeros.basheer.feature.subject.data.dao.SubjectDao
+import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable

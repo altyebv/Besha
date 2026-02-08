@@ -24,6 +24,8 @@ import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.feature.progress.data.dao.ProgressDao
 import com.zeros.basheer.feature.progress.data.entity.UserProgressEntity
+import com.zeros.basheer.feature.subject.data.dao.SubjectDao
+import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
