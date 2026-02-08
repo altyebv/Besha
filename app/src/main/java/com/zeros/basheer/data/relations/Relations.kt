@@ -4,6 +4,9 @@ import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
 import com.zeros.basheer.data.models.*
+import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
+import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 
 // ============================================
 // CONTENT RELATIONS
@@ -15,29 +18,29 @@ data class UnitWithLessons(
         parentColumn = "id",
         entityColumn = "unitId"
     )
-    val lessons: List<Lesson>
+    val lessonEntities: List<LessonEntity>
 )
 
 data class LessonWithSections(
-    @Embedded val lesson: Lesson,
+    @Embedded val lessonEntity: LessonEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "lessonId"
     )
-    val sections: List<Section>
+    val sectionEntities: List<SectionEntity>
 )
 
 data class SectionWithBlocks(
-    @Embedded val section: Section,
+    @Embedded val sectionEntity: SectionEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "sectionId"
     )
-    val blocks: List<Block>
+    val blocks: List<BlockEntity>
 )
 
 data class SectionWithConcepts(
-    @Embedded val section: Section,
+    @Embedded val sectionEntity: SectionEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
@@ -51,12 +54,12 @@ data class SectionWithConcepts(
 )
 
 data class SectionWithBlocksAndConcepts(
-    @Embedded val section: Section,
+    @Embedded val sectionEntity: SectionEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "sectionId"
     )
-    val blocks: List<Block>,
+    val blocks: List<BlockEntity>,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
@@ -73,9 +76,9 @@ data class SectionWithBlocksAndConcepts(
  * Full lesson content for display
  */
 data class LessonFull(
-    @Embedded val lesson: Lesson,
+    @Embedded val lessonEntity: LessonEntity,
     @Relation(
-        entity = Section::class,
+        entity = SectionEntity::class,
         parentColumn = "id",
         entityColumn = "lessonId"
     )
@@ -93,7 +96,7 @@ data class ConceptWithSections(
             entityColumn = "sectionId"
         )
     )
-    val sections: List<Section>
+    val sectionEntities: List<SectionEntity>
 )
 
 data class ConceptWithTags(
@@ -167,7 +170,7 @@ data class QuizAttemptWithResponses(
 // ============================================
 
 data class LessonWithProgress(
-    @Embedded val lesson: Lesson,
+    @Embedded val lessonEntity: LessonEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "lessonId"
