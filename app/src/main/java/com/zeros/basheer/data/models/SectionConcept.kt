@@ -3,6 +3,7 @@ package com.zeros.basheer.data.models
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 
 /**
  * Junction table linking Sections to Concepts.
@@ -19,7 +20,7 @@ import androidx.room.Index
     primaryKeys = ["sectionId", "conceptId"],
     foreignKeys = [
         ForeignKey(
-            entity = Section::class,
+            entity = SectionEntity::class,
             parentColumns = ["id"],
             childColumns = ["sectionId"],
             onDelete = ForeignKey.CASCADE

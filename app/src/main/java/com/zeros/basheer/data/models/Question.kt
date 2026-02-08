@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 
 /**
  * Quiz questions of all types.
@@ -30,7 +31,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.SET_NULL
         ),
         ForeignKey(
-            entity = Lesson::class,
+            entity = LessonEntity::class,
             parentColumns = ["id"],
             childColumns = ["lessonId"],
             onDelete = ForeignKey.SET_NULL

@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 
 /**
  * Tracks user progress at the LESSON level.
@@ -14,7 +15,7 @@ import androidx.room.PrimaryKey
     tableName = "user_progress",
     foreignKeys = [
         ForeignKey(
-            entity = Lesson::class,
+            entity = LessonEntity::class,
             parentColumns = ["id"],
             childColumns = ["lessonId"],
             onDelete = ForeignKey.CASCADE
