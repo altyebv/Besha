@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
@@ -17,11 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import com.zeros.basheer.data.repository.DatabaseSeeder
 import com.zeros.basheer.ui.components.BasheerBottomBar
 import com.zeros.basheer.ui.navigation.BasheerNavHost
-import com.zeros.basheer.ui.theme.BasheerTheme
+import com.zeros.basheer.core.ui.theme.BasheerTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
