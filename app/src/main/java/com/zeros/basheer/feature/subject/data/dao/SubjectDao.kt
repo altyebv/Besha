@@ -1,4 +1,4 @@
-package com.zeros.basheer.data.local.dao
+package com.zeros.basheer.feature.subject.data.dao
 
 import androidx.room.*
 import com.zeros.basheer.data.models.Subject
