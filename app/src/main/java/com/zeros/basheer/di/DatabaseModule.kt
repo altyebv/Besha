@@ -6,6 +6,13 @@ import com.zeros.basheer.core.data.local.AppDatabase
 import com.zeros.basheer.data.local.dao.*
 import com.zeros.basheer.data.repository.BasheerRepository
 import com.zeros.basheer.data.repository.DatabaseSeeder
+import com.zeros.basheer.feature.concept.data.dao.ConceptDao
+import com.zeros.basheer.feature.concept.data.dao.ConceptReviewDao
+import com.zeros.basheer.feature.concept.data.dao.ConceptTagDao
+import com.zeros.basheer.feature.concept.data.dao.TagDao
+import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
+import com.zeros.basheer.feature.feed.data.dao.ContentVariantDao
+import com.zeros.basheer.feature.feed.data.dao.FeedItemDao
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
@@ -39,8 +46,8 @@ object DatabaseModule {
     // Core content DAOs
     // SubjectDao and UnitDao now provided by SubjectModule
 
-    @Provides
-    fun provideContentVariantDao(database: AppDatabase): ContentVariantDao = database.contentVariantDao()
+//    @Provides
+//    fun provideContentVariantDao(database: AppDatabase): ContentVariantDao = database.contentVariantDao()
 
     @Provides
     fun provideLessonDao(database: AppDatabase): LessonDao = database.lessonDao()
@@ -52,14 +59,14 @@ object DatabaseModule {
     fun provideBlockDao(database: AppDatabase): BlockDao = database.blockDao()
 
     // Concepts & categorization DAOs
-    @Provides
-    fun provideConceptDao(database: AppDatabase): ConceptDao = database.conceptDao()
+//    @Provides
+//    fun provideConceptDao(database: AppDatabase): ConceptDao = database.conceptDao()
 
-    @Provides
-    fun provideTagDao(database: AppDatabase): TagDao = database.tagDao()
+//    @Provides
+//    fun provideTagDao(database: AppDatabase): TagDao = database.tagDao()
 
-    @Provides
-    fun provideConceptTagDao(database: AppDatabase): ConceptTagDao = database.conceptTagDao()
+//    @Provides
+//    fun provideConceptTagDao(database: AppDatabase): ConceptTagDao = database.conceptTagDao()
 
     @Provides
     fun provideSectionConceptDao(database: AppDatabase): SectionConceptDao = database.sectionConceptDao()
@@ -78,15 +85,15 @@ object DatabaseModule {
     fun provideExamQuestionDao(database: AppDatabase): ExamQuestionDao = database.examQuestionDao()
 
     // Feed DAO
-    @Provides
-    fun provideFeedItemDao(database: AppDatabase): FeedItemDao = database.feedItemDao()
+//    @Provides
+//    fun provideFeedItemDao(database: AppDatabase): FeedItemDao = database.feedItemDao()
 
     // ProgressDao now provided by ProgressModule - removed duplicate
 
     // Progress tracking DAOs (others)
 
-    @Provides
-    fun provideConceptReviewDao(database: AppDatabase): ConceptReviewDao = database.conceptReviewDao()
+//    @Provides
+//    fun provideConceptReviewDao(database: AppDatabase): ConceptReviewDao = database.conceptReviewDao()
 
     @Provides
     fun provideQuizAttemptDao(database: AppDatabase): QuizAttemptDao = database.quizAttemptDao()
@@ -128,17 +135,15 @@ object RepositoryModule {
         progressDao: ProgressDao,
         conceptReviewDao: ConceptReviewDao,
         quizAttemptDao: QuizAttemptDao,
-        questionResponseDao: QuestionResponseDao
+        questionResponseDao: QuestionResponseDao,
+        conceptRepository: ConceptRepository
     ): BasheerRepository {
         return BasheerRepository(
             subjectRepository = subjectRepository,
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,
-            conceptDao = conceptDao,
-            tagDao = tagDao,
-            conceptTagDao = conceptTagDao,
-            sectionConceptDao = sectionConceptDao,
+            conceptRepository = conceptRepository,
             questionDao = questionDao,
             questionConceptDao = questionConceptDao,
             examDao = examDao,
@@ -157,34 +162,30 @@ object RepositoryModule {
         lessonDao: LessonDao,
         sectionDao: SectionDao,
         blockDao: BlockDao,
-        conceptDao: ConceptDao,
-        tagDao: TagDao,
-        conceptTagDao: ConceptTagDao,
         sectionConceptDao: SectionConceptDao,
         questionDao: QuestionDao,
         questionConceptDao: QuestionConceptDao,
         examDao: ExamDao,
         examQuestionDao: ExamQuestionDao,
-        feedItemDao: FeedItemDao,
         practiceSessionDao: PracticeSessionDao,
-        questionStatsDao: QuestionStatsDao
+        questionStatsDao: QuestionStatsDao,
+        conceptRepository: ConceptRepository,
+        feedRepository: com.zeros.basheer.feature.feed.domain.repository.FeedRepository
     ): DatabaseSeeder {
         return DatabaseSeeder(
             subjectRepository = subjectRepository,
+            conceptRepository = conceptRepository,
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,
-            conceptDao = conceptDao,
-            tagDao = tagDao,
-            conceptTagDao = conceptTagDao,
             sectionConceptDao = sectionConceptDao,
             questionDao = questionDao,
             questionConceptDao = questionConceptDao,
             examDao = examDao,
             examQuestionDao = examQuestionDao,
-            feedItemDao = feedItemDao,
             practiceSessionDao = practiceSessionDao,
-            questionStatsDao = questionStatsDao
+            questionStatsDao = questionStatsDao,
+            feedRepository = feedRepository
         )
     }
 }

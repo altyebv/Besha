@@ -2,17 +2,23 @@ package com.zeros.basheer.data.repository
 
 
 import com.zeros.basheer.data.local.dao.*
-import com.zeros.basheer.data.models.Concept
-import com.zeros.basheer.data.models.ConceptReview
 import com.zeros.basheer.data.models.Exam
 import com.zeros.basheer.data.models.ExamSource
 import com.zeros.basheer.data.models.Question
 import com.zeros.basheer.data.models.QuestionResponse
 import com.zeros.basheer.data.models.QuestionType
 import com.zeros.basheer.data.models.QuizAttempt
-import com.zeros.basheer.data.models.Rating
-import com.zeros.basheer.data.models.Tag
 import com.zeros.basheer.data.relations.*
+import com.zeros.basheer.feature.concept.data.dao.ConceptDao
+import com.zeros.basheer.feature.concept.data.dao.ConceptReviewDao
+import com.zeros.basheer.feature.concept.data.dao.ConceptTagDao
+import com.zeros.basheer.feature.concept.data.dao.TagDao
+import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
+import com.zeros.basheer.feature.concept.domain.model.Concept
+import com.zeros.basheer.feature.concept.domain.model.ConceptReview
+import com.zeros.basheer.feature.concept.domain.model.Rating
+import com.zeros.basheer.feature.concept.domain.model.Tag
+import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
@@ -32,13 +38,10 @@ import javax.inject.Singleton
 @Singleton
 class BasheerRepository @Inject constructor(
     private val subjectRepository: SubjectRepository,
+    private val conceptRepository: ConceptRepository,
     private val lessonDao: LessonDao,
     private val sectionDao: SectionDao,
     private val blockDao: BlockDao,
-    private val conceptDao: ConceptDao,
-    private val tagDao: TagDao,
-    private val conceptTagDao: ConceptTagDao,
-    private val sectionConceptDao: SectionConceptDao,
     private val questionDao: QuestionDao,
     private val questionConceptDao: QuestionConceptDao,
     private val examDao: ExamDao,
@@ -81,17 +84,16 @@ class BasheerRepository @Inject constructor(
     // ==========================================
     // CONCEPTS
     // ==========================================
-    fun getConceptsBySubject(subjectId: String): Flow<List<Concept>> = conceptDao.getConceptsBySubject(subjectId)
-    fun getConceptsByLesson(lessonId: String): Flow<List<Concept>> = conceptDao.getConceptsByLesson(lessonId)
-    fun getNewConcepts(subjectId: String, limit: Int = 10): Flow<List<Concept>> = conceptDao.getNewConcepts(subjectId, limit)
-    suspend fun getConceptById(id: String): Concept? = conceptDao.getConceptById(id)
-    suspend fun getConceptsDueForReview(limit: Int = 20): List<Concept> = conceptDao.getConceptsDueForReview(limit = limit)
+    fun getConceptsBySubject(subjectId: String): Flow<List<Concept>> = conceptRepository.getConceptsBySubject(subjectId)
+    fun getConceptsByLesson(lessonId: String): Flow<List<Concept>> = conceptRepository.getConceptsByLesson(lessonId)
+    fun getNewConcepts(subjectId: String, limit: Int = 10): Flow<List<Concept>> = conceptRepository.getNewConcepts(subjectId, limit)
+    suspend fun getConceptById(id: String): Concept? = conceptRepository.getConceptById(id)
 
     // ==========================================
     // TAGS
     // ==========================================
-    fun getAllTags(): Flow<List<Tag>> = tagDao.getAllTags()
-    fun getConceptsByTag(tagId: String): Flow<List<Concept>> = conceptTagDao.getConceptsByTag(tagId)
+    fun getAllTags(): Flow<List<Tag>> = conceptRepository.getAllTags()
+    fun getConceptsByTag(tagId: String): Flow<List<Concept>> = conceptRepository.getConceptsByTag(tagId)
 
     // ==========================================
     // QUESTIONS
@@ -133,11 +135,9 @@ class BasheerRepository @Inject constructor(
     // ==========================================
     // CONCEPT REVIEWS (Spaced Repetition)
     // ==========================================
-    fun getConceptsDueForReviewFlow(limit: Int = 20): Flow<List<ConceptReview>> =
-        conceptReviewDao.getConceptsDueForReview(limit = limit)
     fun getConceptsDueCount(): Flow<Int> = conceptReviewDao.getConceptsDueCount()
     suspend fun recordConceptReview(conceptId: String, rating: Rating) =
-        conceptReviewDao.recordReview(conceptId, rating)
+        conceptRepository.recordReview(conceptId, rating)
 
     // ==========================================
     // QUIZ ATTEMPTS

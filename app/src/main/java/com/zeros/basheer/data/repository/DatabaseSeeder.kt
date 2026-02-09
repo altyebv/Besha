@@ -2,33 +2,24 @@ package com.zeros.basheer.data.repository
 
 import android.content.Context
 import com.google.gson.Gson
-import com.zeros.basheer.data.local.dao.ConceptDao
-import com.zeros.basheer.data.local.dao.ConceptTagDao
 import com.zeros.basheer.data.local.dao.ExamDao
 import com.zeros.basheer.data.local.dao.ExamQuestionDao
-import com.zeros.basheer.data.local.dao.FeedItemDao
+import com.zeros.basheer.feature.feed.data.dao.FeedItemDao
 import com.zeros.basheer.data.local.dao.PracticeSessionDao
 import com.zeros.basheer.data.local.dao.QuestionConceptDao
 import com.zeros.basheer.data.local.dao.QuestionDao
 import com.zeros.basheer.data.local.dao.QuestionStatsDao
 import com.zeros.basheer.data.local.dao.SectionConceptDao
-import com.zeros.basheer.data.local.dao.TagDao
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.data.models.QuestionStats
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
-import com.zeros.basheer.data.models.Concept
-import com.zeros.basheer.data.models.Tag
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockType
 import com.zeros.basheer.data.models.CognitiveLevel
-import com.zeros.basheer.data.models.ConceptTag
-import com.zeros.basheer.data.models.ConceptType
 import com.zeros.basheer.data.models.Exam
 import com.zeros.basheer.data.models.ExamQuestion
 import com.zeros.basheer.data.models.ExamSource
-import com.zeros.basheer.data.models.FeedItem
-import com.zeros.basheer.data.models.FeedItemType
-import com.zeros.basheer.data.models.InteractionType
+
 import com.zeros.basheer.data.models.PracticeGenerationType
 import com.zeros.basheer.data.models.PracticeSession
 import com.zeros.basheer.data.models.PracticeSessionStatus
@@ -37,6 +28,15 @@ import com.zeros.basheer.data.models.QuestionConcept
 import com.zeros.basheer.data.models.QuestionSource
 import com.zeros.basheer.data.models.QuestionType
 import com.zeros.basheer.data.models.SectionConcept
+import com.zeros.basheer.feature.concept.domain.model.Concept
+import com.zeros.basheer.feature.concept.domain.model.ConceptTag
+import com.zeros.basheer.feature.concept.domain.model.ConceptType
+import com.zeros.basheer.feature.concept.domain.model.Tag
+import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
+import com.zeros.basheer.feature.feed.domain.model.FeedItem
+import com.zeros.basheer.feature.feed.domain.model.FeedItemType
+import com.zeros.basheer.feature.feed.domain.model.InteractionType
+import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
@@ -57,18 +57,16 @@ Unified seeder that handles both lesson content AND quiz bank data.
 @Singleton
 class DatabaseSeeder @Inject constructor(
     private val subjectRepository: SubjectRepository,
+    private val feedRepository: FeedRepository,
     private val lessonDao: LessonDao,
     private val sectionDao: SectionDao,
     private val blockDao: BlockDao,
-    private val conceptDao: ConceptDao,
-    private val tagDao: TagDao,
-    private val conceptTagDao: ConceptTagDao,
+    private val conceptRepository: ConceptRepository,
     private val sectionConceptDao: SectionConceptDao,
     private val questionDao: QuestionDao,
     private val questionConceptDao: QuestionConceptDao,
     private val examDao: ExamDao,
     private val examQuestionDao: ExamQuestionDao,
-    private val feedItemDao: FeedItemDao,
     private val practiceSessionDao: PracticeSessionDao,
     private val questionStatsDao: QuestionStatsDao
 ) {
@@ -106,14 +104,14 @@ class DatabaseSeeder @Inject constructor(
 
         // 2. Insert tags
         data.tags.forEach { tag ->
-            tagDao.insertTag(tag.toEntity())
+            conceptRepository.insertTag(tag.toEntity())
         }
 
         // 3. Insert concepts and their tags
         data.concepts.forEach { concept ->
-            conceptDao.insertConcept(concept.toEntity(data.subject.id))
+            conceptRepository.insertConcept(concept.toEntity(data.subject.id))
             concept.tagIds?.forEach { tagId ->
-                conceptTagDao.insert(ConceptTag(concept.id, tagId))
+                conceptRepository.insertConceptTag(ConceptTag(concept.id, tagId))
             }
         }
 
@@ -176,7 +174,7 @@ class DatabaseSeeder @Inject constructor(
 
         // 7. Insert feed items
         data.feedItems.forEach { feedItem ->
-            feedItemDao.insertFeedItem(feedItem.toEntity(data.subject.id))
+            feedRepository.insertFeedItem(feedItem.toEntity(data.subject.id))
         }
     }
 
