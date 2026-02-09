@@ -2,13 +2,13 @@ package com.zeros.basheer.ui.screens.feeds
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.data.models.FeedItem
-import com.zeros.basheer.data.models.InteractionType
-import com.zeros.basheer.data.models.Rating
+
 import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.domain.mapper.FeedMapper
 import com.zeros.basheer.domain.model.CardInteractionState
 import com.zeros.basheer.domain.model.FeedCard
+import com.zeros.basheer.feature.concept.domain.model.Rating
+import com.zeros.basheer.feature.feed.domain.model.InteractionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

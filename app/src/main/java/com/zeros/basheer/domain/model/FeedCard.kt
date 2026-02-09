@@ -1,7 +1,8 @@
 package com.zeros.basheer.domain.model
 
-import com.zeros.basheer.data.models.FeedItemType
-import com.zeros.basheer.data.models.InteractionType
+import com.zeros.basheer.feature.feed.domain.model.FeedItemType
+import com.zeros.basheer.feature.feed.domain.model.InteractionType
+
 
 /**
  * UI-ready feed card model.

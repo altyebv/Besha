@@ -15,8 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.zeros.basheer.data.models.Concept
-import com.zeros.basheer.data.models.ConceptType
+import com.zeros.basheer.feature.concept.domain.model.Concept
+import com.zeros.basheer.feature.concept.domain.model.ConceptType
 
 /**
  * Modal bottom sheet displaying concept details.

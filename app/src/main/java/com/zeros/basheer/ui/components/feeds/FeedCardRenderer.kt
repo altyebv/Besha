@@ -3,10 +3,10 @@ package com.zeros.basheer.ui.components.feeds
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.zeros.basheer.data.models.FeedItemType
-import com.zeros.basheer.data.models.InteractionType
 import com.zeros.basheer.domain.model.CardInteractionState
 import com.zeros.basheer.domain.model.FeedCard
+import com.zeros.basheer.feature.feed.domain.model.FeedItemType
+import com.zeros.basheer.feature.feed.domain.model.InteractionType
 
 /**
  * Central dispatcher for rendering feed cards based on their type.

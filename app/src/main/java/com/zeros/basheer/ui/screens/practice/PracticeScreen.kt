@@ -20,6 +20,8 @@ import com.zeros.basheer.domain.model.FeedCard
 import com.zeros.basheer.ui.components.feeds.McqCard
 import com.zeros.basheer.ui.components.feeds.TrueFalseCard
 import com.zeros.basheer.data.models.Question
+import com.zeros.basheer.feature.feed.domain.model.FeedItemType
+import com.zeros.basheer.feature.feed.domain.model.InteractionType
 
 /**
  * Practice Session Screen - Answer questions one by one
@@ -386,14 +388,14 @@ private fun Question.toFeedCard(): FeedCard {
         conceptId = "", // Not needed for practice
         subjectId = this.subjectId,
         subjectName = "", // Not needed
-        type = com.zeros.basheer.data.models.FeedItemType.MINI_QUIZ,
+        type = FeedItemType.MINI_QUIZ,
         contentAr = this.textAr,
         contentEn = this.textEn,
         imageUrl = this.imageUrl,
         interactionType = when (this.type) {
-            QuestionType.TRUE_FALSE -> com.zeros.basheer.data.models.InteractionType.SWIPE_TF
-            QuestionType.MCQ -> com.zeros.basheer.data.models.InteractionType.MCQ
-            else -> com.zeros.basheer.data.models.InteractionType.TAP_CONFIRM
+            QuestionType.TRUE_FALSE -> InteractionType.SWIPE_TF
+            QuestionType.MCQ -> InteractionType.MCQ
+            else -> InteractionType.TAP_CONFIRM
         },
         correctAnswer = this.correctAnswer,
         options = this.options?.let { parseOptions(it) },
