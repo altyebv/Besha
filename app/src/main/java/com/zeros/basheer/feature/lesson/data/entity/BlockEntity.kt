@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.zeros.basheer.data.models.Concept
+import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
 
 /**
  * A content block within a section.
@@ -25,7 +25,7 @@ import com.zeros.basheer.data.models.Concept
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Concept::class,
+            entity = ConceptEntity::class,
             parentColumns = ["id"],
             childColumns = ["conceptRef"],
             onDelete = ForeignKey.SET_NULL
