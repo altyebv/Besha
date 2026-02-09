@@ -1,7 +1,7 @@
 package com.zeros.basheer.domain.mapper
 
-import com.zeros.basheer.data.models.FeedItem
 import com.zeros.basheer.domain.model.FeedCard
+import com.zeros.basheer.feature.feed.domain.model.FeedItem
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import org.json.JSONArray
 

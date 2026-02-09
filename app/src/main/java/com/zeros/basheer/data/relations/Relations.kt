@@ -4,6 +4,8 @@ import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
 import com.zeros.basheer.data.models.*
+import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
+import com.zeros.basheer.feature.concept.domain.model.Concept
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
@@ -53,7 +55,7 @@ data class SectionWithConcepts(
             entityColumn = "conceptId"
         )
     )
-    val concepts: List<Concept>
+    val concepts: List<ConceptEntity>
 )
 
 data class SectionWithBlocksAndConcepts(
@@ -72,7 +74,7 @@ data class SectionWithBlocksAndConcepts(
             entityColumn = "conceptId"
         )
     )
-    val concepts: List<Concept>
+    val concepts: List<ConceptEntity>
 )
 
 /**
@@ -88,33 +90,6 @@ data class LessonFull(
     val sections: List<SectionWithBlocksAndConcepts>
 )
 
-data class ConceptWithSections(
-    @Embedded val concept: Concept,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
-        associateBy = Junction(
-            value = SectionConcept::class,
-            parentColumn = "conceptId",
-            entityColumn = "sectionId"
-        )
-    )
-    val sectionEntities: List<SectionEntity>
-)
-
-data class ConceptWithTags(
-    @Embedded val concept: Concept,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
-        associateBy = Junction(
-            value = ConceptTag::class,
-            parentColumn = "conceptId",
-            entityColumn = "tagId"
-        )
-    )
-    val tags: List<Tag>
-)
 
 data class SubjectWithUnits(
     @Embedded val subject: Subject,
@@ -141,7 +116,7 @@ data class QuestionWithConcepts(
             entityColumn = "conceptId"
         )
     )
-    val concepts: List<Concept>
+    val concepts: List<ConceptEntity>
 )
 
 data class ExamWithQuestions(
@@ -181,11 +156,4 @@ data class LessonWithProgress(
     val progress: UserProgress?
 )
 
-data class ConceptWithReview(
-    @Embedded val concept: Concept,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "conceptId"
-    )
-    val review: ConceptReview?
-)
+

@@ -1,7 +1,13 @@
 package com.zeros.basheer.data.repository
 
-import com.zeros.basheer.data.local.dao.*
 import com.zeros.basheer.data.models.*
+import com.zeros.basheer.feature.concept.domain.model.Concept
+import com.zeros.basheer.feature.concept.domain.model.ConceptReview
+import com.zeros.basheer.feature.concept.domain.model.Rating
+import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
+import com.zeros.basheer.feature.feed.data.dao.FeedItemDao
+import com.zeros.basheer.feature.feed.domain.model.FeedItem
+import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
@@ -23,10 +29,9 @@ class LessonRepository @Inject constructor(
     private val lessonDao: LessonDao,
     private val progressRepository: ProgressRepository,  // NEW - replaced ProgressDao
     private val subjectRepository: SubjectRepository,
-    private val conceptDao: ConceptDao,
-    private val conceptReviewDao: ConceptReviewDao,
-    private val feedItemDao: FeedItemDao,
-    private val streakRepository: StreakRepository
+    private val conceptRepository: ConceptRepository,
+    private val streakRepository: StreakRepository,
+    private val feedRepository: FeedRepository
 ) {
 
     // Subjects
@@ -65,7 +70,7 @@ class LessonRepository @Inject constructor(
         lessonDao.getLessonFullFlow(lessonId)
 
     suspend fun getConceptById(conceptId: String): Concept? =
-        conceptDao.getConceptById(conceptId)
+        conceptRepository.getConceptById(conceptId)
 
     // Progress
     fun getProgressByLesson(lessonId: String): Flow<UserProgress?> =
@@ -118,30 +123,30 @@ class LessonRepository @Inject constructor(
 
     // Concepts
     fun getConceptsBySubject(subjectId: String): Flow<List<Concept>> =
-        conceptDao.getConceptsBySubject(subjectId)
+        conceptRepository.getConceptsBySubject(subjectId)
 
     fun getConceptsByLesson(lessonId: String): Flow<List<Concept>> =
-        conceptDao.getConceptsByLesson(lessonId)
+        conceptRepository.getConceptsByLesson(lessonId)
 
     fun getNewConcepts(subjectId: String, limit: Int = 10): Flow<List<Concept>> =
-        conceptDao.getNewConcepts(subjectId, limit)
+        conceptRepository.getNewConcepts(subjectId, limit)
 
     // Concept Reviews
     fun getConceptsDueForReview(limit: Int = 20): Flow<List<ConceptReview>> =
-        conceptReviewDao.getConceptsDueForReview(limit = limit)
+        conceptRepository.getReviewsDueForReview(currentTime = System.currentTimeMillis(), limit = limit)
 
     suspend fun recordConceptReview(conceptId: String, rating: Rating) =
-        conceptReviewDao.recordReview(conceptId, rating)
+        conceptRepository.recordReview(conceptId, rating)
 
     // Feed Items
     fun getFeedItemsBySubject(subjectId: String): Flow<List<FeedItem>> =
-        feedItemDao.getFeedItemsBySubject(subjectId)
+        feedRepository.getFeedItemsBySubject(subjectId)
 
     fun getFeedItemsDueForReview(limit: Int = 20): Flow<List<FeedItem>> =
-        feedItemDao.getFeedItemsDueForReview(System.currentTimeMillis(), limit)
+        feedRepository.getFeedItemsDueForReview(System.currentTimeMillis(), limit)
 
     fun getRandomMiniQuizzes(subjectId: String, limit: Int = 5): Flow<List<FeedItem>> =
-        feedItemDao.getRandomMiniQuizzes(subjectId, limit)
+        feedRepository.getRandomMiniQuizzes(subjectId, limit)
 
     // ==================== Streak & Activity ====================
 
