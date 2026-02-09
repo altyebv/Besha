@@ -3,6 +3,7 @@ package com.zeros.basheer.data.models
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 
 /**
@@ -26,7 +27,7 @@ import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Concept::class,
+            entity = ConceptEntity::class,
             parentColumns = ["id"],
             childColumns = ["conceptId"],
             onDelete = ForeignKey.CASCADE
