@@ -3,15 +3,12 @@ package com.zeros.basheer.core.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.zeros.basheer.feature.feed.data.dao.ContentVariantDao
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
-import com.zeros.basheer.data.local.dao.ConceptDao
-import com.zeros.basheer.data.local.dao.ConceptReviewDao
-import com.zeros.basheer.data.local.dao.ConceptTagDao
-import com.zeros.basheer.data.local.dao.ContentVariantDao
 import com.zeros.basheer.feature.streak.data.dao.DailyActivityDao
 import com.zeros.basheer.data.local.dao.ExamDao
 import com.zeros.basheer.data.local.dao.ExamQuestionDao
-import com.zeros.basheer.data.local.dao.FeedItemDao
+import com.zeros.basheer.feature.feed.data.dao.FeedItemDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.data.local.dao.PracticeSessionDao
 import com.zeros.basheer.data.local.dao.QuestionConceptDao
@@ -23,15 +20,9 @@ import com.zeros.basheer.data.local.dao.SectionConceptDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionProgressDao
 import com.zeros.basheer.feature.subject.data.dao.SubjectDao
-import com.zeros.basheer.data.local.dao.TagDao
 import com.zeros.basheer.feature.subject.data.dao.UnitDao
-import com.zeros.basheer.data.models.Concept
-import com.zeros.basheer.data.models.ConceptReview
-import com.zeros.basheer.data.models.ConceptTag
-import com.zeros.basheer.data.models.ContentVariant
 import com.zeros.basheer.data.models.Exam
 import com.zeros.basheer.data.models.ExamQuestion
-import com.zeros.basheer.data.models.FeedItem
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.data.models.PracticeQuestion
 import com.zeros.basheer.data.models.PracticeSession
@@ -40,16 +31,25 @@ import com.zeros.basheer.data.models.QuestionConcept
 import com.zeros.basheer.data.models.QuestionResponse
 import com.zeros.basheer.data.models.QuestionStats
 import com.zeros.basheer.data.models.QuizAttempt
-import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.data.models.SectionConcept
+import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionProgressEntity
-import com.zeros.basheer.data.models.Tag
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.progress.data.dao.ProgressDao
 import com.zeros.basheer.feature.progress.data.entity.UserProgressEntity
 import com.zeros.basheer.feature.streak.data.entity.DailyActivityEntity
 import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
 import com.zeros.basheer.feature.subject.data.entity.UnitEntity
+import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
+import com.zeros.basheer.feature.concept.data.entity.ConceptReviewEntity
+import com.zeros.basheer.feature.concept.data.entity.ConceptTagEntity
+import com.zeros.basheer.feature.concept.data.dao.ConceptReviewDao
+import com.zeros.basheer.feature.concept.data.dao.ConceptDao
+import com.zeros.basheer.feature.concept.data.dao.ConceptTagDao
+import com.zeros.basheer.feature.concept.data.dao.TagDao
+import com.zeros.basheer.feature.concept.data.entity.TagEntity
+import com.zeros.basheer.feature.feed.data.entity.ContentVariantEntity
+import com.zeros.basheer.feature.feed.data.entity.FeedItemEntity
 
 @Database(
     entities = [
@@ -59,12 +59,12 @@ import com.zeros.basheer.feature.subject.data.entity.UnitEntity
         LessonEntity::class,
         SectionEntity::class,
         BlockEntity::class,
-        ContentVariant::class,
+        ContentVariantEntity::class,
 
         // Concepts & categorization
-        Concept::class,
-        Tag::class,
-        ConceptTag::class,
+        ConceptEntity::class,
+        TagEntity::class,
+        ConceptTagEntity::class,
         SectionConcept::class,
 
         // Quiz system
@@ -79,11 +79,11 @@ import com.zeros.basheer.feature.subject.data.entity.UnitEntity
         PracticeQuestion::class,
 
         // Feed
-        FeedItem::class,
+        FeedItemEntity::class,
 
         // Progress tracking
         UserProgressEntity::class,
-        ConceptReview::class,
+        ConceptReviewEntity::class,
         QuizAttempt::class,
         QuestionResponse::class,
         SectionProgressEntity::class,
