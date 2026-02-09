@@ -1,6 +1,7 @@
 package com.zeros.basheer.domain.model
 
-import com.zeros.basheer.data.models.ConceptType
+import com.zeros.basheer.feature.concept.domain.model.ConceptType
+
 
 /**
  * UI-ready concept detail for modal display.

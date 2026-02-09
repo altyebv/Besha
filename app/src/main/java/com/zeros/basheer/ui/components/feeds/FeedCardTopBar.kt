@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.zeros.basheer.data.models.FeedItemType
 import com.zeros.basheer.domain.model.toBadge
+import com.zeros.basheer.feature.feed.domain.model.FeedItemType
 
 /**
  * Top bar for feed cards showing subject name and card type.

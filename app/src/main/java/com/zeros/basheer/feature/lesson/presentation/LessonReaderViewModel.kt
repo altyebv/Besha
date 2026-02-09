@@ -3,12 +3,12 @@ package com.zeros.basheer.feature.lesson.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.data.models.Concept
 import com.zeros.basheer.feature.progress.domain.model.UserProgress
 import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.domain.mapper.LessonMapper
 import com.zeros.basheer.core.domain.model.Result
 import com.zeros.basheer.domain.model.LessonContent
+import com.zeros.basheer.feature.concept.domain.model.Concept
 //import com.zeros.basheer.feature.lesson.domain.model.LessonContent
 import com.zeros.basheer.feature.lesson.domain.usecase.GetLessonContentUseCase
 import com.zeros.basheer.feature.lesson.domain.usecase.MarkLessonCompleteUseCase
