@@ -4,7 +4,7 @@ package com.zeros.basheer.feature.concept.data.relations
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import com.zeros.basheer.data.models.SectionConcept
+import com.zeros.basheer.feature.practice.data.entity.SectionConcept
 import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
 import com.zeros.basheer.feature.concept.data.entity.ConceptReviewEntity
 import com.zeros.basheer.feature.concept.data.entity.ConceptTagEntity
