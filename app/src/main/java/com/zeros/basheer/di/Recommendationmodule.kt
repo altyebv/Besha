@@ -1,8 +1,10 @@
 package com.zeros.basheer.di
 
 import com.zeros.basheer.data.repository.LessonRepository
-import com.zeros.basheer.data.repository.QuizBankRepository
 import com.zeros.basheer.domain.recommendation.RecommendationEngine
+import com.zeros.basheer.domain.repository.ContentRepository
+import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository
+import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,12 +18,14 @@ object RecommendationModule {
     @Provides
     @Singleton
     fun provideRecommendationEngine(
-        lessonRepository: LessonRepository,
-        quizBankRepository: QuizBankRepository
+        contentRepository: ContentRepository,
+        quizBankRepository: QuizBankRepository,
+        practiceRepository: PracticeRepository
     ): RecommendationEngine {
         return RecommendationEngine(
-            lessonRepository = lessonRepository,
-            quizBankRepository = quizBankRepository
+            quizBankRepository = quizBankRepository,
+            contentRepository = contentRepository,
+            practiceRepository = practiceRepository
         )
     }
 }
