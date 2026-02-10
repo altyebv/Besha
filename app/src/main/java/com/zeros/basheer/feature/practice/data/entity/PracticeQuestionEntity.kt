@@ -1,25 +1,23 @@
-package com.zeros.basheer.data.models
+package com.zeros.basheer.feature.practice.data.entity
+
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.zeros.basheer.feature.quizbank.data.entity.QuestionEntity
 
-/**
- * Junction table linking PracticeSession to Questions.
- * Stores the questions in this session and student's responses.
- */
 @Entity(
     tableName = "practice_questions",
     primaryKeys = ["sessionId", "questionId"],
     foreignKeys = [
         ForeignKey(
-            entity = PracticeSession::class,
+            entity = PracticeSessionEntity::class,
             parentColumns = ["id"],
             childColumns = ["sessionId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Question::class,
+            entity = QuestionEntity::class,
             parentColumns = ["id"],
             childColumns = ["questionId"],
             onDelete = ForeignKey.CASCADE
@@ -30,17 +28,13 @@ import androidx.room.Index
         Index("questionId")
     ]
 )
-data class PracticeQuestion(
+data class PracticeQuestionEntity(
     val sessionId: Long,
     val questionId: String,
-    val order: Int,                          // Order in this session
-    
-    // Response (null if not answered yet)
+    val order: Int,
     val userAnswer: String? = null,
     val isCorrect: Boolean? = null,
     val timeSpentSeconds: Int? = null,
     val answeredAt: Long? = null,
-    
-    // State
     val skipped: Boolean = false
 )
