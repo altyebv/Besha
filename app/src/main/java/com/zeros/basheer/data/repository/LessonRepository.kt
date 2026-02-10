@@ -5,11 +5,8 @@ import com.zeros.basheer.feature.concept.domain.model.Concept
 import com.zeros.basheer.feature.concept.domain.model.ConceptReview
 import com.zeros.basheer.feature.concept.domain.model.Rating
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
-import com.zeros.basheer.feature.feed.data.dao.FeedItemDao
 import com.zeros.basheer.feature.feed.domain.model.FeedItem
 import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
-import com.zeros.basheer.feature.lesson.data.dao.LessonDao
-import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import com.zeros.basheer.feature.streak.domain.model.DailyActivity
@@ -26,7 +23,6 @@ import javax.inject.Singleton
 
 @Singleton
 class LessonRepository @Inject constructor(
-    private val lessonDao: LessonDao,
     private val progressRepository: ProgressRepository,  // NEW - replaced ProgressDao
     private val subjectRepository: SubjectRepository,
     private val conceptRepository: ConceptRepository,
@@ -51,23 +47,23 @@ class LessonRepository @Inject constructor(
         subjectRepository.getUnitById(id)
 
     // Lessons
-    fun getLessonsByUnit(unitId: String): Flow<List<LessonEntity>> =
-        lessonDao.getLessonsByUnit(unitId)
-
-    fun getLessonsBySubject(subjectId: String): Flow<List<LessonEntity>> =
-        lessonDao.getLessonsBySubject(subjectId)
-
-    suspend fun getLessonById(id: String): LessonEntity? =
-        lessonDao.getLessonById(id)
-
-    fun getLessonByIdFlow(id: String): Flow<LessonEntity?> =
-        lessonDao.getLessonByIdFlow(id)
-
-    suspend fun getLessonFull(lessonId: String): com.zeros.basheer.data.relations.LessonFull? =
-        lessonDao.getLessonFull(lessonId)
-
-    fun getLessonFullFlow(lessonId: String): Flow<com.zeros.basheer.data.relations.LessonFull?> =
-        lessonDao.getLessonFullFlow(lessonId)
+//    fun getLessonsByUnit(unitId: String): Flow<List<LessonEntity>> =
+//        lessonRepository.getLessonsByUnit(unitId)
+//
+//    fun getLessonsBySubject(subjectId: String): Flow<List<LessonEntity>> =
+//        lessonRepository.getLessonsBySubject(subjectId)
+//
+//     fun getLessonById(id: String): LessonEntity? =
+//        lessonRepository.getLessonById(id)
+//
+//    fun getLessonByIdFlow(id: String): Flow<LessonEntity?> =
+//        lessonRepository.getLessonByIdFlow(id)
+//
+//     fun getLessonFull(lessonId: String): com.zeros.basheer.data.relations.LessonFull? =
+//        lessonRepository.getLessonFull(lessonId)
+//
+//    fun getLessonFullFlow(lessonId: String): Flow<com.zeros.basheer.data.relations.LessonFull?> =
+//        lessonRepository.getLessonFullFlow(lessonId)
 
     suspend fun getConceptById(conceptId: String): Concept? =
         conceptRepository.getConceptById(conceptId)
@@ -96,30 +92,30 @@ class LessonRepository @Inject constructor(
     /**
      * Update lesson progress based on completed sections
      */
-    suspend fun updateLessonProgress(lessonId: String) {
-        val lessonFull = lessonDao.getLessonFull(lessonId)
-        val totalSections = lessonFull?.sections?.size ?: 1
-
-        val existing = progressRepository.getProgressByLessonOnce(lessonId) ?: return
-
-        val completedCount = existing.completedSections
-            .split(",")
-            .filter { it.isNotEmpty() }
-            .size
-
-        val calculatedProgress = if (totalSections > 0) {
-            completedCount.toFloat() / totalSections
-        } else {
-            0f
-        }
-
-        progressRepository.updateProgress(
-            existing.copy(
-                progress = calculatedProgress,
-                completed = calculatedProgress >= 1.0f
-            )
-        )
-    }
+//    suspend fun updateLessonProgress(lessonId: String) {
+//        val lessonFull = lessonRepository.getLessonFull(lessonId)
+//        val totalSections = lessonFull?.sections?.size ?: 1
+//
+//        val existing = progressRepository.getProgressByLessonOnce(lessonId) ?: return
+//
+//        val completedCount = existing.completedSections
+//            .split(",")
+//            .filter { it.isNotEmpty() }
+//            .size
+//
+//        val calculatedProgress = if (totalSections > 0) {
+//            completedCount.toFloat() / totalSections
+//        } else {
+//            0f
+//        }
+//
+//        progressRepository.updateProgress(
+//            existing.copy(
+//                progress = calculatedProgress,
+//                completed = calculatedProgress >= 1.0f
+//            )
+//        )
+//    }
 
     // Concepts
     fun getConceptsBySubject(subjectId: String): Flow<List<Concept>> =
