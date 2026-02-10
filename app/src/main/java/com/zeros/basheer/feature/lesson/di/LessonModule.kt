@@ -4,6 +4,7 @@ package com.zeros.basheer.feature.lesson.di
 import com.zeros.basheer.feature.lesson.data.dao.*
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepositoryImpl
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
+import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,13 +21,15 @@ object LessonModule {
         lessonDao: LessonDao,
         sectionDao: SectionDao,
         blockDao: BlockDao,
-        sectionProgressDao: SectionProgressDao
+        sectionProgressDao: SectionProgressDao,
+        subjectRepository:SubjectRepository
     ): LessonRepository {
         return LessonRepositoryImpl(
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,
-            sectionProgressDao = sectionProgressDao
+            sectionProgressDao = sectionProgressDao,
+            subjectRepository = subjectRepository
         )
     }
 }
