@@ -6,7 +6,6 @@ import com.zeros.basheer.feature.streak.domain.model.DailyActivity
 import com.zeros.basheer.domain.model.ScoredRecommendation
 import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.feature.streak.domain.model.StreakStatus
-import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.domain.recommendation.RecommendationEngine
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import com.zeros.basheer.feature.streak.domain.usecase.GetStreakStatusUseCase
@@ -52,8 +51,10 @@ data class MainScreenState(
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repository: LessonRepository,
     private val recommendationEngine: RecommendationEngine,
+    private val subjectRepository: com.zeros.basheer.feature.subject.domain.repository.SubjectRepository,
+    private val lessonRepository: com.zeros.basheer.feature.lesson.domain.repository.LessonRepository,
+    private val progressRepository: com.zeros.basheer.feature.progress.domain.repository.ProgressRepository,
     private val getStreakStatusUseCase: GetStreakStatusUseCase,
     private val streakRepository: StreakRepository
 ) : ViewModel() {
@@ -74,7 +75,7 @@ class MainViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
 
             // Collect all subjects
-            repository.getAllSubjects().collect { subjects ->
+            subjectRepository.getAllSubjects().collect { subjects ->
                 val subjectsWithProgress = mutableListOf<SubjectWithProgress>()
                 var totalLessons = 0
                 var totalCompleted = 0
@@ -82,14 +83,14 @@ class MainViewModel @Inject constructor(
                 // For each subject, calculate its progress
                 for (subject in subjects) {
                     // Get units
-                    val units = repository.getUnitsBySubject(subject.id).first()
+                    val units = subjectRepository.getUnitsBySubject(subject.id).first()
 
                     // Get lessons
-                    val lessons = repository.getLessonsBySubject(subject.id).first()
+                    val lessons = lessonRepository.getLessonsBySubject(subject.id).first()
                     totalLessons += lessons.size
 
                     // Get completed lessons
-                    val completedLessons = repository.getCompletedLessons().first()
+                    val completedLessons = progressRepository.getCompletedLessons().first()
 
                     // Count completed lessons for this subject
                     val completedCount = completedLessons.count { progress ->
@@ -98,7 +99,7 @@ class MainViewModel @Inject constructor(
                     totalCompleted += completedCount
 
                     // Find next lesson
-                    val recentLessons = repository.getRecentlyAccessedLessons(10).first()
+                    val recentLessons = progressRepository.getRecentlyAccessedLessons(10).first()
                     val nextLesson = recentLessons
                         .filter { progress -> lessons.any { it.id == progress.lessonId } }
                         .firstOrNull { progress -> !progress.completed }

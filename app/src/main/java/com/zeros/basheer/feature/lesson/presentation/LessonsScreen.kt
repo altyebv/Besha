@@ -16,8 +16,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
+import com.zeros.basheer.feature.lesson.domain.model.LessonDomain
 import com.zeros.basheer.feature.subject.domain.model.Units
-import com.zeros.basheer.ui.screens.lessons.LessonsViewModel
+import com.zeros.basheer.ui.viewmodels.LessonsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,7 +122,7 @@ private fun UnitHeader(
 
 @Composable
 private fun LessonCard(
-    lessonEntity: LessonEntity,
+    lessonEntity: LessonDomain,
     isCompleted: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier

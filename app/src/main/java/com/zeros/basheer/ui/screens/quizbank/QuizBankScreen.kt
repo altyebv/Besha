@@ -23,10 +23,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.zeros.basheer.data.models.*
-import com.zeros.basheer.data.repository.QuestionCounts
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
+import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
+import com.zeros.basheer.feature.practice.domain.model.PracticeSession
+import com.zeros.basheer.feature.quizbank.domain.model.Exam
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionCounts
 
 /**
  * Quiz Bank Screen - Main screen for accessing exams and practice modes

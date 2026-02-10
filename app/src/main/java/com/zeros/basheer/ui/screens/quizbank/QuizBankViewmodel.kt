@@ -2,54 +2,40 @@ package com.zeros.basheer.ui.screens.quizbank
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.data.models.*
-import com.zeros.basheer.data.repository.QuestionCounts
-import com.zeros.basheer.data.repository.QuizBankRepository
+import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
+import com.zeros.basheer.feature.practice.domain.model.PracticeSession
+import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository
+import com.zeros.basheer.feature.quizbank.domain.model.Exam
+import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionCounts
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
+import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * UI State for Quiz Bank Screen
- */
 data class QuizBankState(
-    // Exams by source
     val ministryExams: List<Exam> = emptyList(),
     val schoolExams: List<Exam> = emptyList(),
     val practiceExams: List<Exam> = emptyList(),
-
-    // Practice sessions
     val recentSessions: List<PracticeSession> = emptyList(),
     val activeSession: PracticeSession? = null,
-
-    // Question counts
     val questionCounts: QuestionCounts? = null,
-
-    // Stats
     val averageScore: Float? = null,
     val completedSessionCount: Int = 0,
-
-    // UI state
     val selectedTab: QuizBankTab = QuizBankTab.MINISTRY_EXAMS,
     val isLoading: Boolean = true,
     val error: String? = null
 )
 
-
-/**
- * Tabs for Quiz Bank Screen
- */
 enum class QuizBankTab {
-    MINISTRY_EXAMS,     // امتحانات الوزارة
-    SCHOOL_EXAMS,       // امتحانات المدارس
-    PRACTICE_MODES,     // أوضاع التدريب
-    HISTORY             // السجل
+    MINISTRY_EXAMS,
+    SCHOOL_EXAMS,
+    PRACTICE_MODES,
+    HISTORY
 }
 
-/**
- * Events from Quiz Bank Screen
- */
 sealed class QuizBankEvent {
     data class SelectTab(val tab: QuizBankTab) : QuizBankEvent()
     data class StartExam(val examId: String) : QuizBankEvent()
@@ -65,12 +51,12 @@ sealed class QuizBankEvent {
     object Refresh : QuizBankEvent()
 }
 
-
-
 @HiltViewModel
 class QuizBankViewModel @Inject constructor(
-    private val quizBankRepository: QuizBankRepository
+    private val quizBankRepository: QuizBankRepository,
+    private val practiceRepository: PracticeRepository  // ADD THIS
 ) : ViewModel() {
+
     sealed class NavigationEvent {
         data class NavigateToPractice(val sessionId: Long) : NavigationEvent()
     }
@@ -81,16 +67,12 @@ class QuizBankViewModel @Inject constructor(
     private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
-    // Current subject (for now, hardcoded to Geography)
     private val currentSubjectId = "geography"
 
     init {
         loadData()
     }
 
-    /**
-     * Handle UI events
-     */
     fun onEvent(event: QuizBankEvent) {
         when (event) {
             is QuizBankEvent.SelectTab -> {
@@ -118,59 +100,40 @@ class QuizBankViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Load all data for Quiz Bank
-     */
     private fun loadData() {
         _state.update { it.copy(isLoading = true, error = null) }
 
-        // Load ministry exams
+        // Load ministry exams - FIX SYNTAX ERROR
         viewModelScope.launch {
-            quizBankRepository.getExamsBySource(ExamSource.MINISTRY)
-                .catch { e ->
-                    _state.update { it.copy(error = e.message) }
-                }
-                .collect { exams ->
-                    _state.update { it.copy(ministryExams = exams) }
-                }
+            quizBankRepository.getExamsBySource(currentSubjectId, ExamSource.MINISTRY)
+                .catch { e -> _state.update { it.copy(error = e.message) } }
+                .collect { exams -> _state.update { it.copy(ministryExams = exams) } }
         }
 
-        // Load school exams
+        // Load school exams - FIX SYNTAX ERROR
         viewModelScope.launch {
-            quizBankRepository.getExamsBySource(ExamSource.SCHOOL)
-                .catch { e ->
-                    _state.update { it.copy(error = e.message) }
-                }
-                .collect { exams ->
-                    _state.update { it.copy(schoolExams = exams) }
-                }
+            quizBankRepository.getExamsBySource(currentSubjectId, ExamSource.SCHOOL)
+                .catch { e -> _state.update { it.copy(error = e.message) } }
+                .collect { exams -> _state.update { it.copy(schoolExams = exams) } }
         }
 
-        // Load practice exams
+        // Load practice exams - FIX SYNTAX ERROR
         viewModelScope.launch {
-            quizBankRepository.getExamsBySource(ExamSource.PRACTICE)
-                .catch { e ->
-                    _state.update { it.copy(error = e.message) }
-                }
-                .collect { exams ->
-                    _state.update { it.copy(practiceExams = exams) }
-                }
+            quizBankRepository.getExamsBySource(currentSubjectId, ExamSource.PRACTICE)
+                .catch { e -> _state.update { it.copy(error = e.message) } }
+                .collect { exams -> _state.update { it.copy(practiceExams = exams) } }
         }
 
-        // Load recent practice sessions
+        // Load recent practice sessions - USE PRACTICE REPOSITORY
         viewModelScope.launch {
-            quizBankRepository.getRecentSessions(10)
-                .catch { e ->
-                    _state.update { it.copy(error = e.message) }
-                }
-                .collect { sessions ->
-                    _state.update { it.copy(recentSessions = sessions) }
-                }
+            practiceRepository.getRecentCompletedSessions(10)
+                .catch { e -> _state.update { it.copy(error = e.message) } }
+                .collect { sessions -> _state.update { it.copy(recentSessions = sessions) } }
         }
 
-        // Load active session
+        // Load active session - USE PRACTICE REPOSITORY
         viewModelScope.launch {
-            val activeSession = quizBankRepository.getActiveSession()
+            val activeSession = practiceRepository.getActiveSession()
             _state.update { it.copy(activeSession = activeSession) }
         }
 
@@ -182,45 +145,29 @@ class QuizBankViewModel @Inject constructor(
 
         // Load stats
         viewModelScope.launch {
-            quizBankRepository.getAverageScoreForSubject(currentSubjectId)
-                .catch { e ->
-                    _state.update { it.copy(error = e.message) }
-                }
-                .collect { score ->
-                    _state.update { it.copy(averageScore = score, isLoading = false) }
-                }
+            practiceRepository.getAverageScore(currentSubjectId)
+                .catch { e -> _state.update { it.copy(error = e.message) } }
+                .collect { score -> _state.update { it.copy(averageScore = score, isLoading = false) } }
         }
 
         viewModelScope.launch {
-            quizBankRepository.getCompletedSessionCount(currentSubjectId)
-                .catch { e ->
-                    _state.update { it.copy(error = e.message) }
-                }
-                .collect { count ->
-                    _state.update { it.copy(completedSessionCount = count) }
-                }
+            practiceRepository.getCompletedSessionCount(currentSubjectId)
+                .catch { e -> _state.update { it.copy(error = e.message) } }
+                .collect { count -> _state.update { it.copy(completedSessionCount = count) } }
         }
     }
 
-    /**
-     * Start a full exam (not implemented yet - navigate to exam screen)
-     */
     private fun startExam(examId: String) {
-        // TODO: Navigate to exam screen
-        // For now, this is just a placeholder
         viewModelScope.launch {
             try {
                 val exam = quizBankRepository.getExamById(examId)
-                // Navigate to exam screen with exam data
+                // TODO: Navigate to exam screen
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
         }
     }
 
-    /**
-     * Start a new practice session
-     */
     private fun startPracticeSession(
         generationType: PracticeGenerationType,
         questionCount: Int = 20,
@@ -231,7 +178,7 @@ class QuizBankViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
-                val sessionId = quizBankRepository.createPracticeSession(
+                val sessionId = practiceRepository.createPracticeSession(
                     subjectId = currentSubjectId,
                     generationType = generationType,
                     questionCount = questionCount,
@@ -242,10 +189,7 @@ class QuizBankViewModel @Inject constructor(
                 )
                 _navigationEvent.emit(NavigationEvent.NavigateToPractice(sessionId))
 
-
-                // TODO: Navigate to practice session screen with sessionId
-                // Reload active session
-                val activeSession = quizBankRepository.getActiveSession()
+                val activeSession = practiceRepository.getActiveSession()
                 _state.update { it.copy(activeSession = activeSession) }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
@@ -253,15 +197,12 @@ class QuizBankViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Resume an existing practice session
-     */
     private fun resumeSession(sessionId: Long) {
         viewModelScope.launch {
             try {
-                val session = quizBankRepository.getSession(sessionId)
+                val session = practiceRepository.getSession(sessionId)
                 if (session != null) {
-                    // TODO: Navigate to practice session screen with sessionId
+                    _navigationEvent.emit(NavigationEvent.NavigateToPractice(sessionId))
                 }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
