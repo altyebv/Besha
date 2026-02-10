@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface LessonRepository {
     suspend fun getLessonById(id: String): Result<LessonDomain>
+    fun getLessonsBySubject(subjectId: String): Flow<List<LessonDomain>>
     suspend fun getLessonContent(lessonId: String): Result<LessonContent>
     fun getLessonsByUnit(unitId: String): Flow<List<LessonDomain>>
     suspend fun markLessonComplete(lessonId: String): Result<Unit>

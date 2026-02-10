@@ -2,16 +2,17 @@ package com.zeros.basheer.feature.lesson.domain.repository
 
 
 import com.zeros.basheer.core.domain.model.Result
-import com.zeros.basheer.domain.model.LessonContent
 import com.zeros.basheer.feature.lesson.data.dao.*
 import com.zeros.basheer.feature.lesson.data.entity.*
 import com.zeros.basheer.feature.lesson.domain.model.*
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
+import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class LessonRepositoryImpl @Inject constructor(
+    private val subjectRepository: SubjectRepository,
     private val lessonDao: LessonDao,
     private val sectionDao: SectionDao,
     private val blockDao: BlockDao,
@@ -29,6 +30,16 @@ class LessonRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.Error(e.message ?: "Unknown error", e)
         }
+    }
+
+//    override suspend fun getLessonsByUnit(UnitId: String): Flow<List<LessonDomain>>{
+//        return lessonDao.getLessonsByUnit(UnitId)
+//            .map { entities -> entities.map { it.toDomain() } }
+//    }
+
+    override fun getLessonsBySubject(subjectId: String): Flow<List<LessonDomain>> {
+        return lessonDao.getLessonsBySubject(subjectId)
+            .map { entities -> entities.map { it.toDomain() } }
     }
 
     override suspend fun getLessonContent(lessonId: String): Result<com.zeros.basheer.domain.model.LessonContent> {
