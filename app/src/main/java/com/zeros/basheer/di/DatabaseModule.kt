@@ -3,21 +3,18 @@ package com.zeros.basheer.di
 import android.content.Context
 import androidx.room.Room
 import com.zeros.basheer.core.data.local.AppDatabase
-import com.zeros.basheer.data.local.dao.*
 import com.zeros.basheer.data.repository.BasheerRepository
 import com.zeros.basheer.data.repository.DatabaseSeeder
-import com.zeros.basheer.feature.concept.data.dao.ConceptDao
 import com.zeros.basheer.feature.concept.data.dao.ConceptReviewDao
-import com.zeros.basheer.feature.concept.data.dao.ConceptTagDao
-import com.zeros.basheer.feature.concept.data.dao.TagDao
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
-import com.zeros.basheer.feature.feed.data.dao.ContentVariantDao
-import com.zeros.basheer.feature.feed.data.dao.FeedItemDao
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionProgressDao
+import com.zeros.basheer.feature.practice.data.dao.PracticeSessionDao
+import com.zeros.basheer.feature.practice.data.dao.SectionConceptDao
 import com.zeros.basheer.feature.progress.data.dao.ProgressDao
+import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -72,17 +69,9 @@ object DatabaseModule {
     fun provideSectionConceptDao(database: AppDatabase): SectionConceptDao = database.sectionConceptDao()
 
     // Quiz system DAOs
-    @Provides
-    fun provideQuestionDao(database: AppDatabase): QuestionDao = database.questionDao()
 
-    @Provides
-    fun provideQuestionConceptDao(database: AppDatabase): QuestionConceptDao = database.questionConceptDao()
 
-    @Provides
-    fun provideExamDao(database: AppDatabase): ExamDao = database.examDao()
 
-    @Provides
-    fun provideExamQuestionDao(database: AppDatabase): ExamQuestionDao = database.examQuestionDao()
 
     // Feed DAO
 //    @Provides
@@ -95,22 +84,18 @@ object DatabaseModule {
 //    @Provides
 //    fun provideConceptReviewDao(database: AppDatabase): ConceptReviewDao = database.conceptReviewDao()
 
-    @Provides
-    fun provideQuizAttemptDao(database: AppDatabase): QuizAttemptDao = database.quizAttemptDao()
 
-    @Provides
-    fun provideQuestionResponseDao(database: AppDatabase): QuestionResponseDao = database.questionResponseDao()
+
+
 
     @Provides
     fun provideSectionProgressDao(database: AppDatabase): SectionProgressDao = database.sectionProgressDao()
 
     // DailyActivityDao now provided by StreakModule - removed duplicate
 
-    @Provides
-    fun provideQuestionStatsDao(database: AppDatabase): QuestionStatsDao = database.questionStatsDao()
 
-    @Provides
-    fun providePracticeSessionDao(database: AppDatabase): PracticeSessionDao = database.practiceSessionDao()
+
+
 }
 
 @Module
@@ -124,34 +109,21 @@ object RepositoryModule {
         lessonDao: LessonDao,
         sectionDao: SectionDao,
         blockDao: BlockDao,
-        conceptDao: ConceptDao,
-        tagDao: TagDao,
-        conceptTagDao: ConceptTagDao,
-        sectionConceptDao: SectionConceptDao,
-        questionDao: QuestionDao,
-        questionConceptDao: QuestionConceptDao,
-        examDao: ExamDao,
-        examQuestionDao: ExamQuestionDao,
+        quizBankRepository: QuizBankRepository,
         progressDao: ProgressDao,
         conceptReviewDao: ConceptReviewDao,
-        quizAttemptDao: QuizAttemptDao,
-        questionResponseDao: QuestionResponseDao,
         conceptRepository: ConceptRepository
     ): BasheerRepository {
         return BasheerRepository(
             subjectRepository = subjectRepository,
+            quizBankRepository = quizBankRepository,
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,
             conceptRepository = conceptRepository,
-            questionDao = questionDao,
-            questionConceptDao = questionConceptDao,
-            examDao = examDao,
-            examQuestionDao = examQuestionDao,
             progressDao = progressDao,
             conceptReviewDao = conceptReviewDao,
-            quizAttemptDao = quizAttemptDao,
-            questionResponseDao = questionResponseDao
+
         )
     }
 
@@ -159,32 +131,24 @@ object RepositoryModule {
     @Singleton
     fun provideDatabaseSeeder(
         subjectRepository: com.zeros.basheer.feature.subject.domain.repository.SubjectRepository,
+        quizBankRepository: QuizBankRepository,
         lessonDao: LessonDao,
         sectionDao: SectionDao,
         blockDao: BlockDao,
         sectionConceptDao: SectionConceptDao,
-        questionDao: QuestionDao,
-        questionConceptDao: QuestionConceptDao,
-        examDao: ExamDao,
-        examQuestionDao: ExamQuestionDao,
         practiceSessionDao: PracticeSessionDao,
-        questionStatsDao: QuestionStatsDao,
         conceptRepository: ConceptRepository,
         feedRepository: com.zeros.basheer.feature.feed.domain.repository.FeedRepository
     ): DatabaseSeeder {
         return DatabaseSeeder(
             subjectRepository = subjectRepository,
             conceptRepository = conceptRepository,
+            quizBankRepository = quizBankRepository,
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,
             sectionConceptDao = sectionConceptDao,
-            questionDao = questionDao,
-            questionConceptDao = questionConceptDao,
-            examDao = examDao,
-            examQuestionDao = examQuestionDao,
             practiceSessionDao = practiceSessionDao,
-            questionStatsDao = questionStatsDao,
             feedRepository = feedRepository
         )
     }
