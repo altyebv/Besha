@@ -1,4 +1,4 @@
-package com.zeros.basheer.data.models
+package com.zeros.basheer.feature.practice.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -8,10 +8,10 @@ import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 
 /**
  * Junction table linking Sections to Concepts.
- * 
+ *
  * This tracks which concepts are TAUGHT in which sections.
  * Different from Block.conceptRef which tracks which block DEFINES a concept.
- * 
+ *
  * Example:
  * - Section "مقدمة في الإحداثيات" teaches concepts: latitude, longitude, equator
  * - The HIGHLIGHT_BOX block that defines latitude has conceptRef = "latitude"
@@ -24,13 +24,13 @@ import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
             entity = SectionEntity::class,
             parentColumns = ["id"],
             childColumns = ["sectionId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.Companion.CASCADE
         ),
         ForeignKey(
             entity = ConceptEntity::class,
             parentColumns = ["id"],
             childColumns = ["conceptId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.Companion.CASCADE
         )
     ],
     indices = [
