@@ -14,8 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.zeros.basheer.data.models.PracticeSession
-import com.zeros.basheer.data.models.PracticeGenerationType
+import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
+import com.zeros.basheer.feature.practice.domain.model.PracticeSession
 
 /**
  * Session Result Screen - Shows final results after completing practice
