@@ -197,14 +197,8 @@ class LessonReaderViewModel @Inject constructor(
     fun markAsCompleted() {
         viewModelScope.launch {
             saveReadingTime()
-            repository.markLessonCompleted(lessonId)
-
-            // Update progress percentage
-            repository.updateLessonProgress(lessonId)
-
-            // Record for streak tracking
-            repository.recordLessonCompleted()
-            repository.recordTimeSpent(_state.value.readingTimeSeconds)
+            markLessonCompleteUseCase(lessonId)
+            // Progress and streak tracking handled by the use case
         }
     }
 
