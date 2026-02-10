@@ -14,14 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.zeros.basheer.data.models.QuestionType
 import com.zeros.basheer.domain.model.CardInteractionState
 import com.zeros.basheer.domain.model.FeedCard
 import com.zeros.basheer.ui.components.feeds.McqCard
 import com.zeros.basheer.ui.components.feeds.TrueFalseCard
-import com.zeros.basheer.data.models.Question
 import com.zeros.basheer.feature.feed.domain.model.FeedItemType
 import com.zeros.basheer.feature.feed.domain.model.InteractionType
+import com.zeros.basheer.feature.quizbank.domain.model.Question
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 
 /**
  * Practice Session Screen - Answer questions one by one
