@@ -2,32 +2,15 @@ package com.zeros.basheer.data.repository
 
 import android.content.Context
 import com.google.gson.Gson
-import com.zeros.basheer.data.local.dao.ExamDao
-import com.zeros.basheer.data.local.dao.ExamQuestionDao
-import com.zeros.basheer.feature.feed.data.dao.FeedItemDao
-import com.zeros.basheer.data.local.dao.PracticeSessionDao
-import com.zeros.basheer.data.local.dao.QuestionConceptDao
-import com.zeros.basheer.data.local.dao.QuestionDao
-import com.zeros.basheer.data.local.dao.QuestionStatsDao
-import com.zeros.basheer.data.local.dao.SectionConceptDao
+import com.zeros.basheer.feature.practice.data.dao.PracticeSessionDao
+import com.zeros.basheer.feature.practice.data.dao.SectionConceptDao
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
-import com.zeros.basheer.data.models.QuestionStats
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockType
-import com.zeros.basheer.data.models.CognitiveLevel
-import com.zeros.basheer.data.models.Exam
-import com.zeros.basheer.data.models.ExamQuestion
-import com.zeros.basheer.data.models.ExamSource
 
-import com.zeros.basheer.data.models.PracticeGenerationType
-import com.zeros.basheer.data.models.PracticeSession
-import com.zeros.basheer.data.models.PracticeSessionStatus
-import com.zeros.basheer.data.models.Question
-import com.zeros.basheer.data.models.QuestionConcept
-import com.zeros.basheer.data.models.QuestionSource
-import com.zeros.basheer.data.models.QuestionType
-import com.zeros.basheer.data.models.SectionConcept
+
+import com.zeros.basheer.feature.practice.data.entity.SectionConcept
 import com.zeros.basheer.feature.concept.domain.model.Concept
 import com.zeros.basheer.feature.concept.domain.model.ConceptTag
 import com.zeros.basheer.feature.concept.domain.model.ConceptType
@@ -40,9 +23,13 @@ import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionDao
+import com.zeros.basheer.feature.practice.data.entity.PracticeSessionEntity
+import com.zeros.basheer.feature.quizbank.domain.model.ExamQuestion
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
+import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
+import com.zeros.basheer.feature.quizbank.domain.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -58,17 +45,13 @@ Unified seeder that handles both lesson content AND quiz bank data.
 class DatabaseSeeder @Inject constructor(
     private val subjectRepository: SubjectRepository,
     private val feedRepository: FeedRepository,
+    private val quizBankRepository: QuizBankRepository,
     private val lessonDao: LessonDao,
     private val sectionDao: SectionDao,
     private val blockDao: BlockDao,
     private val conceptRepository: ConceptRepository,
     private val sectionConceptDao: SectionConceptDao,
-    private val questionDao: QuestionDao,
-    private val questionConceptDao: QuestionConceptDao,
-    private val examDao: ExamDao,
-    private val examQuestionDao: ExamQuestionDao,
     private val practiceSessionDao: PracticeSessionDao,
-    private val questionStatsDao: QuestionStatsDao
 ) {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -146,9 +129,9 @@ class DatabaseSeeder @Inject constructor(
 
         // 5. Insert questions and their concept links
         data.questions.forEach { question ->
-            questionDao.insertQuestion(question.toEntity(data.subject.id))
+            quizBankRepository.insertQuestion(question.toEntity(data.subject.id))
             question.conceptIds.forEachIndexed { index, conceptId ->
-                questionConceptDao.insert(
+                quizBankRepository.insertQuestionConcept(
                     QuestionConcept(
                         questionId = question.id,
                         conceptId = conceptId,
@@ -160,13 +143,15 @@ class DatabaseSeeder @Inject constructor(
 
         // 6. Insert exams and their question links
         data.exams.forEach { exam ->
-            examDao.insertExam(exam.toEntity(data.subject.id))
+            quizBankRepository.insertExam(exam.toEntity(data.subject.id))
             exam.questionIds.forEachIndexed { index, questionId ->
-                examQuestionDao.insert(
+                quizBankRepository.insertExamQuestion(
                     ExamQuestion(
                         examId = exam.id,
                         questionId = questionId,
-                        order = index + 1
+                        order = index + 1,
+                        sectionLabel = null,
+                        points = null
                     )
                 )
             }
@@ -237,7 +222,7 @@ class DatabaseSeeder @Inject constructor(
 
         // Exams
         mockData.exams.forEach { exam ->
-            examDao.insertExam(
+            quizBankRepository.insertExam(
                 Exam(
                     id = exam.id,
                     subjectId = exam.subjectId,
@@ -255,7 +240,7 @@ class DatabaseSeeder @Inject constructor(
 
         // Questions
         mockData.questions.forEach { question ->
-            questionDao.insertQuestion(
+            quizBankRepository.insertQuestion(
                 Question(
                     id = question.id,
                     subjectId = question.subjectId,
@@ -277,7 +262,9 @@ class DatabaseSeeder @Inject constructor(
                     cognitiveLevel = CognitiveLevel.valueOf(question.cognitiveLevel),
                     points = question.points,
                     estimatedSeconds = question.estimatedSeconds,
-                    feedEligible = question.feedEligible
+                    feedEligible = question.feedEligible,
+
+
                 )
             )
         }
@@ -285,12 +272,12 @@ class DatabaseSeeder @Inject constructor(
         // Link questions to exams
         mockData.questions.forEachIndexed { index, question ->
             if (question.sourceExamId != null) {
-                examQuestionDao.insert(
+                quizBankRepository.insertExamQuestion(
                     ExamQuestion(
                         examId = question.sourceExamId,
                         questionId = question.id,
                         order = index + 1,
-                        points = question.points
+                        points = question.points,
                     )
                 )
             }
@@ -299,10 +286,10 @@ class DatabaseSeeder @Inject constructor(
         // Practice sessions
         mockData.practiceSessions.forEach { session ->
             practiceSessionDao.insertSession(
-                PracticeSession(
+                PracticeSessionEntity(
                     id = session.id,
                     subjectId = session.subjectId,
-                    generationType = PracticeGenerationType.valueOf(session.generationType),
+                    generationType = session.generationType,
                     filterUnitIds = session.filterUnitIds,
                     filterLessonIds = session.filterLessonIds,
                     filterConceptIds = session.filterConceptIds,
@@ -312,8 +299,7 @@ class DatabaseSeeder @Inject constructor(
                     questionCount = session.questionCount,
                     timeLimitSeconds = session.timeLimitSeconds,
                     shuffled = session.shuffled,
-                    difficultyDistribution = session.difficultyDistribution,
-                    status = PracticeSessionStatus.valueOf(session.status),
+                    status = session.status,
                     currentQuestionIndex = session.currentQuestionIndex,
                     correctCount = session.correctCount,
                     wrongCount = session.wrongCount,
@@ -328,7 +314,7 @@ class DatabaseSeeder @Inject constructor(
 
         // Question stats
         mockData.questionStats.forEach { stats ->
-            questionStatsDao.upsertStats(
+            quizBankRepository.insertStats(
                 QuestionStats(
                     questionId = stats.questionId,
                     timesAsked = stats.timesAsked,
@@ -506,7 +492,19 @@ data class QuestionJson(
     val difficulty: Int = 1,
     val points: Int = 1,
     val conceptIds: List<String> = emptyList(),
-    val unitId: String? = null
+    val estimatedSeconds: Int,
+    val cognitiveLevel: CognitiveLevel,
+    val unitId: String? = null,
+    val lessonId: String? = null,
+    val source: String? = null,
+    val sourceExamId: String? = null,
+    val sourceDetails: String? = null,
+    val sourceYear: Int? = null,
+    val feedEligible: Boolean = false,
+    val extraData: String? = null,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+
 ) {
     fun toEntity(subjectId: String) = Question(
         id = id,
@@ -521,7 +519,18 @@ data class QuestionJson(
         imageUrl = imageUrl,
         tableData = tableData,
         difficulty = difficulty,
-        points = points
+        points = points,
+        lessonId = lessonId,
+        source = QuestionSource.valueOf(source.toString()),
+        sourceExamId = sourceExamId,
+        sourceDetails = sourceDetails,
+        sourceYear = sourceYear,
+        feedEligible = feedEligible,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        estimatedSeconds = estimatedSeconds,
+        cognitiveLevel = cognitiveLevel
+
     )
 }
 
@@ -535,7 +544,8 @@ data class ExamJson(
     val schoolName: String? = null,
     val duration: Int? = null,
     val totalPoints: Int? = null,
-    val questionIds: List<String> = emptyList()
+    val questionIds: List<String> = emptyList(),
+    val description: String?
 ) {
     fun toEntity(subjectId: String) = Exam(
         id = id,
@@ -546,7 +556,8 @@ data class ExamJson(
         year = year,
         schoolName = schoolName,
         duration = duration,
-        totalPoints = totalPoints
+        totalPoints = totalPoints,
+        description = description
     )
 }
 
