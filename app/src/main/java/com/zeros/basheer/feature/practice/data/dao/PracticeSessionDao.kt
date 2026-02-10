@@ -1,10 +1,11 @@
-package com.zeros.basheer.data.local.dao
+package com.zeros.basheer.feature.practice.data.dao
 
 import androidx.room.*
-import com.zeros.basheer.data.models.PracticeGenerationType
-import com.zeros.basheer.data.models.PracticeQuestion
-import com.zeros.basheer.data.models.PracticeSession
-import com.zeros.basheer.data.models.PracticeSessionStatus
+import com.zeros.basheer.feature.practice.data.entity.PracticeQuestionEntity
+import com.zeros.basheer.feature.practice.data.entity.PracticeSessionEntity
+import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
+import com.zeros.basheer.feature.practice.domain.model.PracticeQuestion
+import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -13,10 +14,10 @@ interface PracticeSessionDao {
     // ==================== Session Queries ====================
     
     @Query("SELECT * FROM practice_sessions WHERE id = :sessionId")
-    suspend fun getSession(sessionId: Long): PracticeSession?
+    suspend fun getSession(sessionId: Long): PracticeSessionEntity?
     
     @Query("SELECT * FROM practice_sessions WHERE id = :sessionId")
-    fun getSessionFlow(sessionId: Long): Flow<PracticeSession?>
+    fun getSessionFlow(sessionId: Long): Flow<PracticeSessionEntity?>
 
     @Query("Delete FROM practice_sessions")
     suspend fun deleteAll()
@@ -26,14 +27,14 @@ interface PracticeSessionDao {
         WHERE subjectId = :subjectId 
         ORDER BY startedAt DESC
     """)
-    fun getSessionsBySubject(subjectId: String): Flow<List<PracticeSession>>
+    fun getSessionsBySubject(subjectId: String): Flow<List<PracticeSessionEntity>>
     
     @Query("""
         SELECT * FROM practice_sessions 
         WHERE status = :status
         ORDER BY startedAt DESC
     """)
-    fun getSessionsByStatus(status: PracticeSessionStatus): Flow<List<PracticeSession>>
+    fun getSessionsByStatus(status: PracticeSessionStatus): Flow<List<PracticeSessionEntity>>
     
     @Query("""
         SELECT * FROM practice_sessions 
@@ -41,7 +42,7 @@ interface PracticeSessionDao {
         ORDER BY startedAt DESC
         LIMIT 1
     """)
-    suspend fun getActiveSession(): PracticeSession?
+    suspend fun getActiveSession(): PracticeSessionEntity?
     
     @Query("""
         SELECT * FROM practice_sessions 
@@ -49,14 +50,14 @@ interface PracticeSessionDao {
         ORDER BY startedAt DESC
         LIMIT :limit
     """)
-    fun getRecentCompletedSessions(limit: Int = 10): Flow<List<PracticeSession>>
+    fun getRecentCompletedSessions(limit: Int = 10): Flow<List<PracticeSessionEntity>>
     
     @Query("""
         SELECT * FROM practice_sessions 
         WHERE generationType = :type
         ORDER BY startedAt DESC
     """)
-    fun getSessionsByType(type: PracticeGenerationType): Flow<List<PracticeSession>>
+    fun getSessionsByType(type: PracticeGenerationType): Flow<List<PracticeSessionEntity>>
     
     @Query("""
         SELECT AVG(score) FROM practice_sessions 
@@ -76,10 +77,10 @@ interface PracticeSessionDao {
     // ==================== Session Mutations ====================
     
     @Insert
-    suspend fun insertSession(session: PracticeSession): Long
+    suspend fun insertSession(session: PracticeSessionEntity): Long
     
     @Update
-    suspend fun updateSession(session: PracticeSession)
+    suspend fun updateSession(session: PracticeSessionEntity)
     
     @Query("DELETE FROM practice_sessions WHERE id = :sessionId")
     suspend fun deleteSession(sessionId: Long)
@@ -130,20 +131,20 @@ interface PracticeSessionDao {
         WHERE sessionId = :sessionId 
         ORDER BY `order`
     """)
-    suspend fun getQuestionsForSession(sessionId: Long): List<PracticeQuestion>
+    suspend fun getQuestionsForSession(sessionId: Long): List<PracticeQuestionEntity>
     
     @Query("""
         SELECT * FROM practice_questions 
         WHERE sessionId = :sessionId 
         ORDER BY `order`
     """)
-    fun getQuestionsForSessionFlow(sessionId: Long): Flow<List<PracticeQuestion>>
+    fun getQuestionsForSessionFlow(sessionId: Long): Flow<List<PracticeQuestionEntity>>
     
     @Query("""
         SELECT * FROM practice_questions 
         WHERE sessionId = :sessionId AND `order` = :order
     """)
-    suspend fun getQuestionAtIndex(sessionId: Long, order: Int): PracticeQuestion?
+    suspend fun getQuestionAtIndex(sessionId: Long, order: Int): PracticeQuestionEntity?
     
     @Query("""
         SELECT * FROM practice_questions 
@@ -151,7 +152,7 @@ interface PracticeSessionDao {
         ORDER BY `order`
         LIMIT 1
     """)
-    suspend fun getNextUnansweredQuestion(sessionId: Long): PracticeQuestion?
+    suspend fun getNextUnansweredQuestion(sessionId: Long): PracticeQuestionEntity?
     
     @Query("""
         SELECT COUNT(*) FROM practice_questions 
@@ -160,13 +161,13 @@ interface PracticeSessionDao {
     suspend fun getAnsweredCount(sessionId: Long): Int
     
     @Insert
-    suspend fun insertPracticeQuestion(question: PracticeQuestion)
+    suspend fun insertPracticeQuestion(question: PracticeQuestionEntity)
     
     @Insert
-    suspend fun insertPracticeQuestions(questions: List<PracticeQuestion>)
+    suspend fun insertPracticeQuestions(questions: List<PracticeQuestionEntity>)
     
     @Update
-    suspend fun updatePracticeQuestion(question: PracticeQuestion)
+    suspend fun updatePracticeQuestion(question: PracticeQuestionEntity)
     
     @Query("""
         UPDATE practice_questions 
@@ -212,7 +213,7 @@ interface PracticeSessionDao {
         
         updateSession(
             session.copy(
-                status = PracticeSessionStatus.COMPLETED,
+                status = PracticeSessionStatus.COMPLETED.toString(),
                 completedAt = System.currentTimeMillis(),
                 correctCount = correct,
                 wrongCount = questions.count { it.isCorrect == false },
@@ -228,13 +229,13 @@ interface PracticeSessionDao {
      */
     @Transaction
     suspend fun createSessionWithQuestions(
-        session: PracticeSession,
+        session: PracticeSessionEntity,
         questionIds: List<String>
     ): Long {
         val sessionId = insertSession(session)
         
         val practiceQuestions = questionIds.mapIndexed { index, questionId ->
-            PracticeQuestion(
+            PracticeQuestionEntity(
                 sessionId = sessionId,
                 questionId = questionId,
                 order = index
