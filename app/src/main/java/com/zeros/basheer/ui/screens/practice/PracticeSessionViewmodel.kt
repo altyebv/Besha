@@ -3,9 +3,13 @@ package com.zeros.basheer.ui.screens.practice
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.data.models.*
-import com.zeros.basheer.data.repository.QuizBankRepository
 import com.zeros.basheer.domain.model.CardInteractionState
+import com.zeros.basheer.feature.practice.domain.model.PracticeSession
+import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
+import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository
+import com.zeros.basheer.feature.quizbank.domain.model.Question
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
+import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -52,6 +56,7 @@ sealed class PracticeSessionEvent {
 @HiltViewModel
 class PracticeSessionViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
+    private val practiceRepository: PracticeRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -84,13 +89,13 @@ class PracticeSessionViewModel @Inject constructor(
     private fun loadSession() {
         viewModelScope.launch {
             try {
-                val session = quizBankRepository.getSession(sessionId)
+                val session = practiceRepository.getSession(sessionId)
                 if (session == null) {
                     _state.update { it.copy(error = "Session not found", isLoading = false) }
                     return@launch
                 }
 
-                val sessionQuestions = quizBankRepository.getSessionQuestions(sessionId)
+                val sessionQuestions = practiceRepository.getQuestionsForSession(sessionId)
                 val questionIds = sessionQuestions.map { it.questionId }
 
                 // Load actual questions
@@ -142,7 +147,7 @@ class PracticeSessionViewModel @Inject constructor(
         // Record answer in database
         viewModelScope.launch {
             try {
-                quizBankRepository.recordPracticeAnswer(
+                practiceRepository.recordAnswer(
                     sessionId = sessionId,
                     questionId = currentQuestion.id,
                     answer = answer,
@@ -193,7 +198,7 @@ class PracticeSessionViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                quizBankRepository.skipQuestion(sessionId, currentQuestion.id)
+                practiceRepository.skipQuestion(sessionId, currentQuestion.id)
 
                 _state.update {
                     it.copy(skippedCount = it.skippedCount + 1)
@@ -212,7 +217,7 @@ class PracticeSessionViewModel @Inject constructor(
     private fun completeSession() {
         viewModelScope.launch {
             try {
-                quizBankRepository.completePracticeSession(sessionId)
+                practiceRepository.completeSession(sessionId)
 
                 _state.update {
                     it.copy(isComplete = true)
@@ -251,7 +256,7 @@ class PracticeSessionViewModel @Inject constructor(
                 }
 
             // Create new session
-            val newSessionId = quizBankRepository.createPracticeSession(
+            val newSessionId = practiceRepository.createPracticeSession(
                 subjectId = session.subjectId,
                 generationType = session.generationType,
                 questionCount = session.questionCount,
