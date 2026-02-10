@@ -1,8 +1,8 @@
-package com.zeros.basheer.data.local.dao
+package com.zeros.basheer.feature.practice.data.dao
 
 import androidx.room.*
-import com.zeros.basheer.data.models.SectionConcept
 import kotlinx.coroutines.flow.Flow
+import com.zeros.basheer.feature.practice.data.entity.SectionConcept
 
 @Dao
 interface SectionConceptDao {
