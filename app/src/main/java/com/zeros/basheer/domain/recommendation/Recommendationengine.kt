@@ -1,9 +1,8 @@
 package com.zeros.basheer.domain.recommendation
 
-import com.zeros.basheer.data.models.*
-import com.zeros.basheer.data.repository.LessonRepository
-import com.zeros.basheer.data.repository.QuizBankRepository
+import com.zeros.basheer.domain.repository.ContentRepository
 import com.zeros.basheer.domain.model.*
+import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -39,8 +38,9 @@ data class RecommendationConfig(
  */
 @Singleton
 class RecommendationEngine @Inject constructor(
-    private val lessonRepository: LessonRepository,
+    private val contentRepository: ContentRepository,
     private val quizBankRepository: QuizBankRepository,
+    private val practiceRepository: com.zeros.basheer.feature.practice.domain.repository.PracticeRepository,
     private val config: RecommendationConfig = RecommendationConfig()
 ) {
 
@@ -48,7 +48,7 @@ class RecommendationEngine @Inject constructor(
      * Generate top recommendations across all subjects
      */
     suspend fun getTopRecommendations(limit: Int = 3): List<ScoredRecommendation> {
-        val subjects = lessonRepository.getAllSubjects().first()
+        val subjects = contentRepository.getAllSubjects().first()
         val allRecommendations = mutableListOf<ScoredRecommendation>()
 
         // Get current time context
@@ -110,21 +110,21 @@ class RecommendationEngine @Inject constructor(
      * Build subject context from data
      */
     private suspend fun buildSubjectContext(subjectId: String): SubjectContext {
-        val lessons = lessonRepository.getLessonsBySubject(subjectId).first()
-        val completedLessons = lessonRepository.getCompletedLessons().first()
+        val lessons = contentRepository.getLessonsBySubject(subjectId).first()
+        val completedLessons = contentRepository.getCompletedLessons().first()
         val completedCount = completedLessons.count { progress ->
             lessons.any { it.id == progress.lessonId }
         }
 
         // Get quiz performance
         val questionCounts = quizBankRepository.getQuestionCounts(subjectId)
-        val avgScore = quizBankRepository.getAverageScoreForSubject(subjectId).first()
+        val avgScore = practiceRepository.getAverageScore(subjectId).first()
 
         // Get weak concepts
         val weakConcepts = getWeakConcepts(subjectId)
 
         // Get recency data
-        val recentLessons = lessonRepository.getRecentlyAccessedLessons(1).first()
+        val recentLessons = contentRepository.getRecentlyAccessedLessons(1).first()
         val lastStudied = recentLessons.firstOrNull()?.lastAccessedAt
 
         // Count today's sessions
@@ -134,12 +134,12 @@ class RecommendationEngine @Inject constructor(
             set(java.util.Calendar.SECOND, 0)
         }.timeInMillis
 
-        val sessionsToday = lessonRepository.getRecentlyAccessedLessons(50).first()
+        val sessionsToday = contentRepository.getRecentlyAccessedLessons(50).first()
             .count { it.lastAccessedAt >= todayStart }
 
         return SubjectContext(
             subjectId = subjectId,
-            subjectName = lessonRepository.getSubjectById(subjectId)?.nameAr ?: "",
+            subjectName = contentRepository.getSubjectNameAr(subjectId),
             lessonsCompleted = completedCount,
             totalLessons = lessons.size,
             percentComplete = if (lessons.isNotEmpty()) completedCount.toFloat() / lessons.size else 0f,
@@ -169,15 +169,15 @@ class RecommendationEngine @Inject constructor(
         context: SubjectContext
     ): ScoredRecommendation? {
         // Find most recently accessed incomplete lesson
-        val recentLessons = lessonRepository.getRecentlyAccessedLessons(5).first()
-        val completedLessonIds = lessonRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
+        val recentLessons = contentRepository.getRecentlyAccessedLessons(5).first()
+        val completedLessonIds = contentRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
 
         val inProgressLesson = recentLessons
             .firstOrNull { !completedLessonIds.contains(it.lessonId) }
             ?: return null
 
-        val lesson = lessonRepository.getLessonById(inProgressLesson.lessonId) ?: return null
-        val unit = lessonRepository.getUnitById(lesson.unitId) ?: return null
+        val lesson = contentRepository.getLessonById(inProgressLesson.lessonId) ?: return null
+        val unit = contentRepository.getUnitById(lesson.unitId) ?: return null
 
         val recommendation = Recommendation.ContinueLesson(
             lessonId = lesson.id,
@@ -236,11 +236,11 @@ class RecommendationEngine @Inject constructor(
         context: SubjectContext
     ): ScoredRecommendation? {
         // Find units that are 80%+ complete
-        val units = lessonRepository.getUnitsBySubject(subject.id).first()
+        val units = contentRepository.getUnitsBySubject(subject.id).first()
 
         for (unit in units) {
-            val lessons = lessonRepository.getLessonsByUnit(unit.id).first()
-            val completedLessons = lessonRepository.getCompletedLessons().first()
+            val lessons = contentRepository.getLessonsByUnit(unit.id).first()
+            val completedLessons = contentRepository.getCompletedLessons().first()
             val completedCount = completedLessons.count { progress ->
                 lessons.any { it.id == progress.lessonId }
             }
@@ -298,11 +298,11 @@ class RecommendationEngine @Inject constructor(
         context: SubjectContext
     ): ScoredRecommendation? {
         // Find first incomplete unit
-        val units = lessonRepository.getUnitsBySubject(subject.id).first()
-        val completedLessons = lessonRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
+        val units = contentRepository.getUnitsBySubject(subject.id).first()
+        val completedLessons = contentRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
 
         for (unit in units) {
-            val lessons = lessonRepository.getLessonsByUnit(unit.id).first()
+            val lessons = contentRepository.getLessonsByUnit(unit.id).first()
             val hasIncomplete = lessons.any { !completedLessons.contains(it.id) }
 
             if (hasIncomplete) {
