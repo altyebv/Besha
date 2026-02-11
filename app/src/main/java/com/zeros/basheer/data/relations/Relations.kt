@@ -11,6 +11,7 @@ import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.feature.practice.data.entity.SectionConcept
 import com.zeros.basheer.feature.progress.domain.model.UserProgress
 import com.zeros.basheer.feature.quizbank.data.entity.ExamEntity
+import com.zeros.basheer.feature.quizbank.data.entity.QuestionConceptEntity
 import com.zeros.basheer.feature.quizbank.data.entity.QuestionEntity
 import com.zeros.basheer.feature.quizbank.domain.model.Question
 import com.zeros.basheer.feature.subject.data.entity.UnitEntity
@@ -115,7 +116,7 @@ data class QuestionWithConcepts(
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            value = QuestionConcept::class,
+            value = QuestionConceptEntity::class,
             parentColumn = "questionId",
             entityColumn = "conceptId"
         )
@@ -123,29 +124,9 @@ data class QuestionWithConcepts(
     val concepts: List<ConceptEntity>
 )
 
-data class ExamWithQuestions(
-    @Embedded val exam: ExamEntity,
-    @Relation(
-        entity = Question::class,
-        parentColumn = "id",
-        entityColumn = "id",
-        associateBy = Junction(
-            value = ExamQuestion::class,
-            parentColumn = "examId",
-            entityColumn = "questionId"
-        )
-    )
-    val questions: List<Question>
-)
 
-data class QuizAttemptWithResponses(
-    @Embedded val attempt: QuizAttempt,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "attemptId"
-    )
-    val responses: List<QuestionResponse>
-)
+
+
 
 // ============================================
 // PROGRESS RELATIONS
