@@ -1,4 +1,4 @@
-package com.zeros.basheer.data.repository
+package com.zeros.basheer.core.data
 
 import android.content.Context
 import com.google.gson.Gson
@@ -30,6 +30,7 @@ import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import com.zeros.basheer.feature.quizbank.domain.model.*
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -196,7 +197,7 @@ class DatabaseSeeder @Inject constructor(
                         id = subject.id,
                         nameAr = subject.nameAr,
                         nameEn = subject.nameEn,
-                        path = com.zeros.basheer.feature.subject.data.entity.StudentPath.LITERARY
+                        path = StudentPath.LITERARY
                     )
                 )
             } catch (e: Exception) {
@@ -359,7 +360,7 @@ data class SubjectJson(
         id = id,
         nameAr = nameAr,
         nameEn = nameEn,
-        path = com.zeros.basheer.feature.subject.data.entity.StudentPath.valueOf(path),
+        path = StudentPath.valueOf(path),
         isMajor = isMajor,
         order = order,
         colorHex = colorHex

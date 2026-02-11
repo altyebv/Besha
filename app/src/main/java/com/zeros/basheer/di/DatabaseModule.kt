@@ -2,11 +2,8 @@ package com.zeros.basheer.di
 
 import android.content.Context
 import androidx.room.Room
-import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import com.zeros.basheer.core.data.local.AppDatabase
-import com.zeros.basheer.data.repository.BasheerRepository
-import com.zeros.basheer.data.repository.DatabaseSeeder
-import com.zeros.basheer.domain.repository.ContentRepository
+import com.zeros.basheer.core.data.DatabaseSeeder
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
@@ -14,7 +11,6 @@ import com.zeros.basheer.feature.lesson.data.dao.SectionDao
 import com.zeros.basheer.feature.lesson.data.dao.SectionProgressDao
 import com.zeros.basheer.feature.practice.data.dao.PracticeSessionDao
 import com.zeros.basheer.feature.practice.data.dao.SectionConceptDao
-import com.zeros.basheer.feature.progress.domain.usecase.UpdateProgressUseCase
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import dagger.Module
 import dagger.Provides
@@ -65,21 +61,7 @@ object DatabaseModule {
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
 
-    @Provides
-    @Singleton
-    fun provideBasheerRepository(
-        subjectRepository: SubjectRepository,
-        contentRepository: ContentRepository,
-       updateProgressUseCase: UpdateProgressUseCase
-    ): BasheerRepository {
-        return BasheerRepository(
-            subjectRepository = subjectRepository,
-            contentRepository = contentRepository,
-            updateProgressUseCase = updateProgressUseCase
 
-
-        )
-    }
 
     @Provides
     @Singleton

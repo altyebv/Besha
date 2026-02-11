@@ -1,6 +1,5 @@
 package com.zeros.basheer.di
 
-import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.domain.recommendation.RecommendationEngine
 import com.zeros.basheer.domain.repository.ContentRepository
 import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository

@@ -1,4 +1,4 @@
-package com.zeros.basheer.ui.screens.feeds
+package com.zeros.basheer.feature.feed.presentation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -12,10 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.ui.components.feeds.FeedCardRenderer
 import kotlinx.coroutines.launch
 
@@ -78,7 +80,7 @@ fun FeedsScreen(
                     
                     FeedCardRenderer(
                         card = card,
-                        interactionState = if (isCurrentPage) state.cardInteractionState else com.zeros.basheer.domain.model.CardInteractionState.Idle,
+                        interactionState = if (isCurrentPage) state.cardInteractionState else CardInteractionState.Idle,
                         onAnswer = { answer -> viewModel.onAnswer(answer) },
                         onContinue = {
                             if (viewModel.onContinue()) {
@@ -254,7 +256,7 @@ private fun SessionCompleteContent(
 private fun StatRow(
     label: String,
     value: String,
-    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
+    color: Color = MaterialTheme.colorScheme.onSurface,
     isBold: Boolean = false
 ) {
     Row(

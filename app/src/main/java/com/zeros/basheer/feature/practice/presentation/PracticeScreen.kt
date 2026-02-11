@@ -1,4 +1,4 @@
-package com.zeros.basheer.ui.screens.practice
+package com.zeros.basheer.feature.practice.presentation
 
 
 import androidx.compose.foundation.layout.*
@@ -14,8 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.zeros.basheer.domain.model.CardInteractionState
-import com.zeros.basheer.domain.model.FeedCard
+import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
+import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.ui.components.feeds.McqCard
 import com.zeros.basheer.ui.components.feeds.TrueFalseCard
 import com.zeros.basheer.feature.feed.domain.model.FeedItemType

@@ -1,16 +1,16 @@
-package com.zeros.basheer.ui.screens.feeds
+package com.zeros.basheer.feature.feed.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
-import com.zeros.basheer.data.repository.LessonRepository
-import com.zeros.basheer.domain.mapper.FeedMapper
-import com.zeros.basheer.domain.model.CardInteractionState
-import com.zeros.basheer.domain.model.FeedCard
+import com.zeros.basheer.feature.feed.data.mapper.FeedMapper
+import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
+import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.feature.concept.domain.model.Rating
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.feed.domain.model.InteractionType
 import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
+import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
 import com.zeros.basheer.feature.streak.domain.usecase.RecordCardsReviewedUseCase
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

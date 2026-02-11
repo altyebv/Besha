@@ -1,7 +1,8 @@
-package com.zeros.basheer.ui.screens.reader
+package com.zeros.basheer.feature.lesson.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -22,7 +23,6 @@ import com.zeros.basheer.ui.components.blocks.BlockRenderer
 import com.zeros.basheer.ui.components.common.ConceptModal
 import com.zeros.basheer.ui.components.common.LessonCompleteCard
 import com.zeros.basheer.ui.components.common.SectionHeader
-import com.zeros.basheer.feature.lesson.presentation.LessonReaderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,7 +158,7 @@ private fun LessonContent(
     onConceptClick: (String) -> Unit,
     onMarkComplete: () -> Unit,
     onNextLesson: (() -> Unit)?,
-    listState: androidx.compose.foundation.lazy.LazyListState
+    listState: LazyListState
 ) {
     LazyColumn(
         state = listState,

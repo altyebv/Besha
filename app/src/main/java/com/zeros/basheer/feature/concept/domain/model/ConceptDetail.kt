@@ -1,6 +1,4 @@
-package com.zeros.basheer.domain.model
-
-import com.zeros.basheer.feature.concept.domain.model.ConceptType
+package com.zeros.basheer.feature.concept.domain.model
 
 
 /**

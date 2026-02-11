@@ -1,6 +1,6 @@
-package com.zeros.basheer.domain.mapper
+package com.zeros.basheer.feature.feed.data.mapper
 
-import com.zeros.basheer.domain.model.FeedCard
+import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.feature.feed.domain.model.FeedItem
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import org.json.JSONArray
@@ -9,7 +9,7 @@ import org.json.JSONArray
  * Maps Room entities to UI-ready feed models.
  */
 object FeedMapper {
-    
+
     fun toFeedCard(feedItem: FeedItem, subject: Subject?): FeedCard {
         return FeedCard(
             id = feedItem.id,
@@ -27,14 +27,14 @@ object FeedMapper {
             priority = feedItem.priority
         )
     }
-    
+
     fun toFeedCards(feedItems: List<FeedItem>, subject: Subject?): List<FeedCard> {
         return feedItems.map { toFeedCard(it, subject) }
     }
-    
+
     private fun parseOptions(optionsJson: String?): List<String>? {
         if (optionsJson.isNullOrBlank()) return null
-        
+
         return try {
             val jsonArray = JSONArray(optionsJson)
             (0 until jsonArray.length()).map { jsonArray.getString(it) }

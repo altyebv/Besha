@@ -20,9 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zeros.basheer.domain.model.CardInteractionState
-import com.zeros.basheer.domain.model.FeedCard
-import kotlin.math.abs
+import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
+import com.zeros.basheer.feature.feed.domain.model.FeedCard
 
 /**
  * Card for True/False questions with swipe gestures.

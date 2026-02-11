@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.zeros.basheer.data.repository.DatabaseSeeder
+import com.zeros.basheer.core.data.DatabaseSeeder
 import com.zeros.basheer.ui.components.BasheerBottomBar
 import com.zeros.basheer.ui.navigation.BasheerNavHost
 import com.zeros.basheer.core.ui.theme.BasheerTheme

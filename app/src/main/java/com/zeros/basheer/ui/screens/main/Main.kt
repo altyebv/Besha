@@ -24,8 +24,6 @@ import androidx.navigation.NavController
 import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.domain.model.Recommendation
 import com.zeros.basheer.domain.model.ScoredRecommendation
-import com.zeros.basheer.ui.viewmodels.MainViewModel
-import com.zeros.basheer.ui.viewmodels.SubjectWithProgress
 
 @Composable
 fun MainScreen(

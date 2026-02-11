@@ -63,7 +63,5 @@ interface StreakRepository {
 
     // ==================== Utilities ====================
 
-    fun getTodayDate(): String
 
-    fun getYesterdayDate(): String
 }

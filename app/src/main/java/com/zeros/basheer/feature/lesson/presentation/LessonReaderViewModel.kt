@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.progress.domain.model.UserProgress
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
-import com.zeros.basheer.domain.mapper.LessonMapper
+import com.zeros.basheer.feature.lesson.data.mapper.LessonMapper
 import com.zeros.basheer.core.domain.model.Result
 import com.zeros.basheer.domain.model.LessonContent
 import com.zeros.basheer.feature.concept.domain.model.Concept

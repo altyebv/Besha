@@ -28,9 +28,9 @@ class StreakRepositoryImpl @Inject constructor(
 
     // ==================== Date Helpers ====================
 
-    override fun getTodayDate(): String = LocalDate.now().format(DATE_FORMAT)
+    private fun getTodayDate(): String = LocalDate.now().format(DATE_FORMAT)
 
-    override fun getYesterdayDate(): String = LocalDate.now().minusDays(1).format(DATE_FORMAT)
+    private fun getYesterdayDate(): String = LocalDate.now().minusDays(1).format(DATE_FORMAT)
 
     private fun parseDate(dateString: String): LocalDate =
         LocalDate.parse(dateString, DATE_FORMAT)

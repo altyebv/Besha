@@ -2,7 +2,6 @@ package com.zeros.basheer.ui.screens.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.data.repository.LessonRepository
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -21,7 +20,6 @@ data class ProfileState(
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val repository: LessonRepository,
     private val streakRepository: StreakRepository,
 ) : ViewModel() {
     
