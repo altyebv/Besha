@@ -8,7 +8,11 @@ import com.zeros.basheer.domain.mapper.FeedMapper
 import com.zeros.basheer.domain.model.CardInteractionState
 import com.zeros.basheer.domain.model.FeedCard
 import com.zeros.basheer.feature.concept.domain.model.Rating
+import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.feed.domain.model.InteractionType
+import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
+import com.zeros.basheer.feature.streak.domain.usecase.RecordCardsReviewedUseCase
+import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,7 +38,11 @@ data class FeedsState(
 
 @HiltViewModel
 class FeedsViewModel @Inject constructor(
-    private val repository: LessonRepository
+    private val repository: LessonRepository,
+    private val subjectRepository: SubjectRepository,
+    private val feedRepository: FeedRepository,
+    private val conceptRepository: ConceptRepository,
+    private val recordCardsReviewedUseCase: RecordCardsReviewedUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedsState())
@@ -47,8 +55,8 @@ class FeedsViewModel @Inject constructor(
     private fun loadFeedItems() {
         viewModelScope.launch {
             // Get first subject for now
-            repository.getAllSubjects().first().firstOrNull()?.let { subject ->
-                repository.getFeedItemsBySubject(subject.id).collect { feedItems ->
+            subjectRepository.getAllSubjects().first().firstOrNull()?.let { subject ->
+                feedRepository.getFeedItemsBySubject(subject.id).collect { feedItems ->
                     val cards = FeedMapper.toFeedCards(
                         feedItems.take(_state.value.maxCardsPerSession),
                         subject
@@ -90,7 +98,7 @@ class FeedsViewModel @Inject constructor(
         // Record review for spaced repetition
         viewModelScope.launch {
             val rating = if (isCorrect) Rating.GOOD else Rating.HARD
-            repository.recordConceptReview(currentCard.conceptId, rating)
+            conceptRepository.recordReview(currentCard.conceptId, rating)
         }
     }
 
@@ -104,7 +112,7 @@ class FeedsViewModel @Inject constructor(
         
         // Record card reviewed for streak tracking
         viewModelScope.launch {
-            repository.recordCardsReviewed(1)
+            recordCardsReviewedUseCase(1)
         }
         
         // Check if session is complete
