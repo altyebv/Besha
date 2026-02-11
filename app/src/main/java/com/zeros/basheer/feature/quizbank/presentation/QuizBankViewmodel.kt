@@ -1,4 +1,4 @@
-package com.zeros.basheer.ui.screens.quizbank
+package com.zeros.basheer.feature.quizbank.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

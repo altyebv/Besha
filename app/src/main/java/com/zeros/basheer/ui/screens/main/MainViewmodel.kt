@@ -1,4 +1,4 @@
-package com.zeros.basheer.ui.viewmodels
+package com.zeros.basheer.ui.screens.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,10 +7,13 @@ import com.zeros.basheer.domain.model.ScoredRecommendation
 import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import com.zeros.basheer.domain.recommendation.RecommendationEngine
+import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
+import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import com.zeros.basheer.feature.streak.domain.usecase.GetStreakStatusUseCase
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.subject.domain.model.Units
+import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -52,9 +55,9 @@ data class MainScreenState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val recommendationEngine: RecommendationEngine,
-    private val subjectRepository: com.zeros.basheer.feature.subject.domain.repository.SubjectRepository,
-    private val lessonRepository: com.zeros.basheer.feature.lesson.domain.repository.LessonRepository,
-    private val progressRepository: com.zeros.basheer.feature.progress.domain.repository.ProgressRepository,
+    private val subjectRepository: SubjectRepository,
+    private val lessonRepository: LessonRepository,
+    private val progressRepository: ProgressRepository,
     private val getStreakStatusUseCase: GetStreakStatusUseCase,
     private val streakRepository: StreakRepository
 ) : ViewModel() {

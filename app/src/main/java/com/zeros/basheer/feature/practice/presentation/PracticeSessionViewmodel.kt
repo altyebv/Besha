@@ -1,9 +1,9 @@
-package com.zeros.basheer.ui.screens.practice
+package com.zeros.basheer.feature.practice.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.domain.model.CardInteractionState
+import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.practice.domain.model.PracticeSession
 import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
 import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository

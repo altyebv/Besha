@@ -1,7 +1,4 @@
-package com.zeros.basheer.domain.model
-
-import com.zeros.basheer.feature.feed.domain.model.FeedItemType
-import com.zeros.basheer.feature.feed.domain.model.InteractionType
+package com.zeros.basheer.feature.feed.domain.model
 
 
 /**

@@ -1,9 +1,8 @@
-package com.zeros.basheer.ui.viewmodels
+package com.zeros.basheer.feature.lesson.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.feed.domain.usecase.GetContentVariantsUseCase
-import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
 import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.lesson.domain.model.LessonDomain

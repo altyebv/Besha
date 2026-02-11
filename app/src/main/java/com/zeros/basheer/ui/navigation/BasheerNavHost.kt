@@ -7,13 +7,13 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.zeros.basheer.ui.screens.feeds.FeedsScreen
-import com.zeros.basheer.ui.screens.quizbank.QuizBankScreen
+import com.zeros.basheer.feature.feed.presentation.FeedsScreen
+import com.zeros.basheer.feature.quizbank.presentation.QuizBankScreen
 import com.zeros.basheer.feature.lesson.presentation.LessonsScreen
 import com.zeros.basheer.ui.screens.main.MainScreen
-import com.zeros.basheer.ui.screens.practice.PracticeSessionScreen
+import com.zeros.basheer.feature.practice.presentation.PracticeSessionScreen
 import com.zeros.basheer.ui.screens.profile.ProfileScreen
-import com.zeros.basheer.ui.screens.reader.LessonReaderScreen
+import com.zeros.basheer.feature.lesson.presentation.LessonReaderScreen
 
 @Composable
 fun BasheerNavHost(

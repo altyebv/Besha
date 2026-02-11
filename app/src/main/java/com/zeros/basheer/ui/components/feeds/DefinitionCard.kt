@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.zeros.basheer.domain.model.FeedCard
+import com.zeros.basheer.feature.feed.domain.model.FeedCard
 
 /**
  * Card for definitions, facts, rules - simple content display.

@@ -1,8 +1,14 @@
-package com.zeros.basheer.domain.mapper
+package com.zeros.basheer.feature.lesson.data.mapper
 
+import com.zeros.basheer.domain.model.BlockMetadata
+import com.zeros.basheer.domain.model.BlockUiModel
+import com.zeros.basheer.domain.model.HighlightStyle
+import com.zeros.basheer.domain.model.LessonContent
+import com.zeros.basheer.domain.model.ListItem
+import com.zeros.basheer.domain.model.ListStyle
+import com.zeros.basheer.domain.model.SectionUiModel
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockType
-import com.zeros.basheer.domain.model.*
 import com.zeros.basheer.feature.lesson.data.relations.LessonFull
 import com.zeros.basheer.feature.lesson.data.relations.SectionWithBlocksAndConcepts
 import org.json.JSONArray
@@ -12,7 +18,7 @@ import org.json.JSONObject
  * Maps Room entities to UI-ready models.
  */
 object LessonMapper {
-    
+
     fun toLessonContent(lessonFull: LessonFull): LessonContent {
         return LessonContent(
             id = lessonFull.lessonEntity.id,
@@ -24,7 +30,7 @@ object LessonMapper {
                 .map { toSectionUiModel(it) }
         )
     }
-    
+
     private fun toSectionUiModel(section: SectionWithBlocksAndConcepts): SectionUiModel {
         return SectionUiModel(
             id = section.sectionEntity.id,
@@ -35,7 +41,7 @@ object LessonMapper {
                 .map { toBlockUiModel(it) }
         )
     }
-    
+
     private fun toBlockUiModel(block: BlockEntity): BlockUiModel {
         return BlockUiModel(
             id = block.id,
@@ -47,20 +53,20 @@ object LessonMapper {
             metadata = parseMetadata(block)
         )
     }
-    
+
     private fun parseMetadata(block: BlockEntity): BlockMetadata? {
         val metadataJson = block.metadata ?: return getDefaultMetadata(block.type)
-        
+
         return try {
             val json = JSONObject(metadataJson)
-            
+
             when (block.type) {
                 BlockType.HEADING -> {
                     BlockMetadata.Heading(
                         level = json.optInt("level", 2)
                     )
                 }
-                
+
                 BlockType.LIST -> {
                     val style = when (json.optString("style", "bullet")) {
                         "numbered" -> ListStyle.NUMBERED
@@ -70,7 +76,7 @@ object LessonMapper {
                     val items = parseListItems(block.content, json.optBoolean("hasConceptLinks", false))
                     BlockMetadata.List(style = style, items = items)
                 }
-                
+
                 BlockType.HIGHLIGHT_BOX -> {
                     val style = when (json.optString("style", "note")) {
                         "definition" -> HighlightStyle.DEFINITION
@@ -80,24 +86,24 @@ object LessonMapper {
                     }
                     BlockMetadata.HighlightBox(style = style)
                 }
-                
+
                 BlockType.TABLE -> {
                     parseTableMetadata(block.content)
                 }
-                
+
                 BlockType.IMAGE, BlockType.GIF -> {
                     BlockMetadata.Image(
                         aspectRatio = json.optDouble("aspectRatio", 0.0).takeIf { it > 0 }?.toFloat()
                     )
                 }
-                
+
                 else -> null
             }
         } catch (e: Exception) {
             getDefaultMetadata(block.type)
         }
     }
-    
+
     private fun getDefaultMetadata(type: BlockType): BlockMetadata? {
         return when (type) {
             BlockType.HEADING -> BlockMetadata.Heading(level = 2)
@@ -105,7 +111,7 @@ object LessonMapper {
             else -> null
         }
     }
-    
+
     private fun parseListItems(content: String, hasConceptLinks: Boolean): List<ListItem> {
         return try {
             if (hasConceptLinks || content.startsWith("[")) {
@@ -123,8 +129,10 @@ object LessonMapper {
                                     is String -> ListItem(text = child)
                                     is JSONObject -> ListItem(
                                         text = child.getString("text"),
-                                        conceptRef = child.optString("conceptRef").takeIf { it.isNotEmpty() }
+                                        conceptRef = child.optString("conceptRef")
+                                            .takeIf { it.isNotEmpty() }
                                     )
+
                                     else -> ListItem(text = child.toString())
                                 }
                             }
@@ -144,21 +152,21 @@ object LessonMapper {
                 .map { ListItem(text = it.trim()) }
         }
     }
-    
+
     private fun parseTableMetadata(content: String): BlockMetadata.Table {
         return try {
             val json = JSONObject(content)
             val headers = json.optJSONArray("headers")?.let { arr ->
                 (0 until arr.length()).map { arr.getString(it) }
             } ?: emptyList()
-            
+
             val rows = json.optJSONArray("rows")?.let { rowsArr ->
                 (0 until rowsArr.length()).map { i ->
                     val row = rowsArr.getJSONArray(i)
                     (0 until row.length()).map { j -> row.getString(j) }
                 }
             } ?: emptyList()
-            
+
             BlockMetadata.Table(headers = headers, rows = rows)
         } catch (e: Exception) {
             BlockMetadata.Table(headers = emptyList(), rows = emptyList())
