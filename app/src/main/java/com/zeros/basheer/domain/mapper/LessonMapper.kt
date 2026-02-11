@@ -2,9 +2,9 @@ package com.zeros.basheer.domain.mapper
 
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockType
-import com.zeros.basheer.data.relations.LessonFull
-import com.zeros.basheer.data.relations.SectionWithBlocksAndConcepts
 import com.zeros.basheer.domain.model.*
+import com.zeros.basheer.feature.lesson.data.relations.LessonFull
+import com.zeros.basheer.feature.lesson.data.relations.SectionWithBlocksAndConcepts
 import org.json.JSONArray
 import org.json.JSONObject
 
