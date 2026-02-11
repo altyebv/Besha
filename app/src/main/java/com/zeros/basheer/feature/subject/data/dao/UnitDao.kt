@@ -1,8 +1,8 @@
 package com.zeros.basheer.feature.subject.data.dao
 
 import androidx.room.*
-import com.zeros.basheer.data.relations.UnitWithLessons
 import com.zeros.basheer.feature.subject.data.entity.UnitEntity
+import com.zeros.basheer.feature.subject.data.relations.UnitWithLessons
 import kotlinx.coroutines.flow.Flow
 
 @Dao
