@@ -2,7 +2,7 @@ package com.zeros.basheer.feature.quizbank.data.dao
 
 
 import androidx.room.*
-import com.zeros.basheer.data.relations.QuestionWithConcepts
+import com.zeros.basheer.feature.lesson.data.relations.QuestionWithConcepts
 import com.zeros.basheer.feature.quizbank.data.entity.QuestionEntity
 import kotlinx.coroutines.flow.Flow
 

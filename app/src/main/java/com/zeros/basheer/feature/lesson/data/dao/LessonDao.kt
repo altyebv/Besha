@@ -6,10 +6,10 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.zeros.basheer.data.relations.LessonFull
-import com.zeros.basheer.data.relations.LessonWithSections
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
+import com.zeros.basheer.feature.lesson.data.relations.LessonFull
 import com.zeros.basheer.feature.lesson.data.relations.LessonWithProgress
+import com.zeros.basheer.feature.lesson.data.relations.LessonWithSections
 import kotlinx.coroutines.flow.Flow
 
 @Dao
