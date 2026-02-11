@@ -4,14 +4,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.progress.domain.model.UserProgress
-import com.zeros.basheer.data.repository.LessonRepository
+import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
 import com.zeros.basheer.domain.mapper.LessonMapper
 import com.zeros.basheer.core.domain.model.Result
 import com.zeros.basheer.domain.model.LessonContent
 import com.zeros.basheer.feature.concept.domain.model.Concept
+import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 //import com.zeros.basheer.feature.lesson.domain.model.LessonContent
 import com.zeros.basheer.feature.lesson.domain.usecase.GetLessonContentUseCase
 import com.zeros.basheer.feature.lesson.domain.usecase.MarkLessonCompleteUseCase
+import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -46,6 +48,8 @@ class LessonReaderViewModel @Inject constructor(
     private val repository: LessonRepository,
     private val getLessonContentUseCase: GetLessonContentUseCase,
     private val markLessonCompleteUseCase: MarkLessonCompleteUseCase,
+    private val progressRepository: ProgressRepository,
+    private val conceptRepository: ConceptRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -119,11 +123,11 @@ class LessonReaderViewModel @Inject constructor(
         viewModelScope.launch {
             val currentProgress = _state.value.progress
             if (currentProgress != null) {
-                repository.updateProgress(
+                progressRepository.updateProgress(
                     currentProgress.copy(lastAccessedAt = System.currentTimeMillis())
                 )
             } else {
-                repository.updateProgress(
+                progressRepository.updateProgress(
                     UserProgress(
                         lessonId = lessonId,
                         lastAccessedAt = System.currentTimeMillis()
@@ -162,7 +166,7 @@ class LessonReaderViewModel @Inject constructor(
         viewModelScope.launch {
             val currentProgress = _state.value.progress ?: UserProgress(lessonId = lessonId)
             val totalTime = currentProgress.timeSpentSeconds + _state.value.readingTimeSeconds.toInt()
-            repository.updateProgress(
+            progressRepository.updateProgress(
                 currentProgress.copy(timeSpentSeconds = totalTime)
             )
         }
@@ -183,7 +187,7 @@ class LessonReaderViewModel @Inject constructor(
 
     fun onConceptClick(conceptId: String) {
         viewModelScope.launch {
-            val concept = repository.getConceptById(conceptId)
+            val concept = conceptRepository.getConceptById(conceptId)
             _state.update { it.copy(activeConcept = concept) }
         }
     }

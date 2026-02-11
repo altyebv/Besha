@@ -3,6 +3,7 @@ package com.zeros.basheer.ui.screens.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.data.repository.LessonRepository
+import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,7 +21,8 @@ data class ProfileState(
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val repository: LessonRepository
+    private val repository: LessonRepository,
+    private val streakRepository: StreakRepository,
 ) : ViewModel() {
     
     private val _state = MutableStateFlow(ProfileState())
@@ -33,7 +35,7 @@ class ProfileViewModel @Inject constructor(
     private fun loadStats() {
         viewModelScope.launch {
             // Observe streak status
-            repository.getStreakStatusFlow().collect { status ->
+            streakRepository.getStreakStatusFlow().collect { status ->
                 _state.update { it.copy(
                     currentStreak = status.currentStreak,
                     longestStreak = status.longestStreak
@@ -43,28 +45,28 @@ class ProfileViewModel @Inject constructor(
         
         viewModelScope.launch {
             // Total lessons completed
-            repository.getTotalLessonsCompleted().collect { count ->
+            streakRepository.getTotalLessonsCompleted().collect { count ->
                 _state.update { it.copy(totalLessons = count) }
             }
         }
         
         viewModelScope.launch {
             // Total cards reviewed
-            repository.getTotalCardsReviewed().collect { count ->
+            streakRepository.getTotalCardsReviewed().collect { count ->
                 _state.update { it.copy(totalCards = count) }
             }
         }
         
         viewModelScope.launch {
             // Total questions answered
-            repository.getTotalQuestionsAnswered().collect { count ->
+            streakRepository.getTotalQuestionsAnswered().collect { count ->
                 _state.update { it.copy(totalQuestions = count) }
             }
         }
         
         viewModelScope.launch {
             // Total time spent (convert to minutes)
-            repository.getTotalTimeSpent().collect { seconds ->
+            streakRepository.getTotalTimeSpent().collect { seconds ->
                 _state.update { it.copy(
                     totalMinutes = seconds / 60,
                     isLoading = false
