@@ -27,22 +27,12 @@ enum class ExamSource {
 /**
  * Junction: Exam ↔ Question.
  */
-data class ExamQuestion(
-    val examId: String,
-    val questionId: String,
-    val order: Int,
-    val sectionLabel: String? = null,
-    val points: Int? = null
-)
+
 
 /**
  * Junction: Question ↔ Concept.
  */
-data class QuestionConcept(
-    val questionId: String,
-    val conceptId: String,
-    val isPrimary: Boolean
-)
+
 
 /**
  * User's exam attempt.
