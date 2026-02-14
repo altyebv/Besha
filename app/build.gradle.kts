@@ -95,6 +95,10 @@ dependencies {
     // gson
     implementation("com.google.code.gson:gson:2.10.1")
 
+// For SwipeRefresh (if not already present)
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
+// Ensure you have these animation dependencies
+    implementation("androidx.compose.animation:animation:1.5.4")
 
 
 
