@@ -28,16 +28,22 @@ fun BasheerNavHost(
         composable(Screen.Main.route) {
             MainScreen(
                 onSubjectClick = { subjectId ->
-                    // Navigate to lessons screen
-                    // For now, just go to lessons (later can pass subjectId)
-                    navController.navigate(Screen.Lessons.route)
+                    // Navigate to lessons screen with subjectId
+                    navController.navigate(Screen.Lessons.createRoute(subjectId))
                 },
                 navController = navController
             )
         }
 
-        composable(Screen.Lessons.route) {
+        composable(
+            route = Screen.Lessons.route,
+            arguments = listOf(
+                navArgument("subjectId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val subjectId = backStackEntry.arguments?.getString("subjectId") ?: return@composable
             LessonsScreen(
+                subjectId = subjectId,
                 onLessonClick = { lessonId ->
                     navController.navigate(Screen.LessonReader.createRoute(lessonId))
                 }

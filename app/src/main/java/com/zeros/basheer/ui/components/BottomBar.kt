@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.zeros.basheer.ui.navigation.Screen
 
 data class BottomNavItem(
     val route: String,
@@ -27,31 +28,31 @@ data class BottomNavItem(
 
 val bottomNavItems = listOf(
     BottomNavItem(
-        route = "main",
+        route = Screen.Main.route,
         label = "الرئيسية",
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
     ),
     BottomNavItem(
-        route = "lessons",
+        route = Screen.Lessons.route,
         label = "الدروس",
         selectedIcon = Icons.Filled.MenuBook,
         unselectedIcon = Icons.Outlined.MenuBook
     ),
     BottomNavItem(
-        route = "feeds",
+        route = Screen.Feeds.route,
         label = "مراجعة",
         selectedIcon = Icons.Filled.PlayCircle,
         unselectedIcon = Icons.Outlined.PlayCircle
     ),
     BottomNavItem(
-        route = "quizbank",
+        route = Screen.QuizBank.route,
         label = "الامتحانات",
         selectedIcon = Icons.Filled.Quiz,
         unselectedIcon = Icons.Outlined.Quiz
     ),
     BottomNavItem(
-        route = "profile",
+        route = Screen.Profile.route,
         label = "حسابي",
         selectedIcon = Icons.Filled.Person,
         unselectedIcon = Icons.Outlined.Person
