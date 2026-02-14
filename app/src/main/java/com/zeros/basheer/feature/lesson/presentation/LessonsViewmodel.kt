@@ -17,7 +17,7 @@ data class LessonsScreenState(
     val subjectId: String = "",
     val subjectName: String = "",
     val units: List<Pair<Units, List<LessonDomain>>> = emptyList(),
-    val completedLessonIds: Set<String> = emptySet(),
+    val completedLessonIds: List<String> = emptyList(),
     val isLoading: Boolean = true
 )
 
@@ -62,7 +62,7 @@ class LessonsViewModel @Inject constructor(
                         _state.update {
                             it.copy(
                                 units = unitsWithLessons,
-                                completedLessonIds = completedProgress.map { p -> p.lessonId }.toSet(),
+                                completedLessonIds = completedProgress.map { p -> p.lessonId }.toList(),
                                 isLoading = false
                             )
                         }
