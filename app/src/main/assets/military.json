@@ -1,0 +1,514 @@
+{
+  "version": "1.0",
+  "subject": {
+    "id": "التربية_العسكرية",
+    "nameAr": "التربية العسكرية",
+    "nameEn": "Military Education",
+    "path": "LITERARY",
+    "isMajor": false,
+    "order": 1,
+    "colorHex": null
+  },
+  "tags": [
+    {
+      "id": "tag_mil_001",
+      "nameAr": "استراتيجية",
+      "nameEn": "Strategy"
+    },
+    {
+      "id": "tag_mil_002",
+      "nameAr": "أمن قومي",
+      "nameEn": "National Security"
+    }
+  ],
+  "concepts": [
+    {
+      "id": "concept_strategy",
+      "type": "DEFINITION",
+      "titleAr": "الاستراتيجية",
+      "titleEn": "Strategy",
+      "definition": "فن استخدام القوات المسلحة للدولة بغرض تحقيق أهداف السياسة القومية عن طريق استخدام القوة أو التهديد باستخدامها",
+      "shortDefinition": "فن استخدام القوة لتحقيق الأهداف القومية",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 2,
+      "extraData": null,
+      "tagIds": ["tag_mil_001"]
+    },
+    {
+      "id": "concept_national_strategy",
+      "type": "DEFINITION",
+      "titleAr": "الاستراتيجية القومية الشاملة",
+      "titleEn": "Comprehensive National Strategy",
+      "definition": "علم وفن يختص باستخدام موارد الدولة وتطويرها قصد تحقيق الأهداف القومية وأهداف الأمن تحت مختلف الظروف",
+      "shortDefinition": "علم وفن استخدام موارد الدولة لتحقيق الأهداف القومية",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 2,
+      "extraData": null,
+      "tagIds": ["tag_mil_001", "tag_mil_002"]
+    },
+    {
+      "id": "concept_grand_strategy",
+      "type": "DEFINITION",
+      "titleAr": "الاستراتيجية العليا",
+      "titleEn": "Grand Strategy",
+      "definition": "تنسيق قدرات الشعب من أجل تحقيق الهدف السياسي الذي تحدده السلطة العليا في الدولة",
+      "shortDefinition": "تنسيق قدرات الشعب لتحقيق الأهداف السياسية",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 2,
+      "extraData": null,
+      "tagIds": ["tag_mil_001"]
+    },
+    {
+      "id": "concept_strategic_thinking",
+      "type": "DEFINITION",
+      "titleAr": "الفكر الاستراتيجي",
+      "titleEn": "Strategic Thinking",
+      "definition": "القدرة على إنتاج المستقبل والرؤية التنبؤية للمستقبل المستندة إلى الواقعية والموضوعية والعقلانية وليست الخيالية والعشوائية",
+      "shortDefinition": "القدرة على إنتاج المستقبل بواقعية",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 2,
+      "extraData": null,
+      "tagIds": ["tag_mil_001"]
+    },
+    {
+      "id": "concept_national_security",
+      "type": "DEFINITION",
+      "titleAr": "الأمن القومي",
+      "titleEn": "National Security",
+      "definition": "حماية المصالح الرئيسة للدولة مثل الكرامة والوطنية والتكامل الإقليمي وصيانة المؤسسات والقيم الرئيسة للمجتمع",
+      "shortDefinition": "حماية المصالح الرئيسة للدولة",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 2,
+      "extraData": null,
+      "tagIds": ["tag_mil_002"]
+    }
+  ],
+  "units": [
+    {
+      "id": "unit_national_strategy",
+      "title": "الاستراتيجية القومية",
+      "order": 1,
+      "description": "دراسة مفهوم الاستراتيجية وأهميتها ومبادئها في بناء الدولة",
+      "lessons": [
+        {
+          "id": "lesson_strategy_concept",
+          "title": "مفهوم الاستراتيجية وتعريفها",
+          "order": 1,
+          "estimatedMinutes": 30,
+          "summary": "دراسة شاملة لمفهوم الاستراتيجية وتطورها التاريخي ومستوياتها المختلفة",
+          "sections": [
+            {
+              "id": "sec_intro",
+              "title": "تقديم",
+              "order": 1,
+              "conceptIds": ["concept_strategy"],
+              "blocks": [
+                {
+                  "id": "block_001",
+                  "type": "HEADING",
+                  "content": "مفهوم الاستراتيجية",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 1}"
+                },
+                {
+                  "id": "block_002",
+                  "type": "TEXT",
+                  "content": "يعتبر مفهوم الاستراتيجية من المفاهيم المتداولة في العلوم الاجتماعية المختلفة التي تستخدم للدلالة على أكثر من معنى واحد. فكلمة استراتيجية تستخدم في الشؤون العسكرية والسياسية والاقتصادية والاجتماعية دون تحديد واضح لمعناها.",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_003",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "تعبير استراتيجية اشتق من الكلمة اليونانية (Strategos) بمعنى فن القيادة",
+                  "order": 3,
+                  "conceptRef": "concept_strategy",
+                  "caption": null,
+                  "metadata": "{\"style\": \"important\"}"
+                },
+                {
+                  "id": "block_004",
+                  "type": "TEXT",
+                  "content": "أهمية هذا الموضوع تنبع من الإدراك المتزايد لأهمية الاستراتيجية ودورها في ضمان سلامة الوصول إلى الأهداف المرسومة. فالاستراتيجية ليست مجرد رياضة عقلية، وإنما هي نمط من التفكير يجب أن يكون بمثابة مرشد عملي لتحقيق غايات السياسة.",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            },
+            {
+              "id": "sec_uses",
+              "title": "استخدامات مصطلح الاستراتيجية",
+              "order": 2,
+              "conceptIds": [],
+              "blocks": [
+                {
+                  "id": "block_005",
+                  "type": "HEADING",
+                  "content": "الاستخدامات المعاصرة",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "block_006",
+                  "type": "TEXT",
+                  "content": "استخدامات مصطلح الاستراتيجية المعاصرة شملت العديد من الميادين:",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_007",
+                  "type": "LIST",
+                  "content": "وصف موقع دولة بأنه استراتيجي (قناة السويس، باب المندب، مضيق هرمز)\nوصف قرار سياسي أو اقتصادي مهم بأنه قرار استراتيجي\nوصف بعض الأسلحة المتطورة (الأسلحة الاستراتيجية)\nوصف قطاع من القطاعات الرئيسة في المجتمع\nوصف بعض المواد الاقتصادية (المواد الاستراتيجية)\nوصف نمط التفكير أو الدراسات (الفكر الاستراتيجي)",
+                  "order": 3,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"style\": \"bullet\"}"
+                },
+                {
+                  "id": "block_008",
+                  "type": "TIP",
+                  "content": "مواقع البترول في السودان تعتبر من المواقع الاستراتيجية القومية المهمة",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            },
+            {
+              "id": "sec_definition",
+              "title": "تعريف الاستراتيجية",
+              "order": 3,
+              "conceptIds": ["concept_strategy", "concept_national_strategy"],
+              "blocks": [
+                {
+                  "id": "block_009",
+                  "type": "HEADING",
+                  "content": "التطور التاريخي للتعريف",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "block_010",
+                  "type": "TEXT",
+                  "content": "تعبير الاستراتيجية هو ذو أصل عسكري، ومن الناحية التاريخية ارتبط بلفظ الحرب وقيادتها. عرف كارل فون كلاوزفيتز الاستراتيجية بأنها فن إعداد المعارك ووضع الخطط العامة للحرب.",
+                  "order": 2,
+                  "conceptRef": "concept_strategy",
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_011",
+                  "type": "TEXT",
+                  "content": "ثم جاء ليديل هارت الإنجليزي ليوسع المفهوم ليشمل كيفية استخدام القوة المسلحة عموماً لتحقيق الأهداف السياسية.",
+                  "order": 3,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_012",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "في السودان: الاستراتيجية القومية الشاملة هي علم وفن يختص باستخدام موارد الدولة وتطويرها قصد تحقيق الأهداف القومية وأهداف الأمن تحت مختلف الظروف",
+                  "order": 4,
+                  "conceptRef": "concept_national_strategy",
+                  "caption": null,
+                  "metadata": "{\"style\": \"definition\"}"
+                },
+                {
+                  "id": "block_013",
+                  "type": "TIP",
+                  "content": "الاستراتيجية في جوهرها هي علاقة وسائط وأهداف - تكييف الوسائل المتاحة لتحقيق الأهداف المرسومة",
+                  "order": 5,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            },
+            {
+              "id": "sec_levels",
+              "title": "مستويات الاستراتيجية",
+              "order": 4,
+              "conceptIds": ["concept_grand_strategy"],
+              "blocks": [
+                {
+                  "id": "block_014",
+                  "type": "HEADING",
+                  "content": "المستوى الأعلى والأدنى",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "block_015",
+                  "type": "TEXT",
+                  "content": "للاستراتيجية مستويان: المستوى الأعلى (الاستراتيجية العليا أو الشاملة) والمستوى الأدنى (الاستراتيجية التخصصية).",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_016",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "المستوى الأعلى: تنسيق قدرات الشعب من أجل تحقيق الهدف السياسي الذي تحدده السلطة العليا في الدولة",
+                  "order": 3,
+                  "conceptRef": "concept_grand_strategy",
+                  "caption": null,
+                  "metadata": "{\"style\": \"definition\"}"
+                },
+                {
+                  "id": "block_017",
+                  "type": "TEXT",
+                  "content": "المستوى الأدنى يختص بكل قوى الدولة كل منها على حدة: الاستراتيجية السياسية، العسكرية، الاقتصادية، والاجتماعية.",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lesson_strategy_importance",
+          "title": "أهمية الاستراتيجية ومبادئها",
+          "order": 2,
+          "estimatedMinutes": 25,
+          "summary": "دراسة أهمية التخطيط الاستراتيجي ومبادئه والعوامل المؤثرة في اختيار الاستراتيجية",
+          "sections": [
+            {
+              "id": "sec_importance",
+              "title": "أهمية الاستراتيجية",
+              "order": 1,
+              "conceptIds": ["concept_strategic_thinking"],
+              "blocks": [
+                {
+                  "id": "block_018",
+                  "type": "HEADING",
+                  "content": "لماذا نحتاج للاستراتيجية؟",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 1}"
+                },
+                {
+                  "id": "block_019",
+                  "type": "TEXT",
+                  "content": "لكل دولة طموحاتها بأن تحقق لشعبها الرخاء والتقدم والازدهار. إن حشد واستخدام طاقات الدولة لتحقيق الغايات والأهداف يتم عن طريق التخطيط السليم والمدروس.",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_020",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "الفكر الاستراتيجي: القدرة على إنتاج المستقبل - الرؤية التنبؤية المستندة إلى الواقعية والموضوعية والعقلانية",
+                  "order": 3,
+                  "conceptRef": "concept_strategic_thinking",
+                  "caption": null,
+                  "metadata": "{\"style\": \"definition\"}"
+                },
+                {
+                  "id": "block_021",
+                  "type": "HEADING",
+                  "content": "فوائد التخطيط الاستراتيجي",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "block_022",
+                  "type": "LIST",
+                  "content": "توجيه موارد الدولة لتحقيق الأهداف بكفاءة\nتطوير الموارد لضمان استمرارها في العطاء\nتمثل رؤية الدولة لمستقبلها المخطط\nالحصر الدقيق للموارد واستخدامها بطريقة منظمة",
+                  "order": 5,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"style\": \"bullet\"}"
+                },
+                {
+                  "id": "block_023",
+                  "type": "TIP",
+                  "content": "يمكن الاستفادة من المستشفيات والطرق في المجهود الحربي - هذا مثال على الاستخدام الاستراتيجي للموارد",
+                  "order": 6,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            },
+            {
+              "id": "sec_principles",
+              "title": "مبادئ الاستراتيجية الوطنية",
+              "order": 2,
+              "conceptIds": ["concept_national_security"],
+              "blocks": [
+                {
+                  "id": "block_024",
+                  "type": "HEADING",
+                  "content": "الأسس العامة للتخطيط",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "block_025",
+                  "type": "TEXT",
+                  "content": "هناك أسس عامة تطبق في التخطيط للاستراتيجية الوطنية:",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_026",
+                  "type": "LIST",
+                  "content": "تطبق لتحقيق الأهداف الوطنية في السلم والحرب معاً\nتدار الحرب (إذا حدثت) بشكل يقود إلى السلم\nيجب دحر قوات العدو بإعداد جيد للقوات المسلحة\nتحقيق التوازن: 90% للتنمية و10% للنشاطات العسكرية",
+                  "order": 3,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"style\": \"numbered\"}"
+                },
+                {
+                  "id": "block_027",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "الأمن القومي: حماية المصالح الرئيسة للدولة مثل الكرامة والوطنية والتكامل الإقليمي وصيانة المؤسسات والقيم",
+                  "order": 4,
+                  "conceptRef": "concept_national_security",
+                  "caption": null,
+                  "metadata": "{\"style\": \"definition\"}"
+                }
+              ]
+            },
+            {
+              "id": "sec_factors",
+              "title": "العوامل المؤثرة",
+              "order": 3,
+              "conceptIds": [],
+              "blocks": [
+                {
+                  "id": "block_028",
+                  "type": "HEADING",
+                  "content": "العوامل الرئيسة المؤثرة في الاستراتيجية",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "block_029",
+                  "type": "TEXT",
+                  "content": "هناك عوامل هامة تؤثر في كيفية اختيار الاستراتيجية الوطنية:",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_030",
+                  "type": "LIST",
+                  "content": "المصالح والأهداف الوطنية\nالعقيدة السياسية والعسكرية\nالاعتبارات الجغرافية الاستراتيجية\nالاعتبارات الاقتصادية\nالاعتبارات الاجتماعية والنفسية",
+                  "order": 3,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"style\": \"bullet\"}"
+                },
+                {
+                  "id": "block_031",
+                  "type": "TIP",
+                  "content": "الشخصية الوطنية ومدى حب المواطنين للانتماء والتضحية له أثر بالغ في اختيار الاستراتيجية الوطنية",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": [],
+  "exams": [],
+  "feedItems": [
+    {
+      "id": "feed_strategy_def",
+      "conceptId": "concept_strategy",
+      "type": "DEFINITION",
+      "contentAr": "الاستراتيجية: فن استخدام القوات المسلحة لتحقيق أهداف السياسة القومية",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 5,
+      "order": 1
+    },
+    {
+      "id": "feed_tf_origin",
+      "conceptId": "concept_strategy",
+      "type": "MINI_QUIZ",
+      "contentAr": "تعبير الاستراتيجية اشتق من الكلمة اليونانية بمعنى فن القيادة",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "SWIPE_TF",
+      "correctAnswer": "true",
+      "options": null,
+      "explanation": "صحيح! اشتق من الكلمة اليونانية (Strategos) بمعنى فن القيادة",
+      "priority": 4,
+      "order": 2
+    },
+    {
+      "id": "feed_thinking_def",
+      "conceptId": "concept_strategic_thinking",
+      "type": "DEFINITION",
+      "contentAr": "الفكر الاستراتيجي: القدرة على إنتاج المستقبل بواقعية وموضوعية",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 4,
+      "order": 3
+    },
+    {
+      "id": "feed_mcq_balance",
+      "conceptId": "concept_national_strategy",
+      "type": "MINI_QUIZ",
+      "contentAr": "النسبة العامة للموازنة في التخطيط الاستراتيجي هي:",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "MCQ",
+      "correctAnswer": "90% للتنمية و10% للعسكرية",
+      "options": "[\"50% لكل منهما\", \"90% للتنمية و10% للعسكرية\", \"70% للعسكرية و30% للتنمية\", \"100% للعسكرية\"]",
+      "explanation": "يجب تحقيق التوازن: 90% للنشاطات التنموية و10% للنشاطات العسكرية",
+      "priority": 3,
+      "order": 4
+    }
+  ]
+}
