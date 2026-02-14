@@ -63,7 +63,7 @@ import com.zeros.basheer.feature.subject.data.dao.UnitDao
         SectionProgressEntity::class,
         DailyActivityEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
