@@ -46,7 +46,9 @@ fun BasheerNavHost(
                 subjectId = subjectId,
                 onLessonClick = { lessonId ->
                     navController.navigate(Screen.LessonReader.createRoute(lessonId))
-                }
+                },
+                onBack = { navController.popBackStack() }  // ADD THIS
+
             )
         }
 
