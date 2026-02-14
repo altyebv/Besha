@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class LessonsScreenState(
+    val subjectId: String = "",
+    val subjectName: String = "",
     val units: List<Pair<Units, List<LessonDomain>>> = emptyList(),
     val completedLessonIds: Set<String> = emptySet(),
     val isLoading: Boolean = true
@@ -30,22 +32,21 @@ class LessonsViewModel @Inject constructor(
     private val _state = MutableStateFlow(LessonsScreenState())
     val state: StateFlow<LessonsScreenState> = _state.asStateFlow()
 
-    init {
-        loadLessons()
-    }
-
-    private fun loadLessons() {
+    fun loadLessons(subjectId: String) {
         viewModelScope.launch {
-            // For now, load the first subject's lessons
-            // Later you can add subject selection
+            _state.update { it.copy(isLoading = true, subjectId = subjectId) }
+
+            // Get the specific subject
             subjectRepository.getAllSubjects().collect { subjects ->
-                val subject = subjects.firstOrNull()
+                val subject = subjects.find { it.id == subjectId }
                 if (subject == null) {
                     _state.update { it.copy(isLoading = false) }
                     return@collect
                 }
 
-                // Combine units and their lessons
+                _state.update { it.copy(subjectName = subject.nameAr) }
+
+                // Combine units and their lessons for this subject
                 subjectRepository.getUnitsBySubject(subject.id).collect { units ->
                     val unitsWithLessons = mutableListOf<Pair<Units, List<LessonDomain>>>()
 
@@ -56,7 +57,7 @@ class LessonsViewModel @Inject constructor(
                         }
                     }
 
-                    // Load completed lessons AFTER the loop
+                    // Load completed lessons
                     progressRepository.getCompletedLessons().first().let { completedProgress ->
                         _state.update {
                             it.copy(

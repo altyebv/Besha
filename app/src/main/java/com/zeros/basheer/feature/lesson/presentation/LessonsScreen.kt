@@ -21,15 +21,25 @@ import com.zeros.basheer.feature.subject.domain.model.Units
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LessonsScreen(
+    subjectId: String,
     onLessonClick: (String) -> Unit,
     viewModel: LessonsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
+    // Load lessons when subjectId changes
+    LaunchedEffect(subjectId) {
+        viewModel.loadLessons(subjectId)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("الدروس") }
+                title = {
+                    Text(
+                        text = if (state.subjectName.isNotEmpty()) state.subjectName else "الدروس"
+                    )
+                }
             )
         }
     ) { padding ->

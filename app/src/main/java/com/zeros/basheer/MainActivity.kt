@@ -32,9 +32,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             try {
-                seeder.seedFromAssets(this@MainActivity, "geography.json")
-               seeder.seedQuizBankFromAssets(this@MainActivity)
-                Log.d("Basheer", "Database seeded successfully!")
+                seeder.seedFromAssets(this@MainActivity, "geographyy.json")
+                seeder.seedFromAssets(this@MainActivity, "military.json")
+//               seeder.seedQuizBankFromAssets(this@MainActivity)
+                Log.d("Lessons", "Database seeded successfully!")
             } catch (e: Exception) {
                 Log.e("Seeds", "Seeding failed", e)
             }
