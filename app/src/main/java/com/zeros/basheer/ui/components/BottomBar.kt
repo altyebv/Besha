@@ -68,13 +68,21 @@ fun BasheerBottomBar(
 
     NavigationBar {
         bottomNavItems.forEach { item ->
-            val isSelected = currentRoute == item.route
+            // Check if current route matches this item's route pattern
+            // Handle both exact matches and routes with parameters
+            val isSelected = currentRoute?.let { route ->
+                route == item.route || route.startsWith(item.route.split("/").first())
+            } ?: false
 
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
+                    // Don't navigate if already on this screen
+                    if (currentRoute == item.route) return@NavigationBarItem
+
                     navController.navigate(item.route) {
-                        // Pop up to the start destination to avoid building up a large stack
+                        // Pop everything up to Main (start destination)
+                        // This ensures clicking Home from anywhere takes you to Main
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
                         }
