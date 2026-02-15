@@ -14,12 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
-import com.zeros.basheer.feature.feed.domain.model.FeedCard
-import com.zeros.basheer.ui.components.feeds.McqCard
-import com.zeros.basheer.ui.components.feeds.TrueFalseCard
-import com.zeros.basheer.feature.feed.domain.model.FeedItemType
-import com.zeros.basheer.feature.feed.domain.model.InteractionType
+import com.zeros.basheer.feature.practice.presentation.components.*
 import com.zeros.basheer.feature.quizbank.domain.model.Question
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 
@@ -115,7 +110,7 @@ fun PracticeSessionScreen(
                         }
 
                         // Skip button (only when idle)
-                        if (state.interactionState is CardInteractionState.Idle) {
+                        if (state.interactionState is QuestionInteractionState.Idle) {
                             SkipButton(
                                 onSkip = { viewModel.onEvent(PracticeSessionEvent.SkipQuestion) },
                                 modifier = Modifier
@@ -220,17 +215,14 @@ private fun StatChip(
 @Composable
 private fun QuestionCard(
     question: Question,
-    interactionState: CardInteractionState,
+    interactionState: QuestionInteractionState,
     onAnswer: (String) -> Unit,
     onContinue: () -> Unit
 ) {
-    // Convert Question to FeedCard format for reusing existing components
-    val feedCard = question.toFeedCard()
-
     when (question.type) {
         QuestionType.TRUE_FALSE -> {
             TrueFalseCard(
-                card = feedCard,
+                question = question,
                 interactionState = interactionState,
                 onAnswer = onAnswer,
                 onContinue = onContinue
@@ -239,17 +231,74 @@ private fun QuestionCard(
 
         QuestionType.MCQ -> {
             McqCard(
-                card = feedCard,
+                question = question,
                 interactionState = interactionState,
                 onAnswer = onAnswer,
                 onContinue = onContinue
             )
         }
 
-        else -> {
-            // For other question types, show a placeholder
-            OtherQuestionTypeCard(
+        QuestionType.FILL_BLANK -> {
+            FillBlankCard(
                 question = question,
+                interactionState = interactionState,
+                onAnswer = onAnswer,
+                onContinue = onContinue
+            )
+        }
+
+        QuestionType.SHORT_ANSWER,
+        QuestionType.EXPLAIN,
+        QuestionType.LIST -> {
+            OpenAnswerCard(
+                question = question,
+                interactionState = interactionState,
+                onAnswer = onAnswer,
+                onContinue = onContinue
+            )
+        }
+
+        QuestionType.FIGURE -> {
+            FigureCard(
+                question = question,
+                interactionState = interactionState,
+                onAnswer = onAnswer,
+                onContinue = onContinue
+            )
+        }
+
+        QuestionType.COMPARE -> {
+            CompareCard(
+                question = question,
+                interactionState = interactionState,
+                onAnswer = onAnswer,
+                onContinue = onContinue
+            )
+        }
+
+        QuestionType.TABLE -> {
+            TableCard(
+                question = question,
+                interactionState = interactionState,
+                onAnswer = onAnswer,
+                onContinue = onContinue
+            )
+        }
+
+        QuestionType.ORDER -> {
+            OrderCard(
+                question = question,
+                interactionState = interactionState,
+                onAnswer = onAnswer,
+                onContinue = onContinue
+            )
+        }
+
+        QuestionType.MATCH -> {
+            MatchCard(
+                question = question,
+                interactionState = interactionState,
+                onAnswer = onAnswer,
                 onContinue = onContinue
             )
         }
@@ -376,47 +425,6 @@ private fun ErrorMessage(
         Button(onClick = onRetry) {
             Text("إعادة المحاولة")
         }
-    }
-}
-
-/**
- * Extension to convert Question to FeedCard
- */
-private fun Question.toFeedCard(): FeedCard {
-    return FeedCard(
-        id = this.id,
-        conceptId = "", // Not needed for practice
-        subjectId = this.subjectId,
-        subjectName = "", // Not needed
-        type = FeedItemType.MINI_QUIZ,
-        contentAr = this.textAr,
-        contentEn = this.textEn,
-        imageUrl = this.imageUrl,
-        interactionType = when (this.type) {
-            QuestionType.TRUE_FALSE -> InteractionType.SWIPE_TF
-            QuestionType.MCQ -> InteractionType.MCQ
-            else -> InteractionType.TAP_CONFIRM
-        },
-        correctAnswer = this.correctAnswer,
-        options = this.options?.let { parseOptions(it) },
-        explanation = this.explanation,
-        priority = 0
-    )
-}
-
-/**
- * Parse JSON options string
- */
-private fun parseOptions(optionsJson: String): List<String> {
-    return try {
-        // Simple JSON array parsing for ["option1", "option2", ...]
-        optionsJson
-            .trim()
-            .removeSurrounding("[", "]")
-            .split(",")
-            .map { it.trim().removeSurrounding("\"") }
-    } catch (e: Exception) {
-        emptyList()
     }
 }
 

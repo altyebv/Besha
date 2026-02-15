@@ -3,7 +3,7 @@ package com.zeros.basheer.feature.practice.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
+import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.practice.domain.model.PracticeSession
 import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
 import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository
@@ -22,7 +22,7 @@ data class PracticeSessionState(
     val session: PracticeSession? = null,
     val questions: List<Question> = emptyList(),
     val currentQuestionIndex: Int = 0,
-    val interactionState: CardInteractionState = CardInteractionState.Idle,
+    val interactionState: QuestionInteractionState = QuestionInteractionState.Idle,
     val isLoading: Boolean = true,
     val error: String? = null,
     val isComplete: Boolean = false,
@@ -136,7 +136,7 @@ class PracticeSessionViewModel @Inject constructor(
         // Update state to show answer result
         _state.update {
             it.copy(
-                interactionState = CardInteractionState.Answered(
+                interactionState = QuestionInteractionState.Answered(
                     userAnswer = answer,
                     isCorrect = isCorrect,
                     explanation = currentQuestion.explanation
@@ -183,7 +183,7 @@ class PracticeSessionViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     currentQuestionIndex = nextIndex,
-                    interactionState = CardInteractionState.Idle,
+                    interactionState = QuestionInteractionState.Idle,
                     questionStartTime = System.currentTimeMillis()
                 )
             }
