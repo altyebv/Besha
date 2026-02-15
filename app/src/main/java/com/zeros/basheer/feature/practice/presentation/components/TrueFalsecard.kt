@@ -1,4 +1,4 @@
-package com.zeros.basheer.ui.components.feeds
+package com.zeros.basheer.feature.practice.presentation.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -20,8 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
-import com.zeros.basheer.feature.feed.domain.model.FeedCard
+import com.zeros.basheer.feature.quizbank.domain.model.Question
 
 /**
  * Card for True/False questions with swipe gestures.
@@ -30,15 +29,15 @@ import com.zeros.basheer.feature.feed.domain.model.FeedCard
  */
 @Composable
 fun TrueFalseCard(
-    card: FeedCard,
-    interactionState: CardInteractionState,
+    question: Question,
+    interactionState: QuestionInteractionState,
     onAnswer: (String) -> Unit,
     onContinue: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var dragOffset by remember { mutableFloatStateOf(0f) }
     val swipeThreshold = 150f
-    
+
     // Animate color based on drag direction
     val backgroundColor by animateColorAsState(
         targetValue = when {
@@ -49,7 +48,7 @@ fun TrueFalseCard(
         animationSpec = tween(150),
         label = "bgColor"
     )
-    
+
     val cardRotation by animateFloatAsState(
         targetValue = (dragOffset / 30f).coerceIn(-15f, 15f),
         animationSpec = tween(50),
@@ -61,8 +60,8 @@ fun TrueFalseCard(
             .fillMaxSize()
             .background(backgroundColor)
             .then(
-                if (interactionState is CardInteractionState.Idle || 
-                    interactionState is CardInteractionState.Interacting) {
+                if (interactionState is QuestionInteractionState.Idle ||
+                    interactionState is QuestionInteractionState.Interacting) {
                     Modifier.pointerInput(Unit) {
                         detectHorizontalDragGestures(
                             onDragEnd = {
@@ -87,8 +86,8 @@ fun TrueFalseCard(
         contentAlignment = Alignment.Center
     ) {
         when (interactionState) {
-            is CardInteractionState.Idle,
-            is CardInteractionState.Interacting -> {
+            is QuestionInteractionState.Idle,
+            is QuestionInteractionState.Interacting -> {
                 // Question content
                 Column(
                     modifier = Modifier
@@ -102,7 +101,7 @@ fun TrueFalseCard(
                     verticalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
                     Text(
-                        text = card.contentAr,
+                        text = question.textAr,
                         style = MaterialTheme.typography.headlineSmall.copy(
                             lineHeight = 36.sp,
                             fontWeight = FontWeight.Medium
@@ -111,7 +110,7 @@ fun TrueFalseCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 // Swipe hints
                 Row(
                     modifier = Modifier
@@ -127,7 +126,7 @@ fun TrueFalseCard(
                         color = Color(0xFFF44336),
                         alpha = if (dragOffset < -30) 1f else 0.5f
                     )
-                    
+
                     // Right hint (True)
                     SwipeHint(
                         text = "صح",
@@ -137,12 +136,12 @@ fun TrueFalseCard(
                     )
                 }
             }
-            
-            is CardInteractionState.Answered -> {
+
+            is QuestionInteractionState.Answered -> {
                 // Result display
                 AnswerResult(
                     isCorrect = interactionState.isCorrect,
-                    explanation = interactionState.explanation,
+                    explanation = question.explanation,
                     onContinue = onContinue
                 )
             }
@@ -198,7 +197,7 @@ fun AnswerResult(
             tint = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336),
             modifier = Modifier.size(72.dp)
         )
-        
+
         // Result text
         Text(
             text = if (isCorrect) "إجابة صحيحة!" else "إجابة خاطئة",
@@ -206,7 +205,7 @@ fun AnswerResult(
             fontWeight = FontWeight.Bold,
             color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336)
         )
-        
+
         // Explanation
         explanation?.let { exp ->
             Surface(
@@ -223,9 +222,9 @@ fun AnswerResult(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Continue button
         Button(
             onClick = onContinue,

@@ -1,8 +1,10 @@
-package com.zeros.basheer.ui.components.feeds
+package com.zeros.basheer.feature.practice.presentation.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -15,8 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
-import com.zeros.basheer.feature.feed.domain.model.FeedCard
+import com.zeros.basheer.feature.quizbank.domain.model.Question
 
 /**
  * Card for Multiple Choice Questions.
@@ -24,15 +25,16 @@ import com.zeros.basheer.feature.feed.domain.model.FeedCard
  */
 @Composable
 fun McqCard(
-    card: FeedCard,
-    interactionState: CardInteractionState,
+    question: Question,
+    interactionState: QuestionInteractionState,
     onAnswer: (String) -> Unit,
     onContinue: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val options = card.options ?: emptyList()
+    val options = parseOptions(question.options ?: "")
     var selectedOption by remember { mutableStateOf<String?>(null) }
-    
+    val scrollState = rememberScrollState()
+
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -40,13 +42,14 @@ fun McqCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // Question text
             Text(
-                text = card.contentAr,
+                text = question.textAr,
                 style = MaterialTheme.typography.titleLarge.copy(
                     lineHeight = 32.sp,
                     fontWeight = FontWeight.Medium
@@ -54,13 +57,13 @@ fun McqCard(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Options
             when (interactionState) {
-                is CardInteractionState.Idle,
-                is CardInteractionState.Interacting -> {
+                is QuestionInteractionState.Idle,
+                is QuestionInteractionState.Interacting -> {
                     options.forEach { option ->
                         McqOption(
                             text = option,
@@ -73,15 +76,15 @@ fun McqCard(
                         )
                     }
                 }
-                
-                is CardInteractionState.Answered -> {
+
+                is QuestionInteractionState.Answered -> {
                     options.forEach { option ->
                         val state = when {
-                            option == card.correctAnswer -> McqOptionState.CORRECT
+                            option == question.correctAnswer -> McqOptionState.CORRECT
                             option == interactionState.userAnswer && !interactionState.isCorrect -> McqOptionState.INCORRECT
                             else -> McqOptionState.DISABLED
                         }
-                        
+
                         McqOption(
                             text = option,
                             isSelected = false,
@@ -89,9 +92,9 @@ fun McqCard(
                             onClick = { }
                         )
                     }
-                    
+
                     // Explanation
-                    interactionState.explanation?.let { exp ->
+                    question.explanation?.let { exp ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Surface(
                             shape = MaterialTheme.shapes.medium,
@@ -107,9 +110,9 @@ fun McqCard(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Continue button
                     Button(
                         onClick = onContinue,
@@ -151,7 +154,7 @@ private fun McqOption(
         },
         label = "optionBg"
     )
-    
+
     val borderColor by animateColorAsState(
         targetValue = when (state) {
             McqOptionState.DEFAULT -> if (isSelected) {
@@ -165,7 +168,7 @@ private fun McqOption(
         },
         label = "optionBorder"
     )
-    
+
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -190,7 +193,7 @@ private fun McqOption(
                 },
                 modifier = Modifier.weight(1f)
             )
-            
+
             // Result icon
             when (state) {
                 McqOptionState.CORRECT -> {
@@ -210,5 +213,20 @@ private fun McqOption(
                 else -> { }
             }
         }
+    }
+}
+
+/**
+ * Parse JSON options string to list
+ */
+private fun parseOptions(optionsJson: String): List<String> {
+    return try {
+        optionsJson
+            .trim()
+            .removeSurrounding("[", "]")
+            .split(",")
+            .map { it.trim().removeSurrounding("\"") }
+    } catch (e: Exception) {
+        emptyList()
     }
 }
