@@ -1,0 +1,296 @@
+{
+  "version": "1.0",
+  "subject": {
+    "id": "الجغرافيا",
+    "nameAr": "الجغرافيا",
+    "nameEn": "Geography",
+    "path": "LITERARY",
+    "isMajor": false,
+    "order": 0,
+    "colorHex": null
+  },
+  "tags": [],
+  "concepts": [
+    {
+      "id": "concept_1769902577195_ejxeur",
+      "type": "DEFINITION",
+      "titleAr": "الإستشعار عن بعد",
+      "titleEn": "Remote sensing",
+      "definition": "علم يهدف للحصول على معلومات عن ظاهرة معينة أو منطقة أو اقليم أو خلافه من خلال تحليل بيانات هذه الظاهرة أو المنطقة موضع الدراسة و التي تم الحصول عليها بواسطة جهاز تسجيل لا يحتك مٌباشرة بالظاهرة التي ندرسها كما هو الحال في الصور الجوية أو الفضائية",
+      "shortDefinition": "استخدام الصور الجوية التقليدية إضافة إلى استخدام المناظر الجوية والفضائية بواسطة وسائل الاستشعار غير الفوتوغرافية مثل الأقمار الصناعية وسفن الفضاء والرادار والطائرات",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 1,
+      "extraData": null,
+      "tagIds": []
+    },
+    {
+      "id": "concept_satellite",
+      "type": "DEFINITION",
+      "titleAr": "القمر الصناعي",
+      "titleEn": "Satellite",
+      "definition": "جسم يدور حول الأرض في مدار محدد ومجهز بأجهزة استشعار لالتقاط الصور والبيانات عن سطح الأرض",
+      "shortDefinition": "جسم فضائي يدور حول الأرض لجمع البيانات",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 1,
+      "extraData": null,
+      "tagIds": []
+    },
+    {
+      "id": "concept_aerial_photo",
+      "type": "DEFINITION",
+      "titleAr": "الصورة الجوية",
+      "titleEn": "Aerial Photo",
+      "definition": "صورة تُلتقط من الجو بواسطة كاميرات مثبتة على طائرات أو مناطيد، وتستخدم في رسم الخرائط ودراسة الموارد الأرضية",
+      "shortDefinition": "صورة ملتقطة من الجو بواسطة طائرة",
+      "formula": null,
+      "imageUrl": null,
+      "difficulty": 1,
+      "extraData": null,
+      "tagIds": []
+    }
+  ],
+  "units": [
+    {
+      "id": "unit_1770160501908_lp1lct",
+      "title": "مقدمة في قراءة و تفسير الصور الجوية",
+      "order": 1,
+      "description": null,
+      "lessons": [
+        {
+          "id": "lesson_1770160513497_93fsm3",
+          "title": "الإستشعار عن بعد",
+          "order": 1,
+          "estimatedMinutes": 15,
+          "summary": "مقدمة في علم الاستشعار عن بعد وأهميته في دراسة الموارد الأرضية",
+          "sections": [
+            {
+              "id": "sec_1770160552933_ul7uk6",
+              "title": "تمهيد",
+              "order": 1,
+              "conceptIds": ["concept_1769902577195_ejxeur"],
+              "blocks": [
+                {
+                  "id": "block_1770160573710_u5sj8d",
+                  "type": "TEXT",
+                  "content": "الاستشعارعن بعد تواجه المجتمعات البشرية في مختلف أنحاء العالم اليوم، مشكلات معقدة كثيرة في مجالات مختلفة، مثل مشكلات الطاقة والنقل والتلوث ونضوب الموارد وتغير البيئة، وغيرها من المشكلات التي تتطلب إجراءات سريعة لمنع انتشارها وتقليل آثارها. لذا سعت جميع العلوم على المستوى الأكاديمي للمشاركة في ايجاد حلول عملية لمثل هذه المشكلات، متخذة في ذلك أسلوب البحث العلمى التطبيقى.",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_definition_rs",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "الاستشعار عن بعد: علم يهدف للحصول على معلومات عن ظاهرة معينة من خلال تحليل بيانات تم الحصول عليها بواسطة جهاز تسجيل لا يحتك مباشرة بالظاهرة المدروسة",
+                  "order": 2,
+                  "conceptRef": "concept_1769902577195_ejxeur",
+                  "caption": null,
+                  "metadata": "{\"style\": \"definition\"}"
+                },
+                {
+                  "id": "block_text_2",
+                  "type": "TEXT",
+                  "content": "وتعتبر البيانات أحد العناصر الرئيسة في البحث العلمى، وقد تعددت مصادر الحصول عليها من الأعمال الميدانية إلى الكتب والنشرات الإحصائية وغيرها من المصادر التقليدية المعروفة. إلا أن التوسع في الحاجة إلى البيانات المكانية، سواء من حيث الحجم المساحي أو دقة التفاصيل، جعلت المصادر التقليدية للبيانات غير كافية أو غير عملية.",
+                  "order": 3,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_tip_1",
+                  "type": "TIP",
+                  "content": "تذكر أن الميزة الأساسية للاستشعار عن بعد هي عدم الحاجة للملامسة المباشرة للظاهرة المدروسة",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            },
+            {
+              "id": "sec_tools",
+              "title": "وسائل الاستشعار عن بعد",
+              "order": 2,
+              "conceptIds": ["concept_satellite", "concept_aerial_photo"],
+              "blocks": [
+                {
+                  "id": "block_tools_intro",
+                  "type": "TEXT",
+                  "content": "تتنوع وسائل الاستشعار عن بعد بين الوسائل الجوية والفضائية، وكل منها له مميزاته واستخداماته الخاصة.",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "block_list_tools",
+                  "type": "LIST",
+                  "content": "الأقمار الصناعية\nالطائرات\nالمناطيد\nالطائرات بدون طيار (الدرون)",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"style\": \"bullet\"}"
+                },
+                {
+                  "id": "block_satellite_def",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "القمر الصناعي: جسم يدور حول الأرض في مدار محدد ومجهز بأجهزة استشعار لالتقاط الصور والبيانات عن سطح الأرض",
+                  "order": 3,
+                  "conceptRef": "concept_satellite",
+                  "caption": null,
+                  "metadata": "{\"style\": \"definition\"}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": [],
+  "exams": [],
+  "feedItems": [
+    {
+      "id": "feed_def_1",
+      "conceptId": "concept_1769902577195_ejxeur",
+      "type": "DEFINITION",
+      "contentAr": "الاستشعار عن بعد: علم الحصول على معلومات عن ظاهرة معينة بواسطة جهاز لا يحتك مباشرة بها",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 5,
+      "order": 1
+    },
+    {
+      "id": "feed_fact_1",
+      "conceptId": "concept_1769902577195_ejxeur",
+      "type": "FACT",
+      "contentAr": "بدأ الإنسان الاستشعار عن بعد بالصعود إلى التلال والجبال لمشاهدة الأرض من بعد",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 3,
+      "order": 2
+    },
+    {
+      "id": "feed_def_satellite",
+      "conceptId": "concept_satellite",
+      "type": "DEFINITION",
+      "contentAr": "القمر الصناعي: جسم فضائي يدور حول الأرض ومجهز بأجهزة استشعار لجمع البيانات",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 4,
+      "order": 3
+    },
+    {
+      "id": "feed_tf_1",
+      "conceptId": "concept_1769902577195_ejxeur",
+      "type": "MINI_QUIZ",
+      "contentAr": "الاستشعار عن بعد يتطلب ملامسة الجهاز للظاهرة المدروسة",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "SWIPE_TF",
+      "correctAnswer": "false",
+      "options": null,
+      "explanation": "الاستشعار عن بعد لا يتطلب ملامسة - هذا هو جوهر التقنية، فالجهاز يجمع البيانات من مسافة بعيدة",
+      "priority": 5,
+      "order": 4
+    },
+    {
+      "id": "feed_tf_2",
+      "conceptId": "concept_satellite",
+      "type": "MINI_QUIZ",
+      "contentAr": "الأقمار الصناعية تدور حول الأرض في مدارات محددة",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "SWIPE_TF",
+      "correctAnswer": "true",
+      "options": null,
+      "explanation": "صحيح! الأقمار الصناعية تدور في مدارات محددة حول الأرض لتغطية مناطق معينة بشكل منتظم",
+      "priority": 4,
+      "order": 5
+    },
+    {
+      "id": "feed_tf_3",
+      "conceptId": "concept_aerial_photo",
+      "type": "MINI_QUIZ",
+      "contentAr": "الصور الجوية تُلتقط من الفضاء فقط",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "SWIPE_TF",
+      "correctAnswer": "false",
+      "options": null,
+      "explanation": "خطأ! الصور الجوية تُلتقط من الجو بواسطة طائرات أو مناطيد، أما الصور الفضائية فتُلتقط من الأقمار الصناعية",
+      "priority": 4,
+      "order": 6
+    },
+    {
+      "id": "feed_mcq_1",
+      "conceptId": "concept_1769902577195_ejxeur",
+      "type": "MINI_QUIZ",
+      "contentAr": "أي من التالي يعتبر من وسائل الاستشعار عن بعد؟",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "MCQ",
+      "correctAnswer": "الأقمار الصناعية",
+      "options": "[\"المجهر\", \"الأقمار الصناعية\", \"البوصلة\", \"المسطرة\"]",
+      "explanation": "الأقمار الصناعية من أهم وسائل الاستشعار عن بعد لأنها تجمع البيانات من الفضاء دون ملامسة سطح الأرض",
+      "priority": 5,
+      "order": 7
+    },
+    {
+      "id": "feed_mcq_2",
+      "conceptId": "concept_1769902577195_ejxeur",
+      "type": "MINI_QUIZ",
+      "contentAr": "ما هي الميزة الأساسية للاستشعار عن بعد؟",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "MCQ",
+      "correctAnswer": "جمع البيانات دون ملامسة الظاهرة",
+      "options": "[\"السرعة في التنقل\", \"جمع البيانات دون ملامسة الظاهرة\", \"انخفاض التكلفة\", \"سهولة الاستخدام\"]",
+      "explanation": "الميزة الأساسية هي إمكانية جمع المعلومات عن بعد دون الحاجة للاتصال المباشر بالظاهرة المدروسة",
+      "priority": 5,
+      "order": 8
+    },
+    {
+      "id": "feed_mcq_3",
+      "conceptId": "concept_satellite",
+      "type": "MINI_QUIZ",
+      "contentAr": "أين تدور الأقمار الصناعية؟",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "MCQ",
+      "correctAnswer": "حول الأرض في مدارات محددة",
+      "options": "[\"على سطح الأرض\", \"حول الأرض في مدارات محددة\", \"داخل الغلاف الجوي فقط\", \"حول القمر\"]",
+      "explanation": "الأقمار الصناعية تدور حول الأرض في مدارات محددة خارج الغلاف الجوي",
+      "priority": 4,
+      "order": 9
+    },
+    {
+      "id": "feed_tip_1",
+      "conceptId": "concept_1769902577195_ejxeur",
+      "type": "TIP",
+      "contentAr": "💡 نصيحة: تذكر دائماً أن كلمة \"بعد\" في الاستشعار عن بعد تعني عدم الملامسة",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 2,
+      "order": 10
+    }
+  ]
+}
