@@ -121,17 +121,17 @@ fun TrueFalseCard(
                 ) {
                     // Left hint (False)
                     SwipeHint(
-                        text = "خطأ",
-                        icon = Icons.Default.Close,
-                        color = Color(0xFFF44336),
+                        text = "صح",
+                        icon = Icons.Default.Check,
+                        color = Color(0xFF4CAF50),
                         alpha = if (dragOffset < 30) 1f else 0.5f
                     )
 
                     // Right hint (True)
                     SwipeHint(
-                        text = "صح",
-                        icon = Icons.Default.Check,
-                        color = Color(0xFF4CAF50),
+                        text = "خطأ",
+                        icon = Icons.Default.Close,
+                        color = Color(0xFFF44336),
                         alpha = if (dragOffset > -30) 1f else 0.5f
                     )
                 }
