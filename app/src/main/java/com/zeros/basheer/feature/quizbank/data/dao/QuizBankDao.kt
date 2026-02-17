@@ -126,7 +126,13 @@ interface QuizAttemptDao {
     suspend fun deleteAttemptsByExam(examId: String)
 
     @Transaction
-    suspend fun completeAttempt(attemptId: Long, score: Int, totalPoints: Int, timeSpentSeconds: Int) {
+    suspend fun completeAttempt(
+        attemptId: Long,
+        score: Int,
+        totalPoints: Int,
+        timeSpentSeconds: Int,
+        status: String = "COMPLETED"
+    ) {
         val attempt = getAttemptById(attemptId)
         attempt?.let {
             updateAttempt(
@@ -135,7 +141,8 @@ interface QuizAttemptDao {
                     score = score,
                     totalPoints = totalPoints,
                     percentage = if (totalPoints > 0) score.toFloat() / totalPoints * 100 else 0f,
-                    timeSpentSeconds = timeSpentSeconds
+                    timeSpentSeconds = timeSpentSeconds,
+                    status = status
                 )
             )
         }
