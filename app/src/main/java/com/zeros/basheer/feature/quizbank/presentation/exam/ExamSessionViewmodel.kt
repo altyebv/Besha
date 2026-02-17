@@ -34,6 +34,7 @@ data class ExamSessionState(
     val timeRemainingSeconds: Int = 0,
     val isTimerRunning: Boolean = false,
     val showTimeWarning: Boolean = false,
+    val timeWarningMinutes: Int = 0,  // Which warning threshold was hit
 
     // Answers
     val answers: Map<String, String> = emptyMap(),  // questionId -> userAnswer
@@ -46,6 +47,12 @@ data class ExamSessionState(
     val showNavigationSheet: Boolean = false,
     val showSubmitDialog: Boolean = false,
     val isComplete: Boolean = false,
+
+    // Integrity
+    val strictMode: Boolean = false,
+    val violationCount: Int = 0,
+    val isInGracePeriod: Boolean = false,
+    val showViolationWarningDialog: Boolean = false,
 
     // Stats
     val questionStartTime: Long = System.currentTimeMillis()
@@ -83,6 +90,8 @@ sealed class ExamSessionEvent {
     object CancelSubmit : ExamSessionEvent()
     object ConfirmSubmit : ExamSessionEvent()
     object ExamViolation : ExamSessionEvent()
+    object ExamResumed : ExamSessionEvent()
+    object DismissViolationWarning : ExamSessionEvent()
 }
 
 @HiltViewModel
@@ -97,6 +106,8 @@ class ExamSessionViewModel @Inject constructor(
 
     private val examId: String = savedStateHandle.get<String>("examId")
         ?: throw IllegalArgumentException("Exam ID is required")
+
+    private val strictMode: Boolean = savedStateHandle.get<Boolean>("strictMode") ?: false
 
     private val _state = MutableStateFlow(ExamSessionState())
     val state: StateFlow<ExamSessionState> = _state.asStateFlow()
@@ -119,6 +130,8 @@ class ExamSessionViewModel @Inject constructor(
             ExamSessionEvent.CancelSubmit -> cancelSubmit()
             ExamSessionEvent.ConfirmSubmit -> submitExam()
             ExamSessionEvent.ExamViolation -> handleViolation()
+            ExamSessionEvent.ExamResumed -> handleResume()
+            ExamSessionEvent.DismissViolationWarning -> _state.update { it.copy(showViolationWarningDialog = false) }
         }
     }
 
@@ -161,6 +174,7 @@ class ExamSessionViewModel @Inject constructor(
                         timeRemainingSeconds = timeSeconds,
                         isTimerRunning = true,
                         isLoading = false,
+                        strictMode = strictMode,
                         questionStartTime = System.currentTimeMillis()
                     )
                 }
@@ -188,11 +202,14 @@ class ExamSessionViewModel @Inject constructor(
                     val newTime = state.timeRemainingSeconds - 1
 
                     // Show warning at 30, 10, 5 minutes
-                    val showWarning = newTime == 1800 || newTime == 600 || newTime == 300
+                    val warningMinutes = when (newTime) {
+                        1800 -> 30; 600 -> 10; 300 -> 5; else -> 0
+                    }
 
                     state.copy(
                         timeRemainingSeconds = newTime,
-                        showTimeWarning = showWarning
+                        showTimeWarning = warningMinutes > 0,
+                        timeWarningMinutes = warningMinutes
                     )
                 }
             }
@@ -398,20 +415,69 @@ class ExamSessionViewModel @Inject constructor(
                         attemptId = attemptId,
                         score = score,
                         totalPoints = totalPoints,
-                        timeSpentSeconds = totalTime
+                        timeSpentSeconds = totalTime,
+                        status = status.name
                     )
                 } catch (e: Exception) {
                     println("Failed to auto-submit: ${e.message}")
                 }
             }
 
+            timerJob?.cancel()
+            gracePeriodJob?.cancel()
             _state.update { it.copy(isComplete = true, isTimerRunning = false) }
         }
     }
 
+    private var gracePeriodJob: Job? = null
+
     private fun handleViolation() {
-        // User left the screen - disqualify
-        autoSubmitExam(ExamAttemptStatus.DISQUALIFIED)
+        val state = _state.value
+        if (state.isComplete || state.isLoading) return
+
+        if (state.strictMode) {
+            // Strict mode: instant disqualification
+            autoSubmitExam(ExamAttemptStatus.DISQUALIFIED)
+            return
+        }
+
+        // Lenient mode: grace period + warning system
+        val newViolationCount = state.violationCount + 1
+
+        if (newViolationCount >= 2) {
+            // Second offense: disqualify
+            autoSubmitExam(ExamAttemptStatus.DISQUALIFIED)
+            return
+        }
+
+        // First offense: start 15-second grace period
+        _state.update {
+            it.copy(
+                violationCount = newViolationCount,
+                isInGracePeriod = true
+            )
+        }
+
+        gracePeriodJob?.cancel()
+        gracePeriodJob = viewModelScope.launch {
+            delay(15_000)
+            // Grace period expired without resume — disqualify
+            if (_state.value.isInGracePeriod) {
+                autoSubmitExam(ExamAttemptStatus.DISQUALIFIED)
+            }
+        }
+    }
+
+    private fun handleResume() {
+        if (_state.value.isInGracePeriod) {
+            gracePeriodJob?.cancel()
+            _state.update {
+                it.copy(
+                    isInGracePeriod = false,
+                    showViolationWarningDialog = true  // Show warning on first offense
+                )
+            }
+        }
     }
 
     private fun calculateScore(): Int {
@@ -428,5 +494,6 @@ class ExamSessionViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        gracePeriodJob?.cancel()
     }
 }
