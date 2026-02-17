@@ -11,13 +11,15 @@ class CompleteQuizAttemptUseCase @Inject constructor(
         attemptId: Long,
         score: Int,
         totalPoints: Int,
-        timeSpentSeconds: Int
+        timeSpentSeconds: Int,
+        status: String = "COMPLETED"
     ) {
         repository.completeQuizAttempt(
             attemptId = attemptId,
             score = score,
             totalPoints = totalPoints,
-            timeSpentSeconds = timeSpentSeconds
+            timeSpentSeconds = timeSpentSeconds,
+            status = status
         )
     }
 }
