@@ -77,8 +77,14 @@ class MainViewModel @Inject constructor(
             // Start with loading state
             _state.update { it.copy(isLoading = true) }
 
-            // Collect all subjects
-            subjectRepository.getAllSubjects().collect { subjects ->
+            // Combine subjects and completed lessons flows
+            combine(
+                subjectRepository.getAllSubjects(),
+                progressRepository.getCompletedLessons(),
+                progressRepository.getRecentlyAccessedLessons(10)
+            ) { subjects, completedLessons, recentLessons ->
+                Triple(subjects, completedLessons, recentLessons)
+            }.collect { (subjects, completedLessons, recentLessons) ->
                 val subjectsWithProgress = mutableListOf<SubjectWithProgress>()
                 var totalLessons = 0
                 var totalCompleted = 0
@@ -92,9 +98,6 @@ class MainViewModel @Inject constructor(
                     val lessons = lessonRepository.getLessonsBySubject(subject.id).first()
                     totalLessons += lessons.size
 
-                    // Get completed lessons
-                    val completedLessons = progressRepository.getCompletedLessons().first()
-
                     // Count completed lessons for this subject
                     val completedCount = completedLessons.count { progress ->
                         lessons.any { it.id == progress.lessonId }
@@ -102,7 +105,6 @@ class MainViewModel @Inject constructor(
                     totalCompleted += completedCount
 
                     // Find next lesson
-                    val recentLessons = progressRepository.getRecentlyAccessedLessons(10).first()
                     val nextLesson = recentLessons
                         .filter { progress -> lessons.any { it.id == progress.lessonId } }
                         .firstOrNull { progress -> !progress.completed }

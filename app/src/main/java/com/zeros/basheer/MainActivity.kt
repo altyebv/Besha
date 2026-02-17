@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
             try {
                 seeder.seedFromAssets(this@MainActivity, "geographyy.json")
                 seeder.seedFromAssets(this@MainActivity, "military.json")
-//               seeder.seedQuizBankFromAssets(this@MainActivity)
+               seeder.seedQuizBankFromAssets(this@MainActivity)
                 Log.d("Lessons", "Database seeded successfully!")
             } catch (e: Exception) {
                 Log.e("Seeds", "Seeding failed", e)
@@ -44,13 +44,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             BasheerTheme {
                 val navController = rememberNavController()
-
-                // Seed data on first launch
-//                LaunchedEffect(Unit) {
-//                    withContext(Dispatchers.IO) {
-//                        seeder.seedInitialData()
-//                    }
-//                }
 
 
                 Scaffold(
