@@ -28,6 +28,7 @@ import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
 import com.zeros.basheer.feature.practice.domain.model.PracticeSession
 import com.zeros.basheer.feature.quizbank.domain.model.Exam
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionCounts
+import com.zeros.basheer.ui.navigation.Screen
 
 /**
  * Quiz Bank Screen - Main screen for accessing exams and practice modes
@@ -45,6 +46,9 @@ fun QuizBankScreen(
             when (event) {
                 is QuizBankViewModel.NavigationEvent.NavigateToPractice -> {
                     navController.navigate("practice/${event.sessionId}")
+                }
+                is QuizBankViewModel.NavigationEvent.NavigateToExam -> {
+                    navController.navigate(Screen.ExamSession.createRoute(event.examId))
                 }
             }
         }

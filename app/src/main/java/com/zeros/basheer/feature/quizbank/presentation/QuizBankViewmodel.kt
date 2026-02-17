@@ -59,6 +59,7 @@ class QuizBankViewModel @Inject constructor(
 
     sealed class NavigationEvent {
         data class NavigateToPractice(val sessionId: Long) : NavigationEvent()
+        data class NavigateToExam(val examId: String) : NavigationEvent()
     }
 
     private val _state = MutableStateFlow(QuizBankState())
@@ -160,8 +161,8 @@ class QuizBankViewModel @Inject constructor(
     private fun startExam(examId: String) {
         viewModelScope.launch {
             try {
-                val exam = quizBankRepository.getExamById(examId)
-                // TODO: Navigate to exam screen
+                // Emit navigation event to start exam
+                _navigationEvent.emit(NavigationEvent.NavigateToExam(examId))
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
