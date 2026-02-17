@@ -294,16 +294,55 @@ class DatabaseSeeder @Inject constructor(
 
         // Link questions to exams
         println("   Linking questions to exams...")
-        mockData.questions.forEachIndexed { index, question ->
-            if (question.sourceExamId != null) {
-                quizBankRepository.insertExamQuestion(
-                    ExamQuestion(
-                        examId = question.sourceExamId,
-                        questionId = question.id,
-                        order = index + 1,
-                        points = question.points,
+
+        // First: Handle exams with sectionsJson (structured exams)
+        mockData.exams.forEach { exam ->
+            if (exam.sectionsJson != null) {
+                try {
+                    val sections = json.decodeFromString<List<ExamSection>>(exam.sectionsJson)
+                    var globalOrder = 1
+                    sections.forEach { section ->
+                        section.questionIds.forEach { questionId ->
+                            quizBankRepository.insertExamQuestion(
+                                ExamQuestion(
+                                    examId = exam.id,
+                                    questionId = questionId,
+                                    order = globalOrder++,
+                                    sectionLabel = section.title,
+                                    points = section.points?.div(section.questionIds.size)
+                                )
+                            )
+                        }
+                    }
+                    println("      Linked ${globalOrder - 1} questions to exam ${exam.id} via sections")
+                } catch (e: Exception) {
+                    println("      ⚠️ Failed to parse sections for exam ${exam.id}: ${e.message}")
+                }
+            }
+        }
+
+        // Second: Handle questions with sourceExamId (legacy format)
+        // Group questions by exam to maintain proper order
+        val questionsByExam = mockData.questions
+            .filter { it.sourceExamId != null }
+            .groupBy { it.sourceExamId!! }
+
+        questionsByExam.forEach { (examId, questions) ->
+            // Only link if exam doesn't have sections (to avoid duplicates)
+            val exam = mockData.exams.find { it.id == examId }
+            if (exam?.sectionsJson == null) {
+                questions.forEachIndexed { index, question ->
+                    quizBankRepository.insertExamQuestion(
+                        ExamQuestion(
+                            examId = examId,
+                            questionId = question.id,
+                            order = index + 1,
+                            points = question.points,
+                            sectionLabel = null
+                        )
                     )
-                )
+                }
+                println("      Linked ${questions.size} questions to exam $examId via sourceExamId")
             }
         }
 
