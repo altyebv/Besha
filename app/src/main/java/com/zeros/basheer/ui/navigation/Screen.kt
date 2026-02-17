@@ -14,8 +14,12 @@ sealed class Screen(val route: String) {
         fun createRoute(lessonId: String) = "lesson/$lessonId"
     }
 
-    object ExamSession : Screen("exam/{examId}") {
-        fun createRoute(examId: String) = "exam/$examId"
+    object ExamEntry : Screen("exam_entry/{examId}") {
+        fun createRoute(examId: String) = "exam_entry/$examId"
+    }
+
+    object ExamSession : Screen("exam/{examId}?strict={strictMode}") {
+        fun createRoute(examId: String, strictMode: Boolean = false) = "exam/$examId?strict=$strictMode"
     }
 
     object ExamResult : Screen("exam_result/{attemptId}") {

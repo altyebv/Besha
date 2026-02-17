@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.zeros.basheer.feature.feed.presentation.FeedsScreen
 import com.zeros.basheer.feature.quizbank.presentation.QuizBankScreen
+import com.zeros.basheer.feature.quizbank.presentation.entry.ExamEntryScreen
 import com.zeros.basheer.feature.quizbank.presentation.exam.ExamSessionScreen
 import com.zeros.basheer.feature.quizbank.presentation.exam.ExamResultScreen
 import com.zeros.basheer.feature.lesson.presentation.LessonsScreen
@@ -124,9 +125,30 @@ fun BasheerNavHost(
         }
 
         composable(
-            route = Screen.ExamSession.route,
+            route = Screen.ExamEntry.route,
             arguments = listOf(
                 navArgument("examId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val examId = backStackEntry.arguments?.getString("examId") ?: return@composable
+            ExamEntryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onStartExam = { id ->
+                    navController.navigate(Screen.ExamSession.createRoute(id)) {
+                        popUpTo(Screen.ExamEntry.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ExamSession.route,
+            arguments = listOf(
+                navArgument("examId") { type = NavType.StringType },
+                navArgument("strictMode") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
             )
         ) { backStackEntry ->
             val examId = backStackEntry.arguments?.getString("examId") ?: return@composable
