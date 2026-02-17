@@ -93,7 +93,9 @@ data class QuizAttemptEntity(
     val score: Int? = null,
     val totalPoints: Int? = null,
     val percentage: Float? = null,
-    val timeSpentSeconds: Int? = null
+    val timeSpentSeconds: Int? = null,
+    val status: String = "IN_PROGRESS",      // ExamAttemptStatus enum name
+    val flaggedQuestions: String? = null      // Comma-separated question IDs
 )
 
 @Entity(
