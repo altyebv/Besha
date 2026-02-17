@@ -89,7 +89,8 @@ interface QuizBankRepository {
         attemptId: Long,
         score: Int,
         totalPoints: Int,
-        timeSpentSeconds: Int
+        timeSpentSeconds: Int,
+        status: String = "COMPLETED"
     )
 
     suspend fun recordQuestionResponse(

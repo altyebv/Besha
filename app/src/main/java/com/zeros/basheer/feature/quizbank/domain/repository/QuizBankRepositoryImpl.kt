@@ -142,7 +142,13 @@ class QuizBankRepositoryImpl @Inject constructor(
         score = entity.score,
         totalPoints = entity.totalPoints,
         percentage = entity.percentage,
-        timeSpentSeconds = entity.timeSpentSeconds
+        timeSpentSeconds = entity.timeSpentSeconds,
+        status = try {
+            ExamAttemptStatus.valueOf(entity.status)
+        } catch (e: Exception) {
+            ExamAttemptStatus.IN_PROGRESS
+        },
+        flaggedQuestions = entity.flaggedQuestions
     )
 
     private fun quizAttemptDomainToEntity(attempt: QuizAttempt): QuizAttemptEntity = QuizAttemptEntity(
@@ -153,7 +159,9 @@ class QuizBankRepositoryImpl @Inject constructor(
         score = attempt.score,
         totalPoints = attempt.totalPoints,
         percentage = attempt.percentage,
-        timeSpentSeconds = attempt.timeSpentSeconds
+        timeSpentSeconds = attempt.timeSpentSeconds,
+        status = attempt.status.name,
+        flaggedQuestions = attempt.flaggedQuestions
     )
 
     private fun questionResponseEntityToDomain(entity: QuestionResponseEntity): QuestionResponse = QuestionResponse(
@@ -438,9 +446,10 @@ class QuizBankRepositoryImpl @Inject constructor(
         attemptId: Long,
         score: Int,
         totalPoints: Int,
-        timeSpentSeconds: Int
+        timeSpentSeconds: Int,
+        status: String
     ) {
-        completeAttempt(attemptId, score, totalPoints, timeSpentSeconds)
+        quizAttemptDao.completeAttempt(attemptId, score, totalPoints, timeSpentSeconds, status)
     }
 
     override suspend fun recordQuestionResponse(
