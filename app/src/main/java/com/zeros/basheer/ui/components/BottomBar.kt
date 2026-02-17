@@ -34,7 +34,7 @@ val bottomNavItems = listOf(
         unselectedIcon = Icons.Outlined.Home
     ),
     BottomNavItem(
-        route = Screen.Lessons.route,
+        route = Screen.Lessons.baseRoute,
         label = "الدروس",
         selectedIcon = Icons.Filled.MenuBook,
         unselectedIcon = Icons.Outlined.MenuBook
