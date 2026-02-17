@@ -124,7 +124,7 @@ fun TrueFalseCard(
                         text = "خطأ",
                         icon = Icons.Default.Close,
                         color = Color(0xFFF44336),
-                        alpha = if (dragOffset < -30) 1f else 0.5f
+                        alpha = if (dragOffset < 30) 1f else 0.5f
                     )
 
                     // Right hint (True)
@@ -132,7 +132,7 @@ fun TrueFalseCard(
                         text = "صح",
                         icon = Icons.Default.Check,
                         color = Color(0xFF4CAF50),
-                        alpha = if (dragOffset > 30) 1f else 0.5f
+                        alpha = if (dragOffset > -30) 1f else 0.5f
                     )
                 }
             }
