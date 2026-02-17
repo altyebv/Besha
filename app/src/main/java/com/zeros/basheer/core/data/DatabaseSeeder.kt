@@ -30,6 +30,7 @@ import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import com.zeros.basheer.feature.quizbank.domain.model.*
+import com.zeros.basheer.feature.quizbank.domain.model.ExamType
 import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,7 +41,7 @@ import javax.inject.Singleton
 
 /**
 Unified seeder that handles both lesson content AND quiz bank data.
-*/
+ */
 
 @Singleton
 class DatabaseSeeder @Inject constructor(
@@ -168,17 +169,29 @@ class DatabaseSeeder @Inject constructor(
 
     /**
      * Seed quiz bank mock data from assets (for testing/demo)
-     * Reads from: assets/quiz_bank_mock_data.json
      */
-    suspend fun seedQuizBankFromAssets(context: Context) = withContext(Dispatchers.IO) {
+    suspend fun seedQuizBankFromAssets(context: Context, fileName: String = "Exams_.json") = withContext(Dispatchers.IO) {
         try {
-            val inputStream = context.assets.open("Exams.json")
+            println("📖 Reading quiz bank file: $fileName")
+            val inputStream = context.assets.open(fileName)
             val reader = inputStream.bufferedReader()
-            val mockData = gson.fromJson(reader, QuizBankMockData::class.java)
+            val jsonContent = reader.readText()
             reader.close()
 
+            println("📄 JSON file read successfully, length: ${jsonContent.length}")
+
+            val mockData = gson.fromJson(jsonContent, QuizBankMockData::class.java)
+
+            println("✅ JSON parsed successfully")
+            println("   - Subjects: ${mockData.subjects.size}")
+            println("   - Units: ${mockData.units.size}")
+            println("   - Exams: ${mockData.exams.size}")
+            println("   - Questions: ${mockData.questions.size}")
+            println("   - Practice Sessions: ${mockData.practiceSessions.size}")
+            println("   - Question Stats: ${mockData.questionStats.size}")
+
             seedQuizBankData(mockData)
-            println("✅ Quiz Bank seeded successfully from assets")
+            println("✅ Quiz Bank seeded successfully from assets ($fileName)")
         } catch (e: Exception) {
             println("❌ Failed to seed Quiz Bank: ${e.message}")
             e.printStackTrace()
@@ -189,7 +202,10 @@ class DatabaseSeeder @Inject constructor(
      * Seed quiz bank data
      */
     private suspend fun seedQuizBankData(mockData: QuizBankMockData) {
+        println("🌱 Starting quiz bank data seeding...")
+
         // Subjects (if not already exists from lesson seeding)
+        println("   Inserting ${mockData.subjects.size} subjects...")
         mockData.subjects.forEach { subject ->
             try {
                 subjectRepository.insertSubject(
@@ -206,6 +222,7 @@ class DatabaseSeeder @Inject constructor(
         }
 
         // Units (if not already exists)
+        println("   Inserting ${mockData.units.size} units...")
         mockData.units.forEach { unit ->
             try {
                 subjectRepository.insertUnit(
@@ -222,6 +239,7 @@ class DatabaseSeeder @Inject constructor(
         }
 
         // Exams
+        println("   Inserting ${mockData.exams.size} exams...")
         mockData.exams.forEach { exam ->
             quizBankRepository.insertExam(
                 Exam(
@@ -234,12 +252,16 @@ class DatabaseSeeder @Inject constructor(
                     schoolName = exam.schoolName,
                     duration = exam.duration,
                     totalPoints = exam.totalPoints,
-                    description = exam.description
+                    description = exam.description,
+                    examType = exam.examType?.let { ExamType.valueOf(it) },
+                    sectionsJson = exam.sectionsJson
+
                 )
             )
         }
 
         // Questions
+        println("   Inserting ${mockData.questions.size} questions...")
         mockData.questions.forEach { question ->
             quizBankRepository.insertQuestion(
                 Question(
@@ -266,11 +288,12 @@ class DatabaseSeeder @Inject constructor(
                     feedEligible = question.feedEligible,
 
 
-                )
+                    )
             )
         }
 
         // Link questions to exams
+        println("   Linking questions to exams...")
         mockData.questions.forEachIndexed { index, question ->
             if (question.sourceExamId != null) {
                 quizBankRepository.insertExamQuestion(
@@ -285,6 +308,7 @@ class DatabaseSeeder @Inject constructor(
         }
 
         // Practice sessions
+        println("   Inserting ${mockData.practiceSessions.size} practice sessions...")
         mockData.practiceSessions.forEach { session ->
             practiceSessionDao.insertSession(
                 PracticeSessionEntity(
@@ -314,6 +338,7 @@ class DatabaseSeeder @Inject constructor(
         }
 
         // Question stats
+        println("   Inserting ${mockData.questionStats.size} question stats...")
         mockData.questionStats.forEach { stats ->
             quizBankRepository.insertStats(
                 QuestionStats(
@@ -329,6 +354,8 @@ class DatabaseSeeder @Inject constructor(
                 )
             )
         }
+
+        println("✅ Quiz bank data seeding complete!")
     }
 }
 
@@ -506,7 +533,7 @@ data class QuestionJson(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
 
-) {
+    ) {
     fun toEntity(subjectId: String) = Question(
         id = id,
         subjectId = subjectId,
@@ -546,7 +573,9 @@ data class ExamJson(
     val duration: Int? = null,
     val totalPoints: Int? = null,
     val questionIds: List<String> = emptyList(),
-    val description: String?
+    val description: String?,
+    val examType: String? = null,
+    val sectionsJson: String? = null
 ) {
     fun toEntity(subjectId: String) = Exam(
         id = id,
@@ -558,7 +587,9 @@ data class ExamJson(
         schoolName = schoolName,
         duration = duration,
         totalPoints = totalPoints,
-        description = description
+        description = description,
+        examType = examType?.let { ExamType.valueOf(it) },
+        sectionsJson = sectionsJson
     )
 }
 
@@ -597,12 +628,12 @@ data class FeedItemJson(
 // ==================== QUIZ BANK JSON CLASSES (for Gson) ====================
 
 data class QuizBankMockData(
-    val subjects: List<QuizBankSubjectJson>,
-    val units: List<QuizBankUnitJson>,
-    val exams: List<QuizBankExamJson>,
-    val questions: List<QuizBankQuestionJson>,
-    val practiceSessions: List<PracticeSessionJson>,
-    val questionStats: List<QuestionStatsJson>
+    val subjects: List<QuizBankSubjectJson> = emptyList(),
+    val units: List<QuizBankUnitJson> = emptyList(),
+    val exams: List<QuizBankExamJson> = emptyList(),
+    val questions: List<QuizBankQuestionJson> = emptyList(),
+    val practiceSessions: List<PracticeSessionJson> = emptyList(),
+    val questionStats: List<QuestionStatsJson> = emptyList()
 )
 
 data class QuizBankSubjectJson(
@@ -630,7 +661,9 @@ data class QuizBankExamJson(
     val schoolName: String?,
     val duration: Int?,
     val totalPoints: Int?,
-    val description: String?
+    val description: String?,
+    val examType: String? = null,      // ← ADD THIS
+    val sectionsJson: String? = null   // ← ADD THIS
 )
 
 data class QuizBankQuestionJson(
