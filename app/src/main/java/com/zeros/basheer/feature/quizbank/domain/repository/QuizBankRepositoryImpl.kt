@@ -86,7 +86,9 @@ class QuizBankRepositoryImpl @Inject constructor(
         schoolName = entity.schoolName,
         duration = entity.duration,
         totalPoints = entity.totalPoints,
-        description = entity.description
+        description = entity.description,
+        examType = entity.examType?.let { ExamType.valueOf(it) },
+        sectionsJson = entity.sectionsJson
     )
 
     private fun examDomainToEntity(exam: Exam): ExamEntity = ExamEntity(
@@ -99,7 +101,9 @@ class QuizBankRepositoryImpl @Inject constructor(
         schoolName = exam.schoolName,
         duration = exam.duration,
         totalPoints = exam.totalPoints,
-        description = exam.description
+        description = exam.description,
+        examType = exam.examType?.name,
+        sectionsJson = exam.sectionsJson
     )
 
     private fun examQuestionEntityToDomain(entity: ExamQuestionEntity): ExamQuestion = ExamQuestion(
