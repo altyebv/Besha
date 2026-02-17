@@ -97,6 +97,20 @@
       "duration": 150,
       "totalPoints": 120,
       "description": "تدريب شامل يحتوي على جميع أنواع الأسئلة المختلفة"
+    },
+    {
+      "id": "geo_exam_2023_final_full",
+      "subjectId": "geography",
+      "titleAr": "امتحان الشهادة السودانية 2023 - النهائي الكامل",
+      "titleEn": "Sudan Certificate 2023 - Full Final Exam",
+      "source": "MINISTRY",
+      "examType": "FINAL",
+      "year": 2023,
+      "schoolName": null,
+      "duration": 180,
+      "totalPoints": 100,
+      "description": "الامتحان النهائي الكامل للشهادة السودانية لعام 2023 مع جميع الأقسام",
+      "sectionsJson": "[{\"title\":\"القسم الأول: صح أو خطأ (10 درجات)\",\"questionIds\":[\"geo_q_001\",\"geo_q_003\",\"geo_q_026\",\"geo_q_028\"],\"points\":10},{\"title\":\"القسم الثاني: اختيار من متعدد (10 درجات)\",\"questionIds\":[\"geo_q_002\",\"geo_q_004\",\"geo_q_027\",\"geo_q_030\"],\"points\":10},{\"title\":\"القسم الثالث: أكمل الفراغات (10 درجات)\",\"questionIds\":[\"geo_q_005\",\"geo_q_006\",\"geo_q_029\"],\"points\":10},{\"title\":\"القسم الرابع: أسئلة مقالية (30 درجة)\",\"questionIds\":[\"geo_q_007\",\"geo_q_008\",\"geo_q_009\",\"geo_q_031\",\"geo_q_033\"],\"points\":30},{\"title\":\"القسم الخامس: المطابقة والترتيب (20 درجة)\",\"questionIds\":[\"geo_q_010\",\"geo_q_011\",\"geo_q_012\",\"geo_q_016\",\"geo_q_017\",\"geo_q_018\"],\"points\":20},{\"title\":\"القسم السادس: المقارنة والجداول (20 درجة)\",\"questionIds\":[\"geo_q_013\",\"geo_q_014\",\"geo_q_015\",\"geo_q_019\",\"geo_q_020\",\"geo_q_021\"],\"points\":20}]"
     }
   ],
   "questions": [
