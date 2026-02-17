@@ -48,7 +48,7 @@ fun QuizBankScreen(
                     navController.navigate("practice/${event.sessionId}")
                 }
                 is QuizBankViewModel.NavigationEvent.NavigateToExam -> {
-                    navController.navigate(Screen.ExamSession.createRoute(event.examId))
+                    navController.navigate(Screen.ExamEntry.createRoute(event.examId))
                 }
             }
         }
