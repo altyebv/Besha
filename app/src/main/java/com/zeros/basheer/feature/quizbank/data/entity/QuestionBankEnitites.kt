@@ -34,7 +34,9 @@ data class ExamEntity(
     val schoolName: String? = null,
     val duration: Int? = null,
     val totalPoints: Int? = null,
-    val description: String? = null
+    val description: String? = null,
+    val examType: String? = null,
+    val sectionsJson: String? = null
 )
 
 @Entity(

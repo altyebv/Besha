@@ -1,5 +1,37 @@
 package com.zeros.basheer.feature.quizbank.domain.model
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+/**
+ * Exam source type.
+ */
+enum class ExamSource {
+    MINISTRY,
+    SCHOOL,
+    PRACTICE,
+    CUSTOM
+}
+
+/**
+ * Exam type based on Sudanese education system.
+ */
+enum class ExamType {
+    MONTHLY,        // Monthly exams - cover subset of curriculum
+    SEMI_FINAL,     // Mid-year exams - cover full curriculum
+    FINAL           // Final exams - cover full curriculum
+}
+
+/**
+ * Section within an exam.
+ * Example: "القسم الأول: صح أو خطأ"
+ */
+@Serializable
+data class ExamSection(
+    val title: String,              // Section title in Arabic
+    val questionIds: List<String>,  // Questions in this section
+    val points: Int? = null         // Optional: total points for section
+)
 
 /**
  * Domain model for Exam.
@@ -14,14 +46,23 @@ data class Exam(
     val schoolName: String?,
     val duration: Int?,
     val totalPoints: Int?,
-    val description: String?
-)
-
-enum class ExamSource {
-    MINISTRY,
-    SCHOOL,
-    PRACTICE,
-    CUSTOM
+    val description: String?,
+    val examType: ExamType? = null,        // MONTHLY, SEMI_FINAL, FINAL
+    val sectionsJson: String? = null       // JSON array of ExamSection
+) {
+    /**
+     * Parse sections from JSON.
+     * Returns empty list if sectionsJson is null or invalid.
+     */
+    fun getSections(): List<ExamSection> {
+        return try {
+            sectionsJson?.let {
+                Json.decodeFromString<List<ExamSection>>(it)
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }
 
 /**
@@ -45,8 +86,20 @@ data class QuizAttempt(
     val score: Int?,
     val totalPoints: Int?,
     val percentage: Float?,
-    val timeSpentSeconds: Int?
+    val timeSpentSeconds: Int?,
+    val status: ExamAttemptStatus = ExamAttemptStatus.IN_PROGRESS,
+    val flaggedQuestions: String? = null  // Comma-separated question IDs
 )
+
+/**
+ * Status of an exam attempt.
+ */
+enum class ExamAttemptStatus {
+    IN_PROGRESS,    // Exam is ongoing
+    COMPLETED,      // Submitted normally
+    DISQUALIFIED,   // User left the screen (integrity violation)
+    TIME_EXPIRED    // Timer ran out
+}
 
 /**
  * Individual question response in a quiz attempt.
