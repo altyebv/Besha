@@ -8,8 +8,10 @@ import com.zeros.basheer.feature.practice.domain.model.PracticeSession
 import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
 import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository
 import com.zeros.basheer.feature.quizbank.domain.model.Question
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionStats
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
+import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -57,6 +59,7 @@ sealed class PracticeSessionEvent {
 class PracticeSessionViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
     private val practiceRepository: PracticeRepository,
+    private val streakRepository: StreakRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -147,6 +150,7 @@ class PracticeSessionViewModel @Inject constructor(
         // Record answer in database
         viewModelScope.launch {
             try {
+                // 1. Record in practice session
                 practiceRepository.recordAnswer(
                     sessionId = sessionId,
                     questionId = currentQuestion.id,
@@ -154,6 +158,17 @@ class PracticeSessionViewModel @Inject constructor(
                     isCorrect = isCorrect,
                     timeSeconds = timeSpent
                 )
+
+                // 2. Update question stats (global performance tracking)
+                updateQuestionStats(
+                    questionId = currentQuestion.id,
+                    isCorrect = isCorrect,
+                    timeSeconds = timeSpent
+                )
+
+                // 3. Update streak (questions answered + time spent)
+                streakRepository.recordQuestionsAnswered(1)
+                streakRepository.recordTimeSpent(timeSpent.toLong())
 
                 // Update local stats
                 _state.update {
@@ -266,6 +281,34 @@ class PracticeSessionViewModel @Inject constructor(
             )
 
             // TODO: Navigate to new session
+        }
+    }
+
+    /**
+     * Update global question stats for performance tracking.
+     * This data powers:
+     * - Success rate per question
+     * - Average time per question
+     * - Weak areas detection
+     * - Adaptive question selection
+     */
+    private suspend fun updateQuestionStats(
+        questionId: String,
+        isCorrect: Boolean,
+        timeSeconds: Int
+    ) {
+        try {
+            // Get existing stats or create new
+            val stats = quizBankRepository.getStatsForQuestion(questionId)
+                ?: QuestionStats.forNewQuestion(questionId)
+
+            // Update with new response
+            val updatedStats = stats.withNewResponse(isCorrect, timeSeconds)
+
+            // Save back to database
+            quizBankRepository.updateStats(updatedStats)
+        } catch (e: Exception) {
+            println("Failed to update question stats: ${e.message}")
         }
     }
 }

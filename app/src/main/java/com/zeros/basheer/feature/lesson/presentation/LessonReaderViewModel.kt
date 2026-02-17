@@ -12,8 +12,10 @@ import com.zeros.basheer.feature.concept.domain.model.Concept
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 //import com.zeros.basheer.feature.lesson.domain.model.LessonContent
 import com.zeros.basheer.feature.lesson.domain.usecase.GetLessonContentUseCase
-import com.zeros.basheer.feature.lesson.domain.usecase.MarkLessonCompleteUseCase
+import com.zeros.basheer.feature.progress.domain.usecase.MarkLessonCompleteUseCase
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
+import com.zeros.basheer.feature.streak.domain.usecase.RecordLessonCompletedUseCase
+import com.zeros.basheer.feature.streak.domain.usecase.RecordTimeSpentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -50,6 +52,8 @@ class LessonReaderViewModel @Inject constructor(
     private val markLessonCompleteUseCase: MarkLessonCompleteUseCase,
     private val progressRepository: ProgressRepository,
     private val conceptRepository: ConceptRepository,
+    private val recordLessonCompletedUseCase: RecordLessonCompletedUseCase,
+    private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -63,7 +67,9 @@ class LessonReaderViewModel @Inject constructor(
 
     init {
         loadLesson()
+        loadProgress()
     }
+
     private fun loadLesson() {
         viewModelScope.launch {
             // Use NEW use case
@@ -80,6 +86,15 @@ class LessonReaderViewModel @Inject constructor(
                         isLoading = false
                     )}
                 }
+            }
+        }
+    }
+
+    private fun loadProgress() {
+        viewModelScope.launch {
+            // Observe progress changes
+            progressRepository.getProgressByLesson(lessonId).collect { progress ->
+                _state.update { it.copy(progress = progress) }
             }
         }
     }
@@ -143,6 +158,9 @@ class LessonReaderViewModel @Inject constructor(
         if (isTrackingTime) return
         isTrackingTime = true
 
+        // Update last accessed when starting to read
+        updateLastAccessed()
+
         timeTrackingJob = viewModelScope.launch {
             while (isActive && isTrackingTime) {
                 delay(1000)
@@ -164,11 +182,19 @@ class LessonReaderViewModel @Inject constructor(
 
     private fun saveReadingTime() {
         viewModelScope.launch {
-            val currentProgress = _state.value.progress ?: UserProgress(lessonId = lessonId)
-            val totalTime = currentProgress.timeSpentSeconds + _state.value.readingTimeSeconds.toInt()
-            progressRepository.updateProgress(
-                currentProgress.copy(timeSpentSeconds = totalTime)
-            )
+            val timeSpent = _state.value.readingTimeSeconds
+
+            if (timeSpent > 0) {
+                // Record time in progress
+                val currentProgress = _state.value.progress ?: UserProgress(lessonId = lessonId)
+                val totalTime = currentProgress.timeSpentSeconds + timeSpent.toInt()
+                progressRepository.updateProgress(
+                    currentProgress.copy(timeSpentSeconds = totalTime)
+                )
+
+                // Record time in streak/daily activity
+                recordTimeSpentUseCase(timeSpent)
+            }
         }
     }
 
@@ -200,9 +226,14 @@ class LessonReaderViewModel @Inject constructor(
 
     fun markAsCompleted() {
         viewModelScope.launch {
+            // Save reading time to both progress and streak
             saveReadingTime()
+
+            // Mark lesson as complete in progress
             markLessonCompleteUseCase(lessonId)
-            // Progress and streak tracking handled by the use case
+
+            // Record lesson completion in streak/daily activity
+            recordLessonCompletedUseCase()
         }
     }
 

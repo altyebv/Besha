@@ -46,8 +46,13 @@ class LessonsViewModel @Inject constructor(
 
                 _state.update { it.copy(subjectName = subject.nameAr) }
 
-                // Combine units and their lessons for this subject
-                subjectRepository.getUnitsBySubject(subject.id).collect { units ->
+                // Combine units with completed lessons flow
+                combine(
+                    subjectRepository.getUnitsBySubject(subject.id),
+                    progressRepository.getCompletedLessons()
+                ) { units, completedProgress ->
+                    Pair(units, completedProgress)
+                }.collect { (units, completedProgress) ->
                     val unitsWithLessons = mutableListOf<Pair<Units, List<LessonDomain>>>()
 
                     for (unit in units.sortedBy { it.order }) {
@@ -57,15 +62,12 @@ class LessonsViewModel @Inject constructor(
                         }
                     }
 
-                    // Load completed lessons
-                    progressRepository.getCompletedLessons().first().let { completedProgress ->
-                        _state.update {
-                            it.copy(
-                                units = unitsWithLessons,
-                                completedLessonIds = completedProgress.map { p -> p.lessonId }.toList(),
-                                isLoading = false
-                            )
-                        }
+                    _state.update {
+                        it.copy(
+                            units = unitsWithLessons,
+                            completedLessonIds = completedProgress.map { p -> p.lessonId },
+                            isLoading = false
+                        )
                     }
                 }
             }
