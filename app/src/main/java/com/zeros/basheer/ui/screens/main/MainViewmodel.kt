@@ -1,5 +1,6 @@
 package com.zeros.basheer.ui.screens.main
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.streak.domain.model.DailyActivity
@@ -15,6 +16,8 @@ import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -59,13 +62,26 @@ class MainViewModel @Inject constructor(
     private val lessonRepository: LessonRepository,
     private val progressRepository: ProgressRepository,
     private val getStreakStatusUseCase: GetStreakStatusUseCase,
-    private val streakRepository: StreakRepository
+    private val streakRepository: StreakRepository,
+    private val prefs: SharedPreferences
 ) : ViewModel() {
+
+    companion object {
+        private const val PREF_FOCUS_DISMISSED_DATE = "focus_card_dismissed_date"
+    }
 
     private val _state = MutableStateFlow(MainScreenState())
     val state: StateFlow<MainScreenState> = _state.asStateFlow()
 
     init {
+        // Restore persisted dismissal — only honour it if it was set today.
+        // Dismissing a focus card should last for one day, not forever.
+        val dismissedDate = prefs.getString(PREF_FOCUS_DISMISSED_DATE, null)
+        val todayDate = java.time.LocalDate.now().toString()
+        if (dismissedDate == todayDate) {
+            _state.update { it.copy(focusCardDismissed = true) }
+        }
+
         loadData()
         observeStreakStatus()
         observeTodayActivity()
@@ -74,10 +90,8 @@ class MainViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            // Start with loading state
             _state.update { it.copy(isLoading = true) }
 
-            // Combine subjects and completed lessons flows
             combine(
                 subjectRepository.getAllSubjects(),
                 progressRepository.getCompletedLessons(),
@@ -85,37 +99,28 @@ class MainViewModel @Inject constructor(
             ) { subjects, completedLessons, recentLessons ->
                 Triple(subjects, completedLessons, recentLessons)
             }.collect { (subjects, completedLessons, recentLessons) ->
-                val subjectsWithProgress = mutableListOf<SubjectWithProgress>()
-                var totalLessons = 0
-                var totalCompleted = 0
 
-                // For each subject, calculate its progress
-                for (subject in subjects) {
-                    // Get units
-                    val units = subjectRepository.getUnitsBySubject(subject.id).first()
+                // Load all subjects' units and lessons in parallel — one coroutine per
+                // subject instead of sequential first() calls inside the loop.
+                val subjectsWithProgress = subjects.map { subject ->
+                    async {
+                        val units = subjectRepository.getUnitsBySubject(subject.id).first()
+                        val lessons = lessonRepository.getLessonsBySubject(subject.id).first()
 
-                    // Get lessons
-                    val lessons = lessonRepository.getLessonsBySubject(subject.id).first()
-                    totalLessons += lessons.size
+                        val completedCount = completedLessons.count { progress ->
+                            lessons.any { it.id == progress.lessonId }
+                        }
 
-                    // Count completed lessons for this subject
-                    val completedCount = completedLessons.count { progress ->
-                        lessons.any { it.id == progress.lessonId }
-                    }
-                    totalCompleted += completedCount
+                        val nextLesson = recentLessons
+                            .filter { progress -> lessons.any { it.id == progress.lessonId } }
+                            .firstOrNull { progress -> !progress.completed }
+                            ?.let { progress -> lessons.find { it.id == progress.lessonId } }
 
-                    // Find next lesson
-                    val nextLesson = recentLessons
-                        .filter { progress -> lessons.any { it.id == progress.lessonId } }
-                        .firstOrNull { progress -> !progress.completed }
-                        ?.let { progress -> lessons.find { it.id == progress.lessonId } }
+                        val lastStudied = recentLessons
+                            .filter { progress -> lessons.any { it.id == progress.lessonId } }
+                            .maxByOrNull { it.lastAccessedAt }
+                            ?.lastAccessedAt
 
-                    val lastStudied = recentLessons
-                        .filter { progress -> lessons.any { it.id == progress.lessonId } }
-                        .maxByOrNull { it.lastAccessedAt }
-                        ?.lastAccessedAt
-
-                    subjectsWithProgress.add(
                         SubjectWithProgress(
                             subject = subject,
                             totalLessons = lessons.size,
@@ -124,15 +129,15 @@ class MainViewModel @Inject constructor(
                             nextLessonTitle = nextLesson?.title,
                             lastStudied = lastStudied
                         )
-                    )
-                }
+                    }
+                }.awaitAll()
 
-                // Calculate overall progress
+                val totalLessons = subjectsWithProgress.sumOf { it.totalLessons }
+                val totalCompleted = subjectsWithProgress.sumOf { it.completedLessons }
                 val overallProgress = if (totalLessons > 0) {
                     totalCompleted.toFloat() / totalLessons
                 } else 0f
 
-                // Update state
                 _state.update { current ->
                     current.copy(
                         subjects = subjectsWithProgress,
@@ -204,11 +209,13 @@ class MainViewModel @Inject constructor(
     }
 
     /**
-     * Dismiss the top recommendation (show next one tomorrow)
+     * Dismiss the top recommendation for the rest of today.
+     * Persisted so it survives process death and app restarts within the same day.
      */
     fun dismissFocusCard() {
+        val todayDate = java.time.LocalDate.now().toString()
+        prefs.edit().putString(PREF_FOCUS_DISMISSED_DATE, todayDate).apply()
         _state.update { it.copy(focusCardDismissed = true) }
-        // TODO: Persist dismissal to preferences
     }
 
     fun refreshData() {
