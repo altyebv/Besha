@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 /**
@@ -219,47 +220,46 @@ class StreakRepositoryImpl @Inject constructor(
 
     /**
      * Calculates the longest streak ever recorded.
+     *
+     * Sorts oldest-first so we walk forward in time — straightforward consecutive-day
+     * detection. Days with no DB row (zero activity, never inserted) are implicitly
+     * treated as gaps because the date difference check catches any jump > 1 day.
      */
     private fun calculateLongestStreak(activities: List<DailyActivityEntity>): Int {
         if (activities.isEmpty()) return 0
 
-        // Sort by date descending (most recent first)
-        val sorted = activities.sortedByDescending { it.date }
+        // Sort oldest-first so we walk forward in time
+        val sorted = activities
+            .filter { it.streakLevel != StreakLevel.COLD }
+            .sortedBy { it.date }
 
-        var longestStreak = 0
-        var currentStreak = 0
-        var previousDate: LocalDate? = null
+        if (sorted.isEmpty()) return 0
 
-        for (activity in sorted) {
-            if (activity.streakLevel == StreakLevel.COLD) {
-                // Reset streak on cold day
-                longestStreak = maxOf(longestStreak, currentStreak)
-                currentStreak = 0
-                previousDate = null
-                continue
-            }
+        var longestStreak = 1
+        var currentStreak = 1
+        var previousDate: LocalDate = parseDate(sorted.first().date)
 
+        for (activity in sorted.drop(1)) {
             val currentDate = parseDate(activity.date)
+            val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(previousDate, currentDate)
 
-            if (previousDate == null) {
-                // First active day found
-                currentStreak = 1
-            } else {
-                // Check if consecutive (previous is next day since we're going backwards)
-                val expectedPrevious = currentDate.plusDays(1)
-                if (previousDate == expectedPrevious) {
+            when {
+                daysBetween == 1L -> {
+                    // Consecutive day — extend the streak
                     currentStreak++
-                } else {
-                    // Gap in days
                     longestStreak = maxOf(longestStreak, currentStreak)
+                }
+                daysBetween > 1L -> {
+                    // Gap (includes days with no DB row) — reset
                     currentStreak = 1
                 }
+                // daysBetween == 0 would be a duplicate date — impossible with PrimaryKey
             }
 
             previousDate = currentDate
         }
 
-        return maxOf(longestStreak, currentStreak)
+        return longestStreak
     }
 
     // ==================== Mapper ====================
