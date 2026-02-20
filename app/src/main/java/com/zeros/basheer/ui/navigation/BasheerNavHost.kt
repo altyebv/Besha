@@ -120,6 +120,12 @@ fun BasheerNavHost(
                 onNavigateBack = { navController.popBackStack() },
                 onSessionComplete = { sessionId ->
                     // Already handled internally - results screen shows
+                },
+                onRetryNavigate = { newSessionId ->
+                    // Replace current practice session with the new one
+                    navController.navigate("practice/$newSessionId") {
+                        popUpTo("practice/{sessionId}") { inclusive = true }
+                    }
                 }
             )
         }
