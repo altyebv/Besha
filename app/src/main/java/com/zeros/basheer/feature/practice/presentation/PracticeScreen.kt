@@ -1,6 +1,7 @@
 package com.zeros.basheer.feature.practice.presentation
 
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,6 +18,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.zeros.basheer.feature.practice.presentation.components.*
 import com.zeros.basheer.feature.quizbank.domain.model.Question
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
+import com.zeros.basheer.ui.components.common.ExitConfirmationDialog
+import com.zeros.basheer.ui.components.common.ExitContext
 
 /**
  * Practice Session Screen - Answer questions one by one
@@ -26,9 +29,38 @@ import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 fun PracticeSessionScreen(
     onNavigateBack: () -> Unit,
     onSessionComplete: (Long) -> Unit,
+    onRetryNavigate: (Long) -> Unit = {},
     viewModel: PracticeSessionViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    // Collect one-shot navigation events (e.g. retry → new session)
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is PracticeNavEvent.NavigateToSession -> onRetryNavigate(event.sessionId)
+            }
+        }
+    }
+
+    // Intercept hardware/gesture back
+    BackHandler(enabled = !state.isComplete) {
+        showExitDialog = true
+    }
+
+    // Exit confirmation
+    if (showExitDialog) {
+        ExitConfirmationDialog(
+            context = ExitContext.PRACTICE,
+            onConfirm = {
+                showExitDialog = false
+                viewModel.onEvent(PracticeSessionEvent.ExitSession)
+                onNavigateBack()
+            },
+            onDismiss = { showExitDialog = false }
+        )
+    }
 
     // Show results screen when complete
     if (state.isComplete) {
@@ -50,12 +82,7 @@ fun PracticeSessionScreen(
                 totalQuestions = state.questions.size,
                 correctCount = state.correctCount,
                 wrongCount = state.wrongCount,
-                onExit = {
-                    // Show exit confirmation dialog
-                    // For now, just exit
-                    viewModel.onEvent(PracticeSessionEvent.ExitSession)
-                    onNavigateBack()
-                }
+                onExit = { showExitDialog = true }
             )
         }
     ) { padding ->

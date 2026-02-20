@@ -55,6 +55,12 @@ sealed class PracticeSessionEvent {
     object RetrySession : PracticeSessionEvent()
 }
 
+/** One-shot navigation events emitted by PracticeSessionViewModel. */
+sealed class PracticeNavEvent {
+    /** Navigate to a newly-created practice session, replacing the current one. */
+    data class NavigateToSession(val sessionId: Long) : PracticeNavEvent()
+}
+
 @HiltViewModel
 class PracticeSessionViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
@@ -68,6 +74,10 @@ class PracticeSessionViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(PracticeSessionState())
     val state: StateFlow<PracticeSessionState> = _state.asStateFlow()
+
+    // One-shot navigation events (e.g. navigate to a newly-created retry session)
+    private val _navigationEvent = MutableSharedFlow<PracticeNavEvent>(replay = 0)
+    val navigationEvent: SharedFlow<PracticeNavEvent> = _navigationEvent.asSharedFlow()
 
     init {
         loadSession()
@@ -244,43 +254,53 @@ class PracticeSessionViewModel @Inject constructor(
     }
 
     /**
-     * Exit session (abandon)
+     * Exit session — marks it as abandoned so it won't resurface as "in progress".
      */
     private fun exitSession() {
-        // TODO: Mark session as abandoned and navigate away
         viewModelScope.launch {
-            // Update session status to ABANDONED
-            // Navigate back
+            try {
+                practiceRepository.updateSessionStatus(
+                    sessionId = sessionId,
+                    status = PracticeSessionStatus.ABANDONED
+                )
+            } catch (e: Exception) {
+                // Best-effort; navigation proceeds regardless
+                println("Failed to mark session abandoned: ${e.message}")
+            }
         }
     }
 
     /**
-     * Retry the same session type (create new session)
+     * Creates a new session with the same parameters and navigates to it.
      */
     private fun retrySession() {
-        // TODO: Create a new session with the same parameters
         viewModelScope.launch {
             val session = _state.value.session ?: return@launch
 
-            // Parse filter parameters
-            val filterUnitIds = session.filterUnitIds?.split(",")
-            val filterConceptIds = session.filterConceptIds?.split(",")
-            val filterQuestionTypes = session.filterQuestionTypes?.split(",")
-                ?.mapNotNull {
-                    try { QuestionType.valueOf(it) } catch (e: Exception) { null }
-                }
+            try {
+                val filterUnitIds = session.filterUnitIds
+                    ?.split(",")?.filter { it.isNotBlank() }
+                val filterConceptIds = session.filterConceptIds
+                    ?.split(",")?.filter { it.isNotBlank() }
+                val filterQuestionTypes = session.filterQuestionTypes
+                    ?.split(",")
+                    ?.mapNotNull {
+                        try { QuestionType.valueOf(it.trim()) } catch (e: Exception) { null }
+                    }
 
-            // Create new session
-            val newSessionId = practiceRepository.createPracticeSession(
-                subjectId = session.subjectId,
-                generationType = session.generationType,
-                questionCount = session.questionCount,
-                filterUnitIds = filterUnitIds,
-                filterConceptIds = filterConceptIds,
-                filterQuestionTypes = filterQuestionTypes
-            )
+                val newSessionId = practiceRepository.createPracticeSession(
+                    subjectId = session.subjectId,
+                    generationType = session.generationType,
+                    questionCount = session.questionCount,
+                    filterUnitIds = filterUnitIds,
+                    filterConceptIds = filterConceptIds,
+                    filterQuestionTypes = filterQuestionTypes
+                )
 
-            // TODO: Navigate to new session
+                _navigationEvent.emit(PracticeNavEvent.NavigateToSession(newSessionId))
+            } catch (e: Exception) {
+                println("Failed to create retry session: ${e.message}")
+            }
         }
     }
 
