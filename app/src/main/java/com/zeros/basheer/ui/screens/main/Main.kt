@@ -9,6 +9,7 @@ import androidx.navigation.NavController
 import com.zeros.basheer.domain.model.Recommendation
 import com.zeros.basheer.domain.model.ScoredRecommendation
 import com.zeros.basheer.feature.lesson.presentation.components.states.LoadingState
+import com.zeros.basheer.ui.navigation.Screen
 import com.zeros.basheer.ui.screens.main.components.sections.MainDashboardContent
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -87,7 +88,7 @@ private fun handleRecommendationAction(
             navController?.navigate("lesson/${r.lessonId}")
         }
         is Recommendation.QuickReview -> {
-            navController?.navigate("quiz_bank")
+            navController?.navigate(Screen.QuizBank.route)
         }
         is Recommendation.ReviewWeakConcept -> {
             navController?.navigate("practice/${rec.subject.id}/${r.conceptId}")
