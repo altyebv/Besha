@@ -98,41 +98,6 @@ class LessonReaderViewModel @Inject constructor(
             }
         }
     }
-//    private fun loadLesson() {
-//        viewModelScope.launch {
-//            try {
-//                // Load full lesson with sections and blocks
-//                val lessonFull = repository.getLessonFull(lessonId)
-//                if (lessonFull == null) {
-//                    _state.update { it.copy(
-//                        error = "الدرس غير موجود",
-//                        isLoading = false
-//                    )}
-//                    return@launch
-//                }
-//
-//                // Map to UI model
-//                val lessonContent = LessonMapper.toLessonContent(lessonFull)
-//
-//                // Load progress
-//                repository.getProgressByLesson(lessonId).collect { progress ->
-//                    _state.update { it.copy(
-//                        lessonContent = lessonContent,
-//                        progress = progress,
-//                        isLoading = false
-//                    )}
-//                }
-//
-//                // Update last accessed time
-//                updateLastAccessed()
-//            } catch (e: Exception) {
-//                _state.update { it.copy(
-//                    error = e.message ?: "حدث خطأ",
-//                    isLoading = false
-//                )}
-//            }
-//        }
-//    }
 
     private fun updateLastAccessed() {
         viewModelScope.launch {
@@ -176,25 +141,23 @@ class LessonReaderViewModel @Inject constructor(
         timeTrackingJob?.cancel()
         timeTrackingJob = null
 
-        // Save reading time to progress
-        saveReadingTime()
+        // Save reading time to progress (fire-and-forget is fine on pause/clear)
+        viewModelScope.launch { saveReadingTime() }
     }
 
-    private fun saveReadingTime() {
-        viewModelScope.launch {
-            val timeSpent = _state.value.readingTimeSeconds
+    private suspend fun saveReadingTime() {
+        val timeSpent = _state.value.readingTimeSeconds
 
-            if (timeSpent > 0) {
-                // Record time in progress
-                val currentProgress = _state.value.progress ?: UserProgress(lessonId = lessonId)
-                val totalTime = currentProgress.timeSpentSeconds + timeSpent.toInt()
-                progressRepository.updateProgress(
-                    currentProgress.copy(timeSpentSeconds = totalTime)
-                )
+        if (timeSpent > 0) {
+            // Record time in progress
+            val currentProgress = _state.value.progress ?: UserProgress(lessonId = lessonId)
+            val totalTime = currentProgress.timeSpentSeconds + timeSpent.toInt()
+            progressRepository.updateProgress(
+                currentProgress.copy(timeSpentSeconds = totalTime)
+            )
 
-                // Record time in streak/daily activity
-                recordTimeSpentUseCase(timeSpent)
-            }
+            // Record time in streak/daily activity
+            recordTimeSpentUseCase(timeSpent)
         }
     }
 
@@ -244,6 +207,8 @@ class LessonReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        pauseTimeTracking()
+        isTrackingTime = false
+        timeTrackingJob?.cancel()
+        // Note: time is saved on every ON_PAUSE lifecycle event, so nothing is lost here.
     }
 }

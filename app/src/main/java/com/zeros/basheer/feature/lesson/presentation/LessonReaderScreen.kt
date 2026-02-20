@@ -1,5 +1,6 @@
 package com.zeros.basheer.feature.lesson.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -18,9 +19,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.zeros.basheer.domain.model.LessonContent
-//import com.zeros.basheer.feature.lesson.domain.model.LessonContent
 import com.zeros.basheer.ui.components.blocks.BlockRenderer
 import com.zeros.basheer.ui.components.common.ConceptModal
+import com.zeros.basheer.ui.components.common.ExitConfirmationDialog
+import com.zeros.basheer.ui.components.common.ExitContext
 import com.zeros.basheer.ui.components.common.LessonCompleteCard
 import com.zeros.basheer.ui.components.common.SectionHeader
 
@@ -34,7 +36,28 @@ fun LessonReaderScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
-    
+
+    // Exit-confirmation dialog state
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    // Intercept hardware/gesture back press — always ask first
+    BackHandler(enabled = true) {
+        showExitDialog = true
+    }
+
+    // Exit confirmation dialog
+    if (showExitDialog) {
+        ExitConfirmationDialog(
+            context = ExitContext.LESSON,
+            onConfirm = {
+                showExitDialog = false
+                viewModel.pauseTimeTracking()
+                onBackClick()
+            },
+            onDismiss = { showExitDialog = false }
+        )
+    }
+
     // Track lifecycle for time tracking
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -50,7 +73,7 @@ fun LessonReaderScreen(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-    
+
     // Calculate scroll progress
     LaunchedEffect(listState.firstVisibleItemIndex, listState.layoutInfo.totalItemsCount) {
         if (listState.layoutInfo.totalItemsCount > 0) {
@@ -73,7 +96,7 @@ fun LessonReaderScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { showExitDialog = true }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "رجوع"
@@ -125,7 +148,7 @@ fun LessonReaderScreen(
                         onNextLesson = onNextLesson,
                         listState = listState
                     )
-                    
+
                     // Progress indicator at bottom
                     LinearProgressIndicator(
                         progress = { state.scrollProgress },
@@ -137,7 +160,7 @@ fun LessonReaderScreen(
                     )
                 }
             }
-            
+
             // Concept Modal
             if (state.activeConcept != null) {
                 ConceptModal(
@@ -174,13 +197,13 @@ private fun LessonContent(
                 )
             }
         }
-        
+
         // Sections with their blocks
         lessonContent.sections.forEach { section ->
             item(key = "section_header_${section.id}") {
                 SectionHeader(section = section)
             }
-            
+
             items(
                 items = section.blocks,
                 key = { block -> block.id }
@@ -191,7 +214,7 @@ private fun LessonContent(
                 )
             }
         }
-        
+
         // Completion card at the end
         if (hasReachedEnd) {
             item(key = "complete_card") {
@@ -239,7 +262,7 @@ private fun LessonSummaryCard(
                     )
                 }
             }
-            
+
             Text(
                 text = summary,
                 style = MaterialTheme.typography.bodyMedium,
