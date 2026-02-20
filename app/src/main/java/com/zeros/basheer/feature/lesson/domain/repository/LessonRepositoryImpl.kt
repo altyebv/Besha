@@ -6,6 +6,7 @@ import com.zeros.basheer.feature.lesson.data.dao.*
 import com.zeros.basheer.feature.lesson.data.entity.*
 import com.zeros.basheer.feature.lesson.domain.model.*
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
+import com.zeros.basheer.feature.progress.data.dao.ProgressDao
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,7 +17,8 @@ class LessonRepositoryImpl @Inject constructor(
     private val lessonDao: LessonDao,
     private val sectionDao: SectionDao,
     private val blockDao: BlockDao,
-    private val sectionProgressDao: SectionProgressDao
+    private val sectionProgressDao: SectionProgressDao,
+    private val progressDao: ProgressDao
 ) : LessonRepository {
 
     override suspend fun getLessonById(id: String): Result<LessonDomain> {
@@ -99,7 +101,7 @@ class LessonRepositoryImpl @Inject constructor(
 
     override suspend fun markLessonComplete(lessonId: String): Result<Unit> {
         return try {
-            // Update logic here based on your progress tracking
+            progressDao.markLessonCompleted(lessonId)
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(e.message ?: "Unknown error", e)
@@ -108,7 +110,10 @@ class LessonRepositoryImpl @Inject constructor(
 
     override suspend fun updateProgress(lessonId: String, progress: Float): Result<Unit> {
         return try {
-            // Update logic here
+            val existing = progressDao.getProgressByLessonOnce(lessonId)
+            if (existing != null) {
+                progressDao.updateProgress(existing.copy(progress = progress))
+            }
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(e.message ?: "Unknown error", e)
@@ -116,8 +121,8 @@ class LessonRepositoryImpl @Inject constructor(
     }
 
     override fun observeLessonProgress(lessonId: String): Flow<Float> {
-        // Implement based on your progress tracking
-        return kotlinx.coroutines.flow.flowOf(0f)
+        return progressDao.getProgressByLesson(lessonId)
+            .map { it?.progress ?: 0f }
     }
 }
 

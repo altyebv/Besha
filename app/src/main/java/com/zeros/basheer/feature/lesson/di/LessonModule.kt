@@ -1,9 +1,11 @@
 package com.zeros.basheer.feature.lesson.di
 
 
+import com.zeros.basheer.core.data.local.AppDatabase
 import com.zeros.basheer.feature.lesson.data.dao.*
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepositoryImpl
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
+import com.zeros.basheer.feature.progress.data.dao.ProgressDao
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import dagger.Module
 import dagger.Provides
@@ -22,14 +24,16 @@ object LessonModule {
         sectionDao: SectionDao,
         blockDao: BlockDao,
         sectionProgressDao: SectionProgressDao,
-        subjectRepository:SubjectRepository
+        subjectRepository: SubjectRepository,
+        progressDao: ProgressDao
     ): LessonRepository {
         return LessonRepositoryImpl(
             lessonDao = lessonDao,
             sectionDao = sectionDao,
             blockDao = blockDao,
             sectionProgressDao = sectionProgressDao,
-            subjectRepository = subjectRepository
+            subjectRepository = subjectRepository,
+            progressDao = progressDao
         )
     }
 }
