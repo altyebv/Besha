@@ -144,19 +144,31 @@ class ExamSessionViewModel @Inject constructor(
                 val exam = quizBankRepository.getExamById(examId)
                     ?: throw IllegalStateException("Exam not found: $examId")
                 val sections = exam.getSections()
+                android.util.Log.d("ExamSession", "Exam loaded: ${exam.id}, sectionsJson=${exam.sectionsJson?.take(100)}")
+                android.util.Log.d("ExamSession", "Sections parsed: ${sections.size} sections, IDs: ${sections.map { it.questionIds }}")
 
-                // Load questions for this exam
-                val allQuestions = quizBankRepository.getQuestionsForExam(examId)
-
-                // Order questions according to sections if sections exist
+                // Load questions - prefer direct ID lookup from sections (more reliable
+                // than the exam_questions junction table which may not be fully populated)
                 val questions = if (sections.isNotEmpty()) {
                     val questionIds = sections.flatMap { it.questionIds }
-                    // Reorder questions to match section order
-                    questionIds.mapNotNull { id -> allQuestions.find { it.id == id } }
+                    android.util.Log.d("ExamSession", "Loading ${questionIds.size} question IDs from sections: $questionIds")
+                    val loaded = questionIds.mapNotNull { id -> quizBankRepository.getQuestionById(id) }
+                    android.util.Log.d("ExamSession", "Loaded ${loaded.size}/${questionIds.size} questions by ID")
+                    if (loaded.isEmpty() && questionIds.isNotEmpty()) {
+                        android.util.Log.w("ExamSession", "⚠️ All IDs returned null — checking junction table fallback")
+                        val fallback = quizBankRepository.getQuestionsForExam(examId)
+                        android.util.Log.d("ExamSession", "Junction table returned ${fallback.size} questions")
+                        fallback
+                    } else {
+                        loaded
+                    }
                 } else {
-                    // No sections - use questions as is
-                    allQuestions
+                    android.util.Log.d("ExamSession", "No sections — using junction table for exam $examId")
+                    val fallback = quizBankRepository.getQuestionsForExam(examId)
+                    android.util.Log.d("ExamSession", "Junction table returned ${fallback.size} questions")
+                    fallback
                 }
+                android.util.Log.d("ExamSession", "Final question count: ${questions.size}")
 
                 // Start attempt
                 val attemptId = startQuizAttemptUseCase(examId)

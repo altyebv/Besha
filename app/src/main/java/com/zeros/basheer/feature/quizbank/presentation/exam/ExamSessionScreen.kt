@@ -1,5 +1,6 @@
 package com.zeros.basheer.feature.quizbank.presentation.exam
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -18,6 +19,8 @@ import com.zeros.basheer.feature.practice.presentation.components.*
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import com.zeros.basheer.feature.quizbank.presentation.exam.components.ExamNavigationSheet
 import com.zeros.basheer.feature.quizbank.presentation.exam.components.ExamTimer
+import com.zeros.basheer.ui.components.common.ExitConfirmationDialog
+import com.zeros.basheer.ui.components.common.ExitContext
 
 /**
  * Main exam session screen.
@@ -33,14 +36,36 @@ fun ExamSessionScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    // Intercept back press — show exit dialog instead of navigating away silently.
+    // The exam keeps running; the user should know that.
+    BackHandler(enabled = !state.isComplete) {
+        showExitDialog = true
+    }
+
+    // Exit confirmation for exam context (high-stakes tone)
+    if (showExitDialog) {
+        ExitConfirmationDialog(
+            context = ExitContext.EXAM,
+            onConfirm = {
+                showExitDialog = false
+                onNavigateBack()
+            },
+            onDismiss = { showExitDialog = false }
+        )
+    }
 
     // ── Lifecycle integrity observer ──────────────────────────────────────────
+    // Only fire violation on STOP (app truly backgrounded), not on every PAUSE.
+    // PAUSE fires for things like the keyboard sliding up, permission dialogs, etc.
+    // STOP only fires when the user has actually left the app.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE -> viewModel.onEvent(ExamSessionEvent.ExamViolation)
-                Lifecycle.Event.ON_RESUME -> viewModel.onEvent(ExamSessionEvent.ExamResumed)
+                Lifecycle.Event.ON_STOP -> viewModel.onEvent(ExamSessionEvent.ExamViolation)
+                Lifecycle.Event.ON_START -> viewModel.onEvent(ExamSessionEvent.ExamResumed)
                 else -> Unit
             }
         }
@@ -125,6 +150,35 @@ fun ExamSessionScreen(
 
                 state.error != null -> {
                     ErrorMessage(message = state.error!!, modifier = Modifier.align(Alignment.Center))
+                }
+
+                state.questions.isEmpty() -> {
+                    // Questions failed to load — show diagnostic message
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(32.dp),
+                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            "تعذّر تحميل الأسئلة",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "لم يتم العثور على أسئلة لهذا الامتحان في قاعدة البيانات.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
                 }
 
                 state.currentQuestion != null -> {
@@ -358,7 +412,7 @@ private fun ViolationWarningDialog(onDismiss: () -> Unit) {
         },
         text = {
             Text(
-                "لقد غادرت الامتحان. إذا غادرت مرة أخرى سيتم إنهاء الامتحان وتسجيلك كـ  مخالف .",
+                "لقد غادرت الامتحان. إذا غادرت مرة أخرى سيتم إنهاء الامتحان وتسجيلك كـ مخالف.",
                 style = MaterialTheme.typography.bodyMedium
             )
         },
