@@ -60,12 +60,13 @@ fun MainDashboardContent(
             ) { loading ->
                 if (!loading) {
                     OverallStatsBanner(
-                        userName = "بشير",
+                        userName = state.userName,
                         streakDays = state.streakStatus.currentStreak,
                         streakLevel = state.streakStatus.todayLevel,
                         overallProgress = state.overallProgress,
                         completedLessons = state.completedLessonsCount,
-                        totalLessons = state.totalLessonsCount
+                        totalLessons = state.totalLessonsCount,
+                        xpSummary = state.xpSummary
                     )
                 }
             }

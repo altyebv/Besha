@@ -15,6 +15,9 @@ import com.zeros.basheer.feature.streak.domain.usecase.GetStreakStatusUseCase
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
+import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
+import com.zeros.basheer.feature.user.domain.model.XpSummary
+import com.zeros.basheer.feature.user.domain.usecase.GetUserXpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -52,7 +55,9 @@ data class MainScreenState(
     // Smart recommendations
     val topRecommendation: ScoredRecommendation? = null,
     val secondaryRecommendations: List<ScoredRecommendation> = emptyList(),
-    val focusCardDismissed: Boolean = false
+    val focusCardDismissed: Boolean = false,
+    val userName: String = "",
+    val xpSummary: XpSummary? = null
 )
 
 @HiltViewModel
@@ -63,7 +68,9 @@ class MainViewModel @Inject constructor(
     private val progressRepository: ProgressRepository,
     private val getStreakStatusUseCase: GetStreakStatusUseCase,
     private val streakRepository: StreakRepository,
-    private val prefs: SharedPreferences
+    private val prefs: SharedPreferences,
+    private val userProfileRepository: UserProfileRepository,
+    private val getUserXpUseCase: GetUserXpUseCase
 ) : ViewModel() {
 
     companion object {
@@ -86,6 +93,8 @@ class MainViewModel @Inject constructor(
         observeStreakStatus()
         observeTodayActivity()
         loadRecommendations()
+        observeUserProfile()
+        observeXp()
     }
 
     private fun loadData() {
@@ -212,6 +221,22 @@ class MainViewModel @Inject constructor(
      * Dismiss the top recommendation for the rest of today.
      * Persisted so it survives process death and app restarts within the same day.
      */
+    private fun observeUserProfile() {
+        viewModelScope.launch {
+            userProfileRepository.getProfile().collect { profile ->
+                _state.update { it.copy(userName = profile?.name ?: "") }
+            }
+        }
+    }
+
+    private fun observeXp() {
+        viewModelScope.launch {
+            getUserXpUseCase().collect { summary ->
+                _state.update { it.copy(xpSummary = summary) }
+            }
+        }
+    }
+
     fun dismissFocusCard() {
         val todayDate = java.time.LocalDate.now().toString()
         prefs.edit().putString(PREF_FOCUS_DISMISSED_DATE, todayDate).apply()
@@ -221,5 +246,7 @@ class MainViewModel @Inject constructor(
     fun refreshData() {
         loadData()
         loadRecommendations()
+        observeUserProfile()
+        observeXp()
     }
 }

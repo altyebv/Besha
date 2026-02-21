@@ -2,6 +2,7 @@ package com.zeros.basheer.ui.screens.main.components.cards
 
 
 import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -12,12 +13,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.width
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zeros.basheer.feature.streak.data.entity.StreakLevel
+import com.zeros.basheer.feature.user.domain.model.XpSummary
 import com.zeros.basheer.ui.screens.main.components.foundation.*
 
 /**
@@ -45,6 +49,7 @@ fun OverallStatsBanner(
     overallProgress: Float,
     completedLessons: Int,
     totalLessons: Int,
+    xpSummary: XpSummary? = null,
     modifier: Modifier = Modifier
 ) {
     // Animate progress
@@ -85,10 +90,16 @@ fun OverallStatsBanner(
                     modifier = Modifier.weight(1f)
                 )
 
-                StreakBadge(
-                    days = streakDays,
-                    level = streakLevel
-                )
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    StreakBadge(
+                        days = streakDays,
+                        level = streakLevel
+                    )
+                    xpSummary?.let { XpChip(it) }
+                }
             }
 
             HorizontalDivider(
@@ -204,6 +215,7 @@ private fun ProgressSection(
     progress: Float,
     completedLessons: Int,
     totalLessons: Int,
+    xpSummary: XpSummary? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -246,5 +258,43 @@ private fun ProgressSection(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
         )
+    }
+}
+
+/**
+ * Compact XP level chip for the main dashboard banner.
+ */
+@Composable
+private fun XpChip(xpSummary: XpSummary) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = xpSummary.progressInLevel,
+        animationSpec = androidx.compose.animation.core.tween(600),
+        label = "xp_chip_progress"
+    )
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Text(
+                text = "Lv.${xpSummary.level}  •  ${xpSummary.totalXp} XP",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            LinearProgressIndicator(
+                progress = { animatedProgress },
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(3.dp)
+                    .clip(MaterialTheme.shapes.small),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
+            )
+        }
     }
 }

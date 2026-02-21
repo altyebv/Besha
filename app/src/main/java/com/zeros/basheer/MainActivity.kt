@@ -20,16 +20,19 @@ import com.zeros.basheer.ui.components.BasheerBottomBar
 import com.zeros.basheer.ui.navigation.BasheerNavHost
 import com.zeros.basheer.ui.navigation.Screen
 import com.zeros.basheer.core.ui.theme.BasheerTheme
+import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Routes where the bottom bar should be hidden (immersive/flow screens). */
 private val bottomBarHiddenRoutes = setOf(
-    Screen.LessonReader.route,   // "lesson/{lessonId}"
-    Screen.ExamSession.route,    // "exam/{examId}?strict={strictMode}"
-    Screen.ExamEntry.route,      // "exam_entry/{examId}"
-    Screen.ExamResult.route,     // "exam_result/{attemptId}"
+    Screen.Onboarding.route,
+    Screen.EditProfile.route,
+    Screen.LessonReader.route,
+    Screen.ExamSession.route,
+    Screen.ExamEntry.route,
+    Screen.ExamResult.route,
     "practice/{sessionId}"
 )
 
@@ -39,6 +42,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var seeder: DatabaseSeeder
 
+    @Inject
+    lateinit var userPreferences: UserPreferencesRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,13 +58,20 @@ class MainActivity : ComponentActivity() {
             }
         }
         enableEdgeToEdge()
+
+        // Read synchronously — this is a single boolean pref read, safe on main thread
+        val startDestination = if (userPreferences.hasCompletedOnboarding()) {
+            Screen.Main.route
+        } else {
+            Screen.Onboarding.route
+        }
+
         setContent {
             BasheerTheme {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
-                // Hide the bottom bar on immersive screens (lesson reader, exams, practice)
                 val showBottomBar = currentRoute == null ||
                         bottomBarHiddenRoutes.none { pattern ->
                             routeMatchesPattern(currentRoute, pattern)
@@ -75,6 +87,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     BasheerNavHost(
                         navController = navController,
+                        startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -82,16 +95,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-/**
- * Checks whether a live route (e.g. "lesson/geo_unit1_lesson1") matches a
- * Navigation route pattern (e.g. "lesson/{lessonId}").
- * Strips query-string segments so optional params don't break the match.
- */
+
 private fun routeMatchesPattern(currentRoute: String, pattern: String): Boolean {
-    // Strip query params from both sides for comparison
     val liveBase = currentRoute.substringBefore("?")
     val patternBase = pattern.substringBefore("?")
-    // Split into segments and check structural match
     val liveSegments = liveBase.split("/")
     val patternSegments = patternBase.split("/")
     if (liveSegments.size != patternSegments.size) return false
@@ -111,6 +118,7 @@ fun MainActivityPreview() {
         ) { innerPadding ->
             BasheerNavHost(
                 navController = navController,
+                startDestination = Screen.Main.route,
                 modifier = Modifier.padding(innerPadding)
             )
         }
