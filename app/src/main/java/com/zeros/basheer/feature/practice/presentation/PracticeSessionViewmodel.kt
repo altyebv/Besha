@@ -12,6 +12,8 @@ import com.zeros.basheer.feature.quizbank.domain.model.QuestionStats
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
+import com.zeros.basheer.feature.user.domain.model.XpSource
+import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -66,6 +68,7 @@ class PracticeSessionViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
     private val practiceRepository: PracticeRepository,
     private val streakRepository: StreakRepository,
+    private val awardXpUseCase: AwardXpUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -243,6 +246,7 @@ class PracticeSessionViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 practiceRepository.completeSession(sessionId)
+                awardXpUseCase(XpSource.PRACTICE_COMPLETE, sessionId.toString())
 
                 _state.update {
                     it.copy(isComplete = true)

@@ -15,6 +15,8 @@ import com.zeros.basheer.feature.lesson.domain.usecase.GetLessonContentUseCase
 import com.zeros.basheer.feature.progress.domain.usecase.MarkLessonCompleteUseCase
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.streak.domain.usecase.RecordLessonCompletedUseCase
+import com.zeros.basheer.feature.user.domain.model.XpSource
+import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
 import com.zeros.basheer.feature.streak.domain.usecase.RecordTimeSpentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -42,7 +44,12 @@ data class LessonReaderState(
     val hasReachedEnd: Boolean = false,
 
     // UI state
-    val showProgressOverlay: Boolean = false
+    val showProgressOverlay: Boolean = false,
+
+    // Completion modal
+    val showCompletionModal: Boolean = false,
+    val xpEarned: Int = 0,
+    val isRepeatCompletion: Boolean = false
 )
 
 @HiltViewModel
@@ -53,6 +60,7 @@ class LessonReaderViewModel @Inject constructor(
     private val progressRepository: ProgressRepository,
     private val conceptRepository: ConceptRepository,
     private val recordLessonCompletedUseCase: RecordLessonCompletedUseCase,
+    private val awardXpUseCase: AwardXpUseCase,
     private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -188,6 +196,9 @@ class LessonReaderViewModel @Inject constructor(
     // ==================== Actions ====================
 
     fun markAsCompleted() {
+        // Stop timer immediately — no more ticking after completion
+        pauseTimeTracking()
+
         viewModelScope.launch {
             // Save reading time to both progress and streak
             saveReadingTime()
@@ -197,7 +208,25 @@ class LessonReaderViewModel @Inject constructor(
 
             // Record lesson completion in streak/daily activity
             recordLessonCompletedUseCase()
+
+            // Award XP — repo auto-downgrades to LESSON_REPEAT if already completed
+            val transaction = awardXpUseCase(XpSource.LESSON_COMPLETE, lessonId)
+            val isRepeat = transaction?.source == XpSource.LESSON_REPEAT
+            val xpAwarded = transaction?.amount ?: 0
+
+            // Show completion modal with results
+            _state.update {
+                it.copy(
+                    showCompletionModal = true,
+                    xpEarned = xpAwarded,
+                    isRepeatCompletion = isRepeat
+                )
+            }
         }
+    }
+
+    fun dismissCompletionModal() {
+        _state.update { it.copy(showCompletionModal = false) }
     }
 
 
