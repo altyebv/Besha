@@ -1,6 +1,7 @@
 package com.zeros.basheer.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.room.Room
 import com.zeros.basheer.core.data.local.AppDatabase
 import com.zeros.basheer.core.data.DatabaseSeeder
@@ -22,6 +23,13 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(
+        @ApplicationContext context: Context
+    ): SharedPreferences =
+        context.getSharedPreferences("basheer_prefs", Context.MODE_PRIVATE)
 
     @Provides
     @Singleton
