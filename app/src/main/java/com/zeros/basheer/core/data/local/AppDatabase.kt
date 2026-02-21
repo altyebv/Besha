@@ -25,12 +25,15 @@ import com.zeros.basheer.feature.quizbank.data.entity.*
 import com.zeros.basheer.feature.subject.data.dao.SubjectDao
 import com.zeros.basheer.feature.subject.data.dao.UnitDao
 import com.zeros.basheer.feature.user.data.dao.UserProfileDao
+import com.zeros.basheer.feature.user.data.dao.XpDao
 import com.zeros.basheer.feature.user.data.entity.UserProfileEntity
+import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
 
 @Database(
     entities = [
         // User profile
         UserProfileEntity::class,
+        XpTransactionEntity::class,
 
         // Core content
         SubjectEntity::class,
@@ -68,13 +71,14 @@ import com.zeros.basheer.feature.user.data.entity.UserProfileEntity
         SectionProgressEntity::class,
         DailyActivityEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     // User profile
     abstract fun userProfileDao(): UserProfileDao
+    abstract fun xpDao(): XpDao
 
     // Core content
     abstract fun subjectDao(): SubjectDao
