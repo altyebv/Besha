@@ -16,6 +16,7 @@ import com.zeros.basheer.feature.quizbank.domain.model.CognitiveLevel
 import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionSource
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
+import com.zeros.basheer.feature.user.domain.model.XpSource
 
 class Converters {
 
@@ -122,4 +123,11 @@ class Converters {
 
     @TypeConverter
     fun toPracticeSessionStatus(value: String): PracticeSessionStatus = PracticeSessionStatus.valueOf(value)
+
+    // XpSource
+    @TypeConverter
+    fun fromXpSource(value: XpSource): String = value.name
+
+    @TypeConverter
+    fun toXpSource(value: String): XpSource = XpSource.valueOf(value)
 }
