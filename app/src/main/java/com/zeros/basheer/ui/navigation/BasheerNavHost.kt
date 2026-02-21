@@ -22,20 +22,34 @@ import com.zeros.basheer.ui.screens.main.MainScreen
 import com.zeros.basheer.feature.practice.presentation.PracticeSessionScreen
 import com.zeros.basheer.ui.screens.profile.ProfileScreen
 import com.zeros.basheer.feature.lesson.presentation.LessonReaderScreen
+import com.zeros.basheer.feature.user.presentation.edit.EditProfileScreen
+import com.zeros.basheer.feature.user.presentation.onboarding.OnboardingScreen
 
 @Composable
 fun BasheerNavHost(
     navController: NavHostController,
+    startDestination: String,
     modifier: Modifier = Modifier
 ) {
-    // Remember last opened subject
     var lastSubjectId by remember { mutableStateOf<String?>(null) }
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Main.route,
+        startDestination = startDestination,
         modifier = modifier
     ) {
+        // ── Onboarding ────────────────────────────────────────────────────────
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                onOnboardingComplete = {
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ── Main ──────────────────────────────────────────────────────────────
         composable(Screen.Main.route) {
             MainScreen(
                 onSubjectClick = { subjectId ->
@@ -46,6 +60,7 @@ fun BasheerNavHost(
             )
         }
 
+        // ── Lessons ───────────────────────────────────────────────────────────
         composable(
             route = Screen.Lessons.route,
             arguments = listOf(
@@ -59,7 +74,6 @@ fun BasheerNavHost(
             val subjectId = backStackEntry.arguments?.getString("subjectId") ?: lastSubjectId
 
             if (subjectId == null) {
-                // No subject selected, show subject picker
                 LessonsSubjectPicker(
                     onSubjectSelected = { selectedId ->
                         lastSubjectId = selectedId
@@ -70,9 +84,7 @@ fun BasheerNavHost(
                     onBack = { navController.popBackStack() }
                 )
             } else {
-                // Remember this subject for next time
                 lastSubjectId = subjectId
-
                 LessonsScreen(
                     subjectId = subjectId,
                     onLessonClick = { lessonId ->
@@ -83,20 +95,7 @@ fun BasheerNavHost(
             }
         }
 
-        composable(Screen.Feeds.route) {
-            FeedsScreen(
-                onClose = { navController.popBackStack() }
-            )
-        }
-
-        composable(Screen.QuizBank.route) {
-            QuizBankScreen(navController = navController)
-        }
-
-        composable(Screen.Profile.route) {
-            ProfileScreen()
-        }
-
+        // ── Lesson Reader ─────────────────────────────────────────────────────
         composable(
             route = Screen.LessonReader.route,
             arguments = listOf(
@@ -110,19 +109,43 @@ fun BasheerNavHost(
             )
         }
 
+        // ── Feed ──────────────────────────────────────────────────────────────
+        composable(Screen.Feeds.route) {
+            FeedsScreen(
+                onClose = { navController.popBackStack() }
+            )
+        }
+
+        // ── Quiz Bank ─────────────────────────────────────────────────────────
+        composable(Screen.QuizBank.route) {
+            QuizBankScreen(navController = navController)
+        }
+
+        // ── Profile ───────────────────────────────────────────────────────────
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                onEditProfile = { navController.navigate(Screen.EditProfile.route) }
+            )
+        }
+
+        // ── Edit Profile ──────────────────────────────────────────────────────
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Practice ──────────────────────────────────────────────────────────
         composable(
             route = "practice/{sessionId}",
             arguments = listOf(
                 navArgument("sessionId") { type = NavType.LongType }
             )
-        ) { backStackEntry ->
+        ) {
             PracticeSessionScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onSessionComplete = { sessionId ->
-                    // Already handled internally - results screen shows
-                },
+                onSessionComplete = { },
                 onRetryNavigate = { newSessionId ->
-                    // Replace current practice session with the new one
                     navController.navigate("practice/$newSessionId") {
                         popUpTo("practice/{sessionId}") { inclusive = true }
                     }
@@ -130,6 +153,7 @@ fun BasheerNavHost(
             )
         }
 
+        // ── Exam Entry ────────────────────────────────────────────────────────
         composable(
             route = Screen.ExamEntry.route,
             arguments = listOf(
@@ -147,6 +171,7 @@ fun BasheerNavHost(
             )
         }
 
+        // ── Exam Session ──────────────────────────────────────────────────────
         composable(
             route = Screen.ExamSession.route,
             arguments = listOf(
@@ -168,6 +193,7 @@ fun BasheerNavHost(
             )
         }
 
+        // ── Exam Result ───────────────────────────────────────────────────────
         composable(
             route = Screen.ExamResult.route,
             arguments = listOf(
@@ -180,9 +206,7 @@ fun BasheerNavHost(
                 onExit = {
                     navController.popBackStack(Screen.QuizBank.route, inclusive = false)
                 },
-                onRetry = {
-                    navController.popBackStack()
-                }
+                onRetry = { navController.popBackStack() }
             )
         }
     }
