@@ -278,4 +278,6 @@ class StreakRepositoryImpl @Inject constructor(
         firstActivityAt = firstActivityAt,
         lastActivityAt = lastActivityAt
     )
+    override suspend fun getCurrentStreakLevel(): StreakLevel =
+        dailyActivityDao.getActivityForDate(getTodayDate())?.streakLevel ?: StreakLevel.COLD
 }

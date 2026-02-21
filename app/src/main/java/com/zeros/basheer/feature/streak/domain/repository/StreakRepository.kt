@@ -2,6 +2,7 @@ package com.zeros.basheer.feature.streak.domain.repository
 
 
 import com.zeros.basheer.feature.streak.data.entity.DailyActivityEntity
+import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.feature.streak.domain.model.DailyActivity
 import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import kotlinx.coroutines.flow.Flow
@@ -63,5 +64,6 @@ interface StreakRepository {
 
     // ==================== Utilities ====================
 
-
+    /** Returns today's streak level synchronously — used by XP multiplier. */
+    suspend fun getCurrentStreakLevel(): StreakLevel
 }
