@@ -14,6 +14,7 @@ interface SubjectRepository {
     // Subject operations
     fun getAllSubjects(): Flow<List<Subject>>
     fun getSubjectsByPath(path: StudentPath): Flow<List<Subject>>
+    fun getSubjectsByPathFilter(paths: List<StudentPath>): Flow<List<Subject>>
     suspend fun getSubjectById(subjectId: String): Subject?
     suspend fun insertSubject(subject: Subject)
     suspend fun insertSubjects(subjects: List<Subject>)

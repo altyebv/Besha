@@ -31,6 +31,11 @@ class SubjectRepositoryImpl @Inject constructor(
             entities.map { subjectEntityToDomain(it) }
         }
 
+    override fun getSubjectsByPathFilter(paths: List<StudentPath>): Flow<List<Subject>> =
+        subjectDao.getSubjectsByPathFilter(paths).map { entities ->
+            entities.map { subjectEntityToDomain(it) }
+        }
+
     override suspend fun getSubjectById(subjectId: String): Subject? =
         subjectDao.getSubjectById(subjectId)?.let { subjectEntityToDomain(it) }
 

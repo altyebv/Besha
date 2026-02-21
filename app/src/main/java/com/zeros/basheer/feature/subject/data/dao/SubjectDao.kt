@@ -14,6 +14,9 @@ interface SubjectDao {
     @Query("SELECT * FROM subjects WHERE path = :path ORDER BY `order`")
     fun getSubjectsByPath(path: StudentPath): Flow<List<SubjectEntity>>
 
+    @Query("SELECT * FROM subjects WHERE path IN (:paths) ORDER BY `order`")
+    fun getSubjectsByPathFilter(paths: List<StudentPath>): Flow<List<SubjectEntity>>
+
     @Query("SELECT * FROM subjects WHERE id = :subjectId")
     suspend fun getSubjectById(subjectId: String): SubjectEntity?
 
