@@ -24,6 +24,7 @@ import com.zeros.basheer.ui.components.common.ConceptModal
 import com.zeros.basheer.ui.components.common.ExitConfirmationDialog
 import com.zeros.basheer.ui.components.common.ExitContext
 import com.zeros.basheer.ui.components.common.LessonCompleteCard
+import com.zeros.basheer.ui.components.common.LessonCompletionModal
 import com.zeros.basheer.ui.components.common.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -169,6 +170,21 @@ fun LessonReaderScreen(
                 )
             }
         }
+    }
+
+    // Completion Modal — shown after XP is awarded
+    if (state.showCompletionModal && state.lessonContent != null) {
+        LessonCompletionModal(
+            lessonTitle = state.lessonContent!!.title,
+            xpEarned = state.xpEarned,
+            readingTimeSeconds = state.readingTimeSeconds,
+            isRepeatCompletion = state.isRepeatCompletion,
+            onDismiss = viewModel::dismissCompletionModal,
+            onBackToLessons = {
+                viewModel.dismissCompletionModal()
+                onBackClick()
+            }
+        )
     }
 }
 
