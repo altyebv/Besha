@@ -12,6 +12,7 @@ import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import com.zeros.basheer.feature.streak.domain.usecase.GetStreakStatusUseCase
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.subject.domain.model.Units
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
@@ -101,8 +102,12 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
+            val profile = userProfileRepository.getProfileOnce()
+            val pathFilter = profile?.subjectsFilter
+                ?: listOf(StudentPath.COMMON)
+
             combine(
-                subjectRepository.getAllSubjects(),
+                subjectRepository.getSubjectsByPathFilter(pathFilter),
                 progressRepository.getCompletedLessons(),
                 progressRepository.getRecentlyAccessedLessons(10)
             ) { subjects, completedLessons, recentLessons ->
