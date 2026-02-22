@@ -203,40 +203,8 @@ class DatabaseSeeder @Inject constructor(
      */
     private suspend fun seedQuizBankData(mockData: QuizBankMockData) {
         println("🌱 Starting quiz bank data seeding...")
-
-        // Subjects (if not already exists from lesson seeding)
-        println("   Inserting ${mockData.subjects.size} subjects...")
-        mockData.subjects.forEach { subject ->
-            try {
-                subjectRepository.insertSubject(
-                    Subject(
-                        id = subject.id,
-                        nameAr = subject.nameAr,
-                        nameEn = subject.nameEn,
-                        path = StudentPath.LITERARY
-                    )
-                )
-            } catch (e: Exception) {
-                // Subject might already exist from lesson seeding - that's fine
-            }
-        }
-
-        // Units (if not already exists)
-        println("   Inserting ${mockData.units.size} units...")
-        mockData.units.forEach { unit ->
-            try {
-                subjectRepository.insertUnit(
-                    Units(
-                        id = unit.id,
-                        subjectId = unit.subjectId,
-                        title = unit.nameAr,
-                        order = unit.order
-                    )
-                )
-            } catch (e: Exception) {
-                // Unit might already exist
-            }
-        }
+        // Note: subjects and units are seeded by seedFromAssets() per-subject lesson files.
+        // Exams_.json must NOT contain subjects/units to avoid duplicate rows.
 
         // Exams
         println("   Inserting ${mockData.exams.size} exams...")
