@@ -1,46 +1,8 @@
 {
-  "subjects": [
-    {
-      "id": "geography",
-      "nameAr": "الجغرافيا",
-      "nameEn": "Geography",
-      "iconUrl": null
-    }
-  ],
-  "units": [
-    {
-      "id": "geo_unit_1",
-      "subjectId": "geography",
-      "nameAr": "الموقع والمساحة",
-      "nameEn": "Location and Area",
-      "order": 1
-    },
-    {
-      "id": "geo_unit_2",
-      "subjectId": "geography",
-      "nameAr": "التضاريس والمناخ",
-      "nameEn": "Topography and Climate",
-      "order": 2
-    },
-    {
-      "id": "geo_unit_3",
-      "subjectId": "geography",
-      "nameAr": "الموارد الطبيعية",
-      "nameEn": "Natural Resources",
-      "order": 3
-    },
-    {
-      "id": "geo_unit_4",
-      "subjectId": "geography",
-      "nameAr": "السكان والاقتصاد",
-      "nameEn": "Population and Economy",
-      "order": 4
-    }
-  ],
   "exams": [
     {
       "id": "geo_exam_2023_ministry",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "titleAr": "امتحان الشهادة السودانية 2023 - الجغرافيا",
       "titleEn": "Sudan Certificate 2023 - Geography",
       "source": "MINISTRY",
@@ -52,7 +14,7 @@
     },
     {
       "id": "geo_exam_2022_ministry",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "titleAr": "امتحان الشهادة السودانية 2022 - الجغرافيا",
       "titleEn": "Sudan Certificate 2022 - Geography",
       "source": "MINISTRY",
@@ -64,7 +26,7 @@
     },
     {
       "id": "geo_exam_2023_ministry_semi",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "titleAr": "امتحان نصف السنة 2023 - الجغرافيا",
       "titleEn": "Mid-Year Exam 2023 - Geography",
       "source": "MINISTRY",
@@ -76,7 +38,7 @@
     },
     {
       "id": "geo_exam_comboni_2023",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "titleAr": "امتحان مدرسة كمبوني الثانوية - الجغرافيا",
       "titleEn": "Comboni Secondary School Exam - Geography",
       "source": "SCHOOL",
@@ -88,7 +50,7 @@
     },
     {
       "id": "geo_exam_practice_all",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "titleAr": "تدريب شامل - جميع أنواع الأسئلة",
       "titleEn": "Comprehensive Practice - All Question Types",
       "source": "CUSTOM",
@@ -100,7 +62,7 @@
     },
     {
       "id": "geo_exam_2023_final_full",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "titleAr": "امتحان الشهادة السودانية 2023 - النهائي الكامل",
       "titleEn": "Sudan Certificate 2023 - Full Final Exam",
       "source": "MINISTRY",
@@ -116,7 +78,7 @@
   "questions": [
     {
       "id": "geo_q_001",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "TRUE_FALSE",
@@ -139,7 +101,7 @@
     },
     {
       "id": "geo_q_002",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "MCQ",
@@ -162,7 +124,7 @@
     },
     {
       "id": "geo_q_003",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "TRUE_FALSE",
@@ -185,7 +147,7 @@
     },
     {
       "id": "geo_q_004",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "MCQ",
@@ -208,7 +170,7 @@
     },
     {
       "id": "geo_q_005",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "FILL_BLANK",
@@ -231,7 +193,7 @@
     },
     {
       "id": "geo_q_006",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_3",
       "lessonId": null,
       "type": "FILL_BLANK",
@@ -254,7 +216,7 @@
     },
     {
       "id": "geo_q_007",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_3",
       "lessonId": null,
       "type": "SHORT_ANSWER",
@@ -277,7 +239,7 @@
     },
     {
       "id": "geo_q_008",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "EXPLAIN",
@@ -300,7 +262,7 @@
     },
     {
       "id": "geo_q_009",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_4",
       "lessonId": null,
       "type": "LIST",
@@ -323,7 +285,7 @@
     },
     {
       "id": "geo_q_010",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "MATCH",
@@ -346,7 +308,7 @@
     },
     {
       "id": "geo_q_011",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_3",
       "lessonId": null,
       "type": "MATCH",
@@ -369,7 +331,7 @@
     },
     {
       "id": "geo_q_012",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "MATCH",
@@ -392,7 +354,7 @@
     },
     {
       "id": "geo_q_013",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "COMPARE",
@@ -415,7 +377,7 @@
     },
     {
       "id": "geo_q_014",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "COMPARE",
@@ -438,7 +400,7 @@
     },
     {
       "id": "geo_q_015",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_4",
       "lessonId": null,
       "type": "COMPARE",
@@ -461,7 +423,7 @@
     },
     {
       "id": "geo_q_016",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "ORDER",
@@ -484,7 +446,7 @@
     },
     {
       "id": "geo_q_017",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "ORDER",
@@ -507,7 +469,7 @@
     },
     {
       "id": "geo_q_018",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_3",
       "lessonId": null,
       "type": "ORDER",
@@ -530,7 +492,7 @@
     },
     {
       "id": "geo_q_019",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "TABLE",
@@ -553,7 +515,7 @@
     },
     {
       "id": "geo_q_020",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "TABLE",
@@ -576,7 +538,7 @@
     },
     {
       "id": "geo_q_021",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_3",
       "lessonId": null,
       "type": "TABLE",
@@ -599,7 +561,7 @@
     },
     {
       "id": "geo_q_022",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "FIGURE",
@@ -622,7 +584,7 @@
     },
     {
       "id": "geo_q_023",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "FIGURE",
@@ -645,7 +607,7 @@
     },
     {
       "id": "geo_q_024",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "FIGURE",
@@ -668,7 +630,7 @@
     },
     {
       "id": "geo_q_025",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_3",
       "lessonId": null,
       "type": "FIGURE",
@@ -691,7 +653,7 @@
     },
     {
       "id": "geo_q_026",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "TRUE_FALSE",
@@ -714,7 +676,7 @@
     },
     {
       "id": "geo_q_027",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "MCQ",
@@ -737,7 +699,7 @@
     },
     {
       "id": "geo_q_028",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_3",
       "lessonId": null,
       "type": "TRUE_FALSE",
@@ -760,7 +722,7 @@
     },
     {
       "id": "geo_q_029",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_4",
       "lessonId": null,
       "type": "FILL_BLANK",
@@ -783,7 +745,7 @@
     },
     {
       "id": "geo_q_030",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_4",
       "lessonId": null,
       "type": "MCQ",
@@ -806,7 +768,7 @@
     },
     {
       "id": "geo_q_031",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_1",
       "lessonId": null,
       "type": "SHORT_ANSWER",
@@ -829,7 +791,7 @@
     },
     {
       "id": "geo_q_032",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_4",
       "lessonId": null,
       "type": "LIST",
@@ -852,7 +814,7 @@
     },
     {
       "id": "geo_q_033",
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "unitId": "geo_unit_2",
       "lessonId": null,
       "type": "EXPLAIN",
@@ -877,7 +839,7 @@
   "practiceSessions": [
     {
       "id": 1,
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "generationType": "QUICK_REVIEW",
       "filterUnitIds": null,
       "filterLessonIds": null,
@@ -901,7 +863,7 @@
     },
     {
       "id": 2,
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "generationType": "BY_TYPE",
       "filterUnitIds": null,
       "filterLessonIds": null,
@@ -925,7 +887,7 @@
     },
     {
       "id": 3,
-      "subjectId": "geography",
+      "subjectId": "الجغرافيا",
       "generationType": "FULL_EXAM",
       "filterUnitIds": null,
       "filterLessonIds": null,
