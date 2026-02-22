@@ -51,6 +51,10 @@ class MainActivity : ComponentActivity() {
             try {
                 seeder.seedFromAssets(this@MainActivity, "geographyy.json")
                 seeder.seedFromAssets(this@MainActivity, "military.json")
+                seeder.seedFromAssets(this@MainActivity, "physics.json")
+                seeder.seedFromAssets(this@MainActivity, "chemistry.json")
+                seeder.seedFromAssets(this@MainActivity, "arabic.json")
+                seeder.seedFromAssets(this@MainActivity, "islamic.json")
                 seeder.seedQuizBankFromAssets(this@MainActivity)
                 Log.d("Lessons", "Database seeded successfully!")
             } catch (e: Exception) {
