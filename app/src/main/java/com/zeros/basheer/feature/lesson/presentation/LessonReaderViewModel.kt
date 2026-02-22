@@ -144,13 +144,18 @@ class LessonReaderViewModel @Inject constructor(
         }
     }
 
-    fun pauseTimeTracking() {
+    fun pauseTimeTracking(saveTime: Boolean = true) {
         isTrackingTime = false
         timeTrackingJob?.cancel()
         timeTrackingJob = null
 
-        // Save reading time to progress (fire-and-forget is fine on pause/clear)
-        viewModelScope.launch { saveReadingTime() }
+        // Only fire-and-forget when pausing normally (e.g. app backgrounded).
+        // markAsCompleted() passes saveTime=false and calls saveReadingTime() itself
+        // before markLessonCompleteUseCase(), preventing a race that would overwrite
+        // completed=true back to false.
+        if (saveTime) {
+            viewModelScope.launch { saveReadingTime() }
+        }
     }
 
     private suspend fun saveReadingTime() {
@@ -196,22 +201,27 @@ class LessonReaderViewModel @Inject constructor(
     // ==================== Actions ====================
 
     fun markAsCompleted() {
-        // Stop timer immediately — no more ticking after completion
-        pauseTimeTracking()
+        // Stop timer — pass saveTime=false because we save explicitly below
+        // in the correct order (save time → mark complete), avoiding a race.
+        pauseTimeTracking(saveTime = false)
 
         viewModelScope.launch {
-            // Save reading time to both progress and streak
+            // 1. Save reading time first — while progress is still incomplete
             saveReadingTime()
 
-            // Mark lesson as complete in progress
+            // 2. Check if this is a repeat before any writes
+            val isRepeat = _state.value.progress?.completed == true
+
+            // 3. Mark complete in DB
             markLessonCompleteUseCase(lessonId)
 
-            // Record lesson completion in streak/daily activity
-            recordLessonCompletedUseCase()
+            // 4. Only increment daily stats on first-time completion
+            if (!isRepeat) {
+                recordLessonCompletedUseCase()
+            }
 
             // Award XP — repo auto-downgrades to LESSON_REPEAT if already completed
             val transaction = awardXpUseCase(XpSource.LESSON_COMPLETE, lessonId)
-            val isRepeat = transaction?.source == XpSource.LESSON_REPEAT
             val xpAwarded = transaction?.amount ?: 0
 
             // Show completion modal with results
