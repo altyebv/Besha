@@ -33,6 +33,7 @@ private val bottomBarHiddenRoutes = setOf(
     Screen.ExamSession.route,
     Screen.ExamEntry.route,
     Screen.ExamResult.route,
+    Screen.Feeds.route,
     "practice/{sessionId}"
 )
 
