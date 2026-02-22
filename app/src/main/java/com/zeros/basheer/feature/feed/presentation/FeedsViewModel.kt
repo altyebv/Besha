@@ -15,6 +15,8 @@ import com.zeros.basheer.feature.streak.domain.usecase.RecordCardsReviewedUseCas
 import com.zeros.basheer.feature.user.domain.model.XpSource
 import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
+import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -46,6 +48,7 @@ class FeedsViewModel @Inject constructor(
     private val conceptRepository: ConceptRepository,
     private val recordCardsReviewedUseCase: RecordCardsReviewedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
+    private val userProfileRepository: UserProfileRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedsState())
@@ -57,21 +60,25 @@ class FeedsViewModel @Inject constructor(
 
     private fun loadFeedItems() {
         viewModelScope.launch {
-            // Get first subject for now
-            subjectRepository.getAllSubjects().first().firstOrNull()?.let { subject ->
-                feedRepository.getFeedItemsBySubject(subject.id).collect { feedItems ->
-                    val cards = FeedMapper.toFeedCards(
-                        feedItems.take(_state.value.maxCardsPerSession),
-                        subject
-                    )
+            val profile = userProfileRepository.getProfileOnce()
+            val pathFilter = profile?.subjectsFilter
+                ?: listOf(StudentPath.COMMON)
 
-                    _state.update { it.copy(
-                        feedCards = cards,
-                        isLoading = false
-                    )}
-                }
-            } ?: run {
+            val subjects = subjectRepository.getSubjectsByPathFilter(pathFilter).first()
+            if (subjects.isEmpty()) {
                 _state.update { it.copy(isLoading = false) }
+                return@launch
+            }
+
+            val subjectMap = subjects.associateBy { it.id }
+            val subjectIds = subjects.map { it.id }
+
+            feedRepository.getFeedItemsBySubjects(subjectIds).collect { feedItems ->
+                val cards = FeedMapper.toFeedCards(
+                    feedItems.take(_state.value.maxCardsPerSession),
+                    subjectMap
+                )
+                _state.update { it.copy(feedCards = cards, isLoading = false) }
             }
         }
     }

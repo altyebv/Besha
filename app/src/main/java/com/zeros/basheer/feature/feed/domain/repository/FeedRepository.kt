@@ -10,6 +10,7 @@ interface FeedRepository {
     suspend fun getFeedItemById(id: String): FeedItem?
     fun getFeedItemsByConcept(conceptId: String): Flow<List<FeedItem>>
     fun getFeedItemsBySubject(subjectId: String): Flow<List<FeedItem>>
+    fun getFeedItemsBySubjects(subjectIds: List<String>): Flow<List<FeedItem>>
     fun getFeedItemsByType(type: String): Flow<List<FeedItem>>
     fun getFeedItemsDueForReview(currentTime: Long, limit: Int = 20): Flow<List<FeedItem>>
     fun getFeedItemsForLearnedConcepts(subjectId: String, limit: Int = 20): Flow<List<FeedItem>>

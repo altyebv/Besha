@@ -32,6 +32,10 @@ object FeedMapper {
         return feedItems.map { toFeedCard(it, subject) }
     }
 
+    fun toFeedCards(feedItems: List<FeedItem>, subjectMap: Map<String, Subject>): List<FeedCard> {
+        return feedItems.map { toFeedCard(it, subjectMap[it.subjectId]) }
+    }
+
     private fun parseOptions(optionsJson: String?): List<String>? {
         if (optionsJson.isNullOrBlank()) return null
 

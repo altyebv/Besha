@@ -16,6 +16,9 @@ interface FeedItemDao {
     @Query("SELECT * FROM feed_items WHERE subjectId = :subjectId ORDER BY priority DESC, `order`")
     fun getFeedItemsBySubject(subjectId: String): Flow<List<FeedItemEntity>>
 
+    @Query("SELECT * FROM feed_items WHERE subjectId IN (:subjectIds) ORDER BY priority DESC, RANDOM()")
+    fun getFeedItemsBySubjects(subjectIds: List<String>): Flow<List<FeedItemEntity>>
+
     @Query("SELECT * FROM feed_items WHERE type = :type ORDER BY priority DESC")
     fun getFeedItemsByType(type: String): Flow<List<FeedItemEntity>>
 

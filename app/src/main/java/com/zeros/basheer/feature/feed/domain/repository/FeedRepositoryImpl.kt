@@ -30,6 +30,11 @@ class FeedRepositoryImpl @Inject constructor(
             entities.map { feedItemEntityToDomain(it) }
         }
 
+    override fun getFeedItemsBySubjects(subjectIds: List<String>): Flow<List<FeedItem>> =
+        feedItemDao.getFeedItemsBySubjects(subjectIds).map { entities ->
+            entities.map { feedItemEntityToDomain(it) }
+        }
+
     override fun getFeedItemsByType(type: String): Flow<List<FeedItem>> =
         feedItemDao.getFeedItemsByType(type).map { entities ->
             entities.map { feedItemEntityToDomain(it) }
