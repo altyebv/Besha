@@ -18,6 +18,7 @@ object FeedMapper {
             subjectName = subject?.nameAr ?: "",
             type = feedItem.type,
             contentAr = feedItem.contentAr,
+            back = feedItem.back,
             contentEn = feedItem.contentEn,
             imageUrl = feedItem.imageUrl,
             interactionType = feedItem.interactionType,
