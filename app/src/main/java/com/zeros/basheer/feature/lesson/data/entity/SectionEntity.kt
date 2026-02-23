@@ -28,5 +28,6 @@ data class SectionEntity(
     val id: String,                         // e.g., "geo_u1_l1_s1"
     val lessonId: String,
     val title: String,                      // "مقدمة", "الشرح", etc.
-    val order: Int
+    val order: Int,
+    val learningType: LearningType = LearningType.UNDERSTANDING
 )
