@@ -6,7 +6,8 @@ data class FeedItem(
     val conceptId: String,
     val subjectId: String,
     val type: FeedItemType,
-    val contentAr: String,
+    val contentAr: String,           // Front face text for FLASH_CARD; main content for others
+    val back: String? = null,        // Back face text — only used by FLASH_CARD
     val contentEn: String? = null,
     val imageUrl: String? = null,
     val interactionType: InteractionType? = null,
@@ -25,7 +26,8 @@ enum class FeedItemType {
     FACT,
     RULE,
     TIP,
-    MINI_QUIZ
+    MINI_QUIZ,
+    FLASH_CARD
 }
 
 enum class InteractionType {

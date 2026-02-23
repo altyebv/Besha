@@ -8,6 +8,7 @@ import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.feature.concept.domain.model.Rating
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
+import com.zeros.basheer.feature.feed.domain.model.FeedItemType
 import com.zeros.basheer.feature.feed.domain.model.InteractionType
 import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
@@ -113,6 +114,40 @@ class FeedsViewModel @Inject constructor(
         }
     }
 
+
+    /**
+     * Called when the user taps a flash card to flip it.
+     * Transitions state to Flipped so the back face renders and rating buttons appear.
+     */
+    fun onFlip() {
+        _state.update { it.copy(cardInteractionState = CardInteractionState.Flipped) }
+    }
+
+    /**
+     * Called when the user rates themselves after a flash card flip.
+     * [knew] true = ✓ knew it, false = ✗ didn't know it.
+     * Records spaced repetition rating and XP, then advances to next card.
+     */
+    fun onSelfRate(knew: Boolean) {
+        val currentCard = _state.value.feedCards.getOrNull(_state.value.currentIndex) ?: return
+
+        _state.update { it.copy(
+            cardInteractionState = CardInteractionState.Answered(
+                userAnswer = if (knew) "knew" else "didnt_know",
+                isCorrect = knew,
+                explanation = null
+            ),
+            correctAnswers = if (knew) it.correctAnswers + 1 else it.correctAnswers,
+            wrongAnswers = if (!knew) it.wrongAnswers + 1 else it.wrongAnswers
+        )}
+
+        viewModelScope.launch {
+            val rating = if (knew) Rating.GOOD else Rating.HARD
+            conceptRepository.recordReview(currentCard.conceptId, rating)
+            if (knew) awardXpUseCase(XpSource.CARD_CORRECT)
+        }
+    }
+
     fun onContinue(): Boolean {
         val currentIndex = _state.value.currentIndex
         val totalCards = _state.value.feedCards.size
@@ -151,7 +186,12 @@ class FeedsViewModel @Inject constructor(
             return true
         }
 
-        // Interactive cards need to be answered first
+        // Flash cards need to be rated before swiping
+        if (currentCard.type == FeedItemType.FLASH_CARD) {
+            return interactionState is CardInteractionState.Answered
+        }
+
+        // Other interactive cards need to be answered first
         return interactionState is CardInteractionState.Answered
     }
 

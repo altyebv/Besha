@@ -10,16 +10,17 @@ data class FeedCard(
     val subjectId: String,
     val subjectName: String,
     val type: FeedItemType,
-    val contentAr: String,
+    val contentAr: String,           // Front face for FLASH_CARD; main content for others
+    val back: String? = null,        // Back face — only used by FLASH_CARD
     val contentEn: String?,
     val imageUrl: String?,
-    
+
     // For interactive cards
     val interactionType: InteractionType?,
     val correctAnswer: String?,
     val options: List<String>?,
     val explanation: String?,
-    
+
     val priority: Int
 )
 
@@ -29,16 +30,19 @@ data class FeedCard(
 sealed class CardInteractionState {
     /** Card just displayed, waiting for user */
     object Idle : CardInteractionState()
-    
+
     /** User is interacting (e.g., selecting MCQ option) */
     object Interacting : CardInteractionState()
-    
+
     /** User answered, showing result */
     data class Answered(
         val userAnswer: String,
         val isCorrect: Boolean,
         val explanation: String?
     ) : CardInteractionState()
+
+    /** Flash card flipped — waiting for self-rating */
+    object Flipped : CardInteractionState()
 }
 
 /**
@@ -58,6 +62,7 @@ fun FeedItemType.toBadge(): FeedTypeBadge {
         FeedItemType.RULE -> FeedTypeBadge("قاعدة", false)
         FeedItemType.TIP -> FeedTypeBadge("نصيحة", false)
         FeedItemType.MINI_QUIZ -> FeedTypeBadge("اختبر نفسك", true)
+        FeedItemType.FLASH_CARD -> FeedTypeBadge("بطاقة", false)
     }
 }
 

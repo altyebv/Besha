@@ -7,6 +7,7 @@ import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.feature.feed.domain.model.FeedItemType
 import com.zeros.basheer.feature.feed.domain.model.InteractionType
+import com.zeros.basheer.ui.components.feeds.FlashCard
 import com.zeros.basheer.feature.practice.presentation.components.McqCard
 import com.zeros.basheer.feature.practice.presentation.components.TrueFalseCard
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
@@ -21,6 +22,9 @@ fun FeedCardRenderer(
     interactionState: CardInteractionState,
     onAnswer: (String) -> Unit,
     onContinue: () -> Unit,
+    onFlip: () -> Unit = {},
+    onKnewIt: () -> Unit = {},
+    onDidntKnow: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -48,6 +52,16 @@ fun FeedCardRenderer(
                     DefinitionCard(
                         card = card,
                         onContinue = onContinue
+                    )
+                }
+
+                FeedItemType.FLASH_CARD -> {
+                    FlashCard(
+                        card = card,
+                        interactionState = interactionState,
+                        onFlip = onFlip,
+                        onKnewIt = onKnewIt,
+                        onDidntKnow = onDidntKnow
                     )
                 }
 
@@ -139,5 +153,7 @@ private fun CardInteractionState.toQuestionInteractionState(): QuestionInteracti
             isCorrect = this.isCorrect,
             explanation = this.explanation
         )
+        // Flipped is flash-card-only — quiz components treat it as Idle
+        is CardInteractionState.Flipped -> QuestionInteractionState.Idle
     }
 }

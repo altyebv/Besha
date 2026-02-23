@@ -77,7 +77,7 @@ fun FeedsScreen(
                 ) { page ->
                     val card = state.feedCards[page]
                     val isCurrentPage = page == pagerState.currentPage
-                    
+
                     FeedCardRenderer(
                         card = card,
                         interactionState = if (isCurrentPage) state.cardInteractionState else CardInteractionState.Idle,
@@ -85,6 +85,25 @@ fun FeedsScreen(
                         onContinue = {
                             if (viewModel.onContinue()) {
                                 coroutineScope.launch {
+                                    pagerState.animateScrollToPage(page + 1)
+                                }
+                            }
+                        },
+                        onFlip = { viewModel.onFlip() },
+                        onKnewIt = {
+                            viewModel.onSelfRate(knew = true)
+                            coroutineScope.launch {
+                                kotlinx.coroutines.delay(300)
+                                if (viewModel.onContinue()) {
+                                    pagerState.animateScrollToPage(page + 1)
+                                }
+                            }
+                        },
+                        onDidntKnow = {
+                            viewModel.onSelfRate(knew = false)
+                            coroutineScope.launch {
+                                kotlinx.coroutines.delay(300)
+                                if (viewModel.onContinue()) {
                                     pagerState.animateScrollToPage(page + 1)
                                 }
                             }
@@ -190,23 +209,23 @@ private fun SessionCompleteContent(
             text = "🎉",
             style = MaterialTheme.typography.displayLarge
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "أحسنت!",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        
+
         Text(
             text = "أكملت جلسة المراجعة",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         // Stats
         Surface(
             shape = MaterialTheme.shapes.medium,
@@ -224,9 +243,9 @@ private fun SessionCompleteContent(
                 StatRow(label = "نسبة النجاح", value = "$accuracy%", isBold = true)
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         // Actions
         Button(
             onClick = onRestart,
@@ -240,9 +259,9 @@ private fun SessionCompleteContent(
             Spacer(modifier = Modifier.width(8.dp))
             Text("جلسة جديدة")
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         OutlinedButton(
             onClick = onClose,
             modifier = Modifier.fillMaxWidth()
