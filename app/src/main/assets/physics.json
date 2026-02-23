@@ -1,0 +1,658 @@
+{
+  "version": "1.0",
+  "subject": {
+    "id": "الفيزياء",
+    "nameAr": "الفيزياء",
+    "nameEn": "Physics",
+    "path": "SCIENCE",
+    "isMajor": true,
+    "order": 0,
+    "colorHex": "#2196F3"
+  },
+  "tags": [
+    {
+      "id": "tag_phys_mechanics",
+      "nameAr": "ميكانيكا",
+      "nameEn": "Mechanics"
+    },
+    {
+      "id": "tag_phys_waves",
+      "nameAr": "موجات",
+      "nameEn": "Waves"
+    }
+  ],
+  "concepts": [
+    {
+      "id": "concept_phys_newton2",
+      "type": "FORMULA",
+      "titleAr": "قانون نيوتن الثاني",
+      "titleEn": "Newton's Second Law",
+      "definition": "القوة المحصلة المؤثرة على جسم تساوي حاصل ضرب كتلته في تسارعه",
+      "shortDefinition": "القوة = الكتلة × التسارع",
+      "formula": "F = m × a",
+      "imageUrl": null,
+      "difficulty": 2,
+      "extraData": null,
+      "tagIds": [
+        "tag_phys_mechanics"
+      ]
+    },
+    {
+      "id": "concept_phys_velocity",
+      "type": "DEFINITION",
+      "titleAr": "السرعة",
+      "titleEn": "Velocity",
+      "definition": "معدل تغير الإزاحة بالنسبة للزمن، وهي كمية متجهة لها مقدار واتجاه",
+      "shortDefinition": "معدل تغير الإزاحة مع الزمن",
+      "formula": "v = Δx / Δt",
+      "imageUrl": null,
+      "difficulty": 1,
+      "extraData": null,
+      "tagIds": [
+        "tag_phys_mechanics"
+      ]
+    },
+    {
+      "id": "concept_phys_wave",
+      "type": "DEFINITION",
+      "titleAr": "الموجة",
+      "titleEn": "Wave",
+      "definition": "اضطراب ينتقل خلال وسط أو فراغ ناقلاً الطاقة دون نقل المادة",
+      "shortDefinition": "اضطراب ينقل الطاقة دون نقل المادة",
+      "formula": "v = f × λ",
+      "imageUrl": null,
+      "difficulty": 2,
+      "extraData": null,
+      "tagIds": [
+        "tag_phys_waves"
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "unit_phys_mechanics",
+      "title": "الحركة والقوى",
+      "order": 1,
+      "description": "دراسة قوانين الحركة وتطبيقاتها",
+      "lessons": [
+        {
+          "id": "lesson_phys_newton",
+          "title": "قوانين نيوتن للحركة",
+          "order": 1,
+          "estimatedMinutes": 20,
+          "summary": "دراسة قوانين نيوتن الثلاثة وتطبيقاتها العملية",
+          "sections": [
+            {
+              "id": "sec_phys_intro",
+              "title": "مقدمة في ديناميكا الحركة",
+              "order": 1,
+              "conceptIds": [
+                "concept_phys_newton2",
+                "concept_phys_velocity"
+              ],
+              "blocks": [
+                {
+                  "id": "blk_phys_text1",
+                  "type": "TEXT",
+                  "content": "تُعدّ قوانين نيوتن للحركة من أهم الإنجازات العلمية في تاريخ الفيزياء الكلاسيكية. صاغها العالم الإنجليزي إسحاق نيوتن في القرن السابع عشر، وما زالت حتى اليوم الأساس الذي تُبنى عليه الميكانيكا الكلاسيكية وتطبيقاتها الهندسية.",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_phys_heading1",
+                  "type": "HEADING",
+                  "content": "قانون نيوتن الثاني",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "blk_phys_highlight1",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "القانون الثاني: القوة المحصلة على جسم تساوي كتلته مضروبة في تسارعه.\nF = m × a\nحيث: F = القوة (نيوتن)، m = الكتلة (كيلوجرام)، a = التسارع (م/ث²)",
+                  "order": 3,
+                  "conceptRef": "concept_phys_newton2",
+                  "caption": null,
+                  "metadata": "{\"style\": \"definition\"}"
+                },
+                {
+                  "id": "blk_phys_formula1",
+                  "type": "FORMULA",
+                  "content": "F = m \\times a",
+                  "order": 4,
+                  "conceptRef": "concept_phys_newton2",
+                  "caption": "قانون نيوتن الثاني للحركة",
+                  "metadata": "{\"displayMode\": true}"
+                },
+                {
+                  "id": "blk_phys_divider1",
+                  "type": "DIVIDER",
+                  "content": "",
+                  "order": 5,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_phys_heading2",
+                  "type": "HEADING",
+                  "content": "وحدات القياس",
+                  "order": 6,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 3}"
+                },
+                {
+                  "id": "blk_phys_table1",
+                  "type": "TABLE",
+                  "content": "{\"headers\":[\"الكمية\",\"الرمز\",\"الوحدة\"],\"rows\":[{\"cells\":[\"القوة\",\"F\",\"نيوتن (N)\"]},{\"cells\":[\"الكتلة\",\"m\",\"كيلوجرام (kg)\"]},{\"cells\":[\"التسارع\",\"a\",\"م/ث²\"]},{\"cells\":[\"السرعة\",\"v\",\"م/ث\"]}]}",
+                  "order": 7,
+                  "conceptRef": null,
+                  "caption": "وحدات الكميات الفيزيائية الأساسية",
+                  "metadata": null
+                },
+                {
+                  "id": "blk_phys_tip1",
+                  "type": "TIP",
+                  "content": "تذكر: عند حل المسائل، تأكد دائماً من توحيد الوحدات قبل التعويض في المعادلة.",
+                  "order": 8,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_phys_example1",
+                  "type": "EXAMPLE",
+                  "content": "جسم كتلته 5 كيلوجرام يتحرك بتسارع 3 م/ث². احسب القوة المؤثرة عليه.\n\nالحل:\nF = m × a\nF = 5 × 3\nF = 15 نيوتن",
+                  "order": 9,
+                  "conceptRef": "concept_phys_newton2",
+                  "caption": "مثال تطبيقي على القانون الثاني",
+                  "metadata": null
+                },
+                {
+                  "id": "blk_phys_list1",
+                  "type": "LIST",
+                  "content": "قانون القصور الذاتي: الجسم الساكن يبقى ساكناً والمتحرك يبقى متحركاً ما لم تؤثر عليه قوة\nقانون التسارع: القوة المحصلة = الكتلة × التسارع\nقانون التفاعل: لكل فعل رد فعل مساوٍ له في المقدار ومعاكس له في الاتجاه",
+                  "order": 10,
+                  "conceptRef": null,
+                  "caption": "قوانين نيوتن الثلاثة مختصرة",
+                  "metadata": "{\"style\": \"numbered\"}"
+                },
+                {
+                  "id": "blk_phys_quote1",
+                  "type": "QUOTE",
+                  "content": "إذا رأيت أبعد مما رآه غيري، فذلك لأنني وقفت على أكتاف العمالقة.",
+                  "order": 11,
+                  "conceptRef": null,
+                  "caption": "إسحاق نيوتن",
+                  "metadata": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "q_phys_tf1",
+      "type": "TRUE_FALSE",
+      "textAr": "وحدة قياس القوة في النظام الدولي هي النيوتن",
+      "textEn": null,
+      "correctAnswer": "true",
+      "options": null,
+      "explanation": "نعم، وحدة القوة هي النيوتن (N) وتساوي كيلوجرام × متر / ثانية²",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 1,
+      "points": 1,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 20,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": true
+    },
+    {
+      "id": "q_phys_tf2",
+      "type": "TRUE_FALSE",
+      "textAr": "السرعة كمية قياسية ليس لها اتجاه",
+      "textEn": null,
+      "correctAnswer": "false",
+      "options": null,
+      "explanation": "السرعة (velocity) كمية متجهة لها مقدار واتجاه. أما التحرك (speed) فهو الكمية القياسية التي تمثل مقدار السرعة فقط.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 1,
+      "points": 1,
+      "conceptIds": [
+        "concept_phys_velocity"
+      ],
+      "estimatedSeconds": 20,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": true
+    },
+    {
+      "id": "q_phys_mcq1",
+      "type": "MCQ",
+      "textAr": "جسم كتلته 10 كيلوجرام تؤثر عليه قوة محصلة 50 نيوتن. ما تسارعه؟",
+      "textEn": null,
+      "correctAnswer": "5 م/ث²",
+      "options": "[\"2 م/ث²\", \"5 م/ث²\", \"10 م/ث²\", \"50 م/ث²\"]",
+      "explanation": "من قانون نيوتن الثاني: a = F/m = 50/10 = 5 م/ث²",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 2,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 45,
+      "cognitiveLevel": "APPLY",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "q_phys_mcq2",
+      "type": "MCQ",
+      "textAr": "أي القوانين التالية يصف ظاهرة القصور الذاتي؟",
+      "textEn": null,
+      "correctAnswer": "قانون نيوتن الأول",
+      "options": "[\"قانون نيوتن الأول\", \"قانون نيوتن الثاني\", \"قانون نيوتن الثالث\", \"قانون الجذب العام\"]",
+      "explanation": "قانون نيوتن الأول هو قانون القصور الذاتي: الجسم يحافظ على حالته من السكون أو الحركة المنتظمة ما لم تؤثر عليه قوة خارجية.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 1,
+      "points": 1,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 30,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": true
+    },
+    {
+      "id": "q_phys_fill1",
+      "type": "FILL_BLANK",
+      "textAr": "وفق قانون نيوتن الثاني، إذا تضاعفت القوة المؤثرة على جسم ثابت الكتلة فإن تسارعه ___",
+      "textEn": null,
+      "correctAnswer": "يتضاعف",
+      "options": "[\"يتضاعف\", \"يتناصف\", \"يبقى ثابتاً\", \"يتربع\"]",
+      "explanation": "التسارع يتناسب طردياً مع القوة: a = F/m. إذا تضاعفت F وبقيت m ثابتة، يتضاعف a.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 2,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 35,
+      "cognitiveLevel": "UNDERSTAND",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "q_phys_fill2",
+      "type": "FILL_BLANK",
+      "textAr": "سرعة الصوت في الهواء عند 0 درجة مئوية تساوي تقريباً ___ م/ث",
+      "textEn": null,
+      "correctAnswer": "331",
+      "options": "[\"331\", \"300\", \"340\", \"360\"]",
+      "explanation": "سرعة الصوت في الهواء عند الصفر المئوي تساوي 331 م/ث وترتفع بارتفاع درجة الحرارة.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 2,
+      "conceptIds": [
+        "concept_phys_wave"
+      ],
+      "estimatedSeconds": 30,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": true
+    },
+    {
+      "id": "q_phys_short1",
+      "type": "SHORT_ANSWER",
+      "textAr": "عرّف التسارع وأذكر وحدته في النظام الدولي.",
+      "textEn": null,
+      "correctAnswer": "التسارع هو معدل تغير السرعة بالنسبة للزمن، ووحدته م/ث²",
+      "options": null,
+      "explanation": null,
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 1,
+      "points": 2,
+      "conceptIds": [
+        "concept_phys_velocity"
+      ],
+      "estimatedSeconds": 60,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "q_phys_short2",
+      "type": "SHORT_ANSWER",
+      "textAr": "ما الفرق بين السرعة المتجهة والسرعة القياسية؟",
+      "textEn": null,
+      "correctAnswer": "السرعة المتجهة (velocity) لها مقدار واتجاه، بينما السرعة القياسية (speed) لها مقدار فقط دون اتجاه",
+      "options": null,
+      "explanation": null,
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 2,
+      "conceptIds": [
+        "concept_phys_velocity"
+      ],
+      "estimatedSeconds": 60,
+      "cognitiveLevel": "UNDERSTAND",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "q_phys_table1",
+      "type": "TABLE",
+      "textAr": "أكمل الجدول بقيم التسارع لكل حالة، علماً بأن الكتلة ثابتة = 2 كيلوجرام:",
+      "textEn": null,
+      "correctAnswer": "{\"rows\":[[\"10 N\",\"5 م/ث²\"],[\"20 N\",\"10 م/ث²\"],[\"5 N\",\"2.5 م/ث²\"]]}",
+      "options": null,
+      "explanation": "نستخدم a = F/m. لكل صف نقسم القوة على الكتلة (2 kg).",
+      "imageUrl": null,
+      "tableData": "{\"headers\":[\"القوة (N)\",\"التسارع (م/ث²)\"],\"rows\":[{\"cells\":[\"10 N\",\"\"]},{\"cells\":[\"20 N\",\"\"]},{\"cells\":[\"5 N\",\"\"]}]}",
+      "difficulty": 3,
+      "points": 3,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 90,
+      "cognitiveLevel": "APPLY",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "q_phys_figure1",
+      "type": "FIGURE",
+      "textAr": "انظر إلى الرسم البياني للسرعة مقابل الزمن. صف حركة الجسم خلال كل مرحلة.",
+      "textEn": null,
+      "correctAnswer": "المرحلة الأولى: تسارع منتظم. المرحلة الثانية: حركة بسرعة ثابتة. المرحلة الثالثة: تباطؤ حتى التوقف",
+      "options": null,
+      "explanation": "في رسم v-t: الميل الموجب = تسارع، الخط الأفقي = سرعة ثابتة، الميل السالب = تباطؤ",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 3,
+      "points": 3,
+      "conceptIds": [
+        "concept_phys_velocity"
+      ],
+      "estimatedSeconds": 120,
+      "cognitiveLevel": "ANALYZE",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    }
+  ],
+  "exams": [
+    {
+      "id": "phys_exam_2024_mock",
+      "titleAr": "اختبار الفيزياء التجريبي 2024",
+      "titleEn": "Physics Mock Exam 2024",
+      "source": "PRACTICE",
+      "year": 2024,
+      "schoolName": null,
+      "duration": 90,
+      "totalPoints": 20,
+      "description": "اختبار تجريبي يغطي وحدة الحركة والقوى",
+      "examType": "MONTHLY",
+      "sectionsJson": "[{\"title\":\"أسئلة صح وخطأ\",\"points\":4,\"questionIds\":[\"q_phys_tf1\",\"q_phys_tf2\"]},{\"title\":\"أسئلة الاختيار من متعدد\",\"points\":6,\"questionIds\":[\"q_phys_mcq1\",\"q_phys_mcq2\",\"q_phys_fill1\"]},{\"title\":\"أسئلة مقالية\",\"points\":10,\"questionIds\":[\"q_phys_short1\",\"q_phys_short2\",\"q_phys_table1\"]}]",
+      "questionIds": []
+    }
+  ],
+  "feedItems": [
+    {
+      "id": "feed_phys_def1",
+      "conceptId": "concept_phys_newton2",
+      "type": "DEFINITION",
+      "contentAr": "قانون نيوتن الثاني: القوة = الكتلة × التسارع (F = ma)",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 5,
+      "order": 1
+    },
+    {
+      "id": "feed_phys_formula1",
+      "conceptId": "concept_phys_newton2",
+      "type": "FORMULA",
+      "contentAr": "F = m × a\nحيث F القوة بالنيوتن، m الكتلة بالكيلوجرام، a التسارع بالمتر/ثانية²",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 5,
+      "order": 2
+    },
+    {
+      "id": "feed_phys_fact1",
+      "conceptId": "concept_phys_wave",
+      "type": "FACT",
+      "contentAr": "الضوء يسير بسرعة 300,000 كيلومتر في الثانية في الفراغ — أسرع شيء في الكون المعروف",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 3,
+      "order": 3
+    },
+    {
+      "id": "feed_phys_tip1",
+      "conceptId": "concept_phys_newton2",
+      "type": "TIP",
+      "contentAr": "💡 عند حل مسائل القوانين: اكتب المعطيات أولاً، حدد القانون المناسب، ثم عوض وأحسب",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 2,
+      "order": 4
+    },
+    {
+      "id": "feed_phys_tf1",
+      "conceptId": "concept_phys_newton2",
+      "type": "MINI_QUIZ",
+      "contentAr": "إذا تضاعفت كتلة جسم مع بقاء القوة ثابتة، فإن تسارعه يتضاعف",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "SWIPE_TF",
+      "correctAnswer": "false",
+      "options": null,
+      "explanation": "خطأ! a = F/m. إذا تضاعفت الكتلة وبقيت القوة ثابتة، ينقص التسارع إلى النصف.",
+      "priority": 5,
+      "order": 5
+    },
+    {
+      "id": "feed_phys_mcq1",
+      "conceptId": "concept_phys_newton2",
+      "type": "MINI_QUIZ",
+      "contentAr": "قوة 30 نيوتن تؤثر على جسم كتلته 6 كيلوجرام. ما تسارعه؟",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": "MCQ",
+      "correctAnswer": "5 م/ث²",
+      "options": "[\"3 م/ث²\", \"5 م/ث²\", \"6 م/ث²\", \"30 م/ث²\"]",
+      "explanation": "a = F/m = 30/6 = 5 م/ث²",
+      "priority": 5,
+      "order": 6
+    },
+    {
+      "id": "feed_phys_rule1",
+      "conceptId": "concept_phys_newton2",
+      "type": "RULE",
+      "contentAr": "القاعدة: التسارع يتناسب طردياً مع القوة، وعكسياً مع الكتلة",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 4,
+      "order": 7
+    },
+    {
+      "id": "feed_phys_flash1",
+      "conceptId": "concept_phys_newton2",
+      "type": "FLASH_CARD",
+      "contentAr": "ما هو قانون نيوتن الثاني؟",
+      "back": "القوة تساوي الكتلة مضروبةً في التسارع\nF = m × a",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 5,
+      "order": 8
+    },
+    {
+      "id": "feed_phys_flash2",
+      "conceptId": "concept_phys_newton2",
+      "type": "FLASH_CARD",
+      "contentAr": "ما وحدة قياس القوة؟",
+      "back": "النيوتن (N)\nيساوي كيلوجرام × متر / ثانية²",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 4,
+      "order": 9
+    },
+    {
+      "id": "feed_phys_flash3",
+      "conceptId": "concept_phys_velocity",
+      "type": "FLASH_CARD",
+      "contentAr": "ما الفرق بين السرعة المتجهة والسرعة القياسية؟",
+      "back": "السرعة القياسية: المسافة ÷ الزمن (بدون اتجاه)\nالسرعة المتجهة: الإزاحة ÷ الزمن (مع اتجاه)",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 4,
+      "order": 10
+    },
+    {
+      "id": "feed_phys_flash4",
+      "conceptId": "concept_phys_velocity",
+      "type": "FLASH_CARD",
+      "contentAr": "ما معادلة التسارع؟",
+      "back": "التسارع = (السرعة النهائية − السرعة الابتدائية) ÷ الزمن\na = (v − u) ÷ t",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 4,
+      "order": 11
+    },
+    {
+      "id": "feed_phys_flash5",
+      "conceptId": "concept_phys_wave",
+      "type": "FLASH_CARD",
+      "contentAr": "ما العلاقة بين التردد والطول الموجي؟",
+      "back": "سرعة الموجة = التردد × الطول الموجي\nv = f × λ",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 3,
+      "order": 12
+    },
+    {
+      "id": "feed_phys_flash6",
+      "conceptId": "concept_phys_wave",
+      "type": "FLASH_CARD",
+      "contentAr": "ما الفرق بين الموجات المستعرضة والطولية؟",
+      "back": "المستعرضة: الاهتزاز عمودي على اتجاه الانتشار (مثل الضوء)\nالطولية: الاهتزاز موازٍ لاتجاه الانتشار (مثل الصوت)",
+      "contentEn": null,
+      "imageUrl": null,
+      "interactionType": null,
+      "correctAnswer": null,
+      "options": null,
+      "explanation": null,
+      "priority": 3,
+      "order": 13
+    }
+  ]
+}
