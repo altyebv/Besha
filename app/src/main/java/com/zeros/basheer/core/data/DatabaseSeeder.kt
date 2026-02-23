@@ -8,6 +8,7 @@ import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockType
+import com.zeros.basheer.feature.lesson.data.entity.LearningType
 
 
 import com.zeros.basheer.feature.practice.data.entity.SectionConcept
@@ -480,6 +481,7 @@ data class SectionJson(
     val id: String,
     val title: String,
     val order: Int,
+    val learningType: String = "UNDERSTANDING",
     val conceptIds: List<String> = emptyList(),
     val blocks: List<BlockJson> = emptyList()
 ) {
@@ -487,7 +489,8 @@ data class SectionJson(
         id = id,
         lessonId = lessonId,
         title = title,
-        order = order
+        order = order,
+        learningType = LearningType.valueOf(learningType)
     )
 }
 
