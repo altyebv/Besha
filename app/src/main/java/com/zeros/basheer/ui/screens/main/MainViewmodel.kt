@@ -20,6 +20,7 @@ import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
 import com.zeros.basheer.feature.user.domain.model.XpSummary
 import com.zeros.basheer.feature.user.domain.usecase.GetUserXpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
@@ -81,9 +82,10 @@ class MainViewModel @Inject constructor(
     private val _state = MutableStateFlow(MainScreenState())
     val state: StateFlow<MainScreenState> = _state.asStateFlow()
 
+    // Held so refreshData() can cancel before relaunching — prevents duplicate collectors.
+    private var dataJob: Job? = null
+
     init {
-        // Restore persisted dismissal — only honour it if it was set today.
-        // Dismissing a focus card should last for one day, not forever.
         val dismissedDate = prefs.getString(PREF_FOCUS_DISMISSED_DATE, null)
         val todayDate = java.time.LocalDate.now().toString()
         if (dismissedDate == todayDate) {
@@ -99,75 +101,84 @@ class MainViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        viewModelScope.launch {
+        // Cancel any existing collector before starting a new one.
+        // Without this, each refreshData() call stacks another active collector
+        // and they race each other writing to _state.
+        dataJob?.cancel()
+        dataJob = viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
-            val profile = userProfileRepository.getProfileOnce()
-            val pathFilter = profile?.subjectsFilter
-                ?: listOf(StudentPath.COMMON)
+            // flatMapLatest on the profile flow means:
+            // - We react to profile changes (path filter) automatically
+            // - When profile emits a new value the previous inner flow is cancelled
+            //   and a fresh combine() starts — no stale data, no duplicate emissions
+            userProfileRepository.getProfile()
+                .flatMapLatest { profile ->
+                    val pathFilter = profile?.subjectsFilter ?: listOf(StudentPath.COMMON)
 
-            combine(
-                subjectRepository.getSubjectsByPathFilter(pathFilter),
-                progressRepository.getCompletedLessons(),
-                progressRepository.getRecentlyAccessedLessons(10)
-            ) { subjects, completedLessons, recentLessons ->
-                Triple(subjects, completedLessons, recentLessons)
-            }.collect { (subjects, completedLessons, recentLessons) ->
+                    combine(
+                        subjectRepository.getSubjectsByPathFilter(pathFilter),
+                        progressRepository.getCompletedLessons(),
+                        progressRepository.getRecentlyAccessedLessons(10)
+                    ) { subjects, completedLessons, recentLessons ->
+                        Triple(subjects, completedLessons, recentLessons)
+                    }
+                }
+                .collect { (subjects, completedLessons, recentLessons) ->
 
-                // Load all subjects' units and lessons in parallel — one coroutine per
-                // subject instead of sequential first() calls inside the loop.
-                val subjectsWithProgress = subjects.map { subject ->
-                    async {
-                        val units = subjectRepository.getUnitsBySubject(subject.id).first()
-                        val lessons = lessonRepository.getLessonsBySubject(subject.id).first()
+                    // Load all subjects' units and lessons in parallel
+                    val subjectsWithProgress = subjects.map { subject ->
+                        async {
+                            val units = subjectRepository.getUnitsBySubject(subject.id).first()
+                            val lessons = lessonRepository.getLessonsBySubject(subject.id).first()
 
-                        val completedCount = completedLessons.count { progress ->
-                            lessons.any { it.id == progress.lessonId }
+                            val completedCount = completedLessons.count { progress ->
+                                lessons.any { it.id == progress.lessonId }
+                            }
+
+                            val nextLesson = recentLessons
+                                .filter { progress -> lessons.any { it.id == progress.lessonId } }
+                                .firstOrNull { progress -> !progress.completed }
+                                ?.let { progress -> lessons.find { it.id == progress.lessonId } }
+
+                            val lastStudied = recentLessons
+                                .filter { progress -> lessons.any { it.id == progress.lessonId } }
+                                .maxByOrNull { it.lastAccessedAt }
+                                ?.lastAccessedAt
+
+                            SubjectWithProgress(
+                                subject = subject,
+                                totalLessons = lessons.size,
+                                completedLessons = completedCount,
+                                units = units,
+                                nextLessonTitle = nextLesson?.title,
+                                lastStudied = lastStudied
+                            )
                         }
+                    }.awaitAll()
 
-                        val nextLesson = recentLessons
-                            .filter { progress -> lessons.any { it.id == progress.lessonId } }
-                            .firstOrNull { progress -> !progress.completed }
-                            ?.let { progress -> lessons.find { it.id == progress.lessonId } }
+                    val totalLessons = subjectsWithProgress.sumOf { it.totalLessons }
+                    val totalCompleted = subjectsWithProgress.sumOf { it.completedLessons }
+                    val overallProgress = if (totalLessons > 0) {
+                        totalCompleted.toFloat() / totalLessons
+                    } else 0f
 
-                        val lastStudied = recentLessons
-                            .filter { progress -> lessons.any { it.id == progress.lessonId } }
-                            .maxByOrNull { it.lastAccessedAt }
-                            ?.lastAccessedAt
-
-                        SubjectWithProgress(
-                            subject = subject,
-                            totalLessons = lessons.size,
-                            completedLessons = completedCount,
-                            units = units,
-                            nextLessonTitle = nextLesson?.title,
-                            lastStudied = lastStudied
+                    _state.update { current ->
+                        current.copy(
+                            subjects = subjectsWithProgress,
+                            completedLessonsCount = totalCompleted,
+                            totalLessonsCount = totalLessons,
+                            overallProgress = overallProgress,
+                            isLoading = false
                         )
                     }
-                }.awaitAll()
-
-                val totalLessons = subjectsWithProgress.sumOf { it.totalLessons }
-                val totalCompleted = subjectsWithProgress.sumOf { it.completedLessons }
-                val overallProgress = if (totalLessons > 0) {
-                    totalCompleted.toFloat() / totalLessons
-                } else 0f
-
-                _state.update { current ->
-                    current.copy(
-                        subjects = subjectsWithProgress,
-                        completedLessonsCount = totalCompleted,
-                        totalLessonsCount = totalLessons,
-                        overallProgress = overallProgress,
-                        isLoading = false
-                    )
                 }
-            }
         }
     }
 
     private fun observeStreakStatus() {
         viewModelScope.launch {
-            getStreakStatusUseCase.asFlow().collect { status ->  // NEW
+            getStreakStatusUseCase.asFlow().collect { status ->
                 _state.update { it.copy(streakStatus = status) }
             }
         }
@@ -175,7 +186,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeTodayActivity() {
         viewModelScope.launch {
-            streakRepository.getTodayActivityFlow().collect { activity ->  // NEW
+            streakRepository.getTodayActivityFlow().collect { activity ->
                 _state.update { it.copy(todayActivity = activity) }
             }
         }
@@ -222,10 +233,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Dismiss the top recommendation for the rest of today.
-     * Persisted so it survives process death and app restarts within the same day.
-     */
     private fun observeUserProfile() {
         viewModelScope.launch {
             userProfileRepository.getProfile().collect { profile ->
@@ -249,9 +256,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun refreshData() {
+        // loadData() cancels the previous dataJob before relaunching —
+        // no duplicate collectors, no stale writes.
         loadData()
         loadRecommendations()
-        observeUserProfile()
-        observeXp()
     }
 }

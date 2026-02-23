@@ -2,12 +2,11 @@ package com.zeros.basheer.ui.screens.main.components.sections
 
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zeros.basheer.domain.model.ScoredRecommendation
@@ -18,7 +17,6 @@ import com.zeros.basheer.ui.screens.main.components.cards.SubjectCard
 import com.zeros.basheer.ui.screens.main.components.cards.TodayFocusCard
 import com.zeros.basheer.ui.screens.main.components.foundation.MainAnimations
 import com.zeros.basheer.ui.screens.main.components.foundation.MainMetrics
-import kotlinx.coroutines.delay
 
 /**
  * Main dashboard content with scrollable sections.
@@ -75,24 +73,11 @@ fun MainDashboardContent(
         // Today's focus card
         if (state.topRecommendation != null && !state.focusCardDismissed) {
             item(key = "focus_card") {
-                var visible by remember { mutableStateOf(false) }
-
-                LaunchedEffect(Unit) {
-                    delay(MainAnimations.FOCUS_CARD_DELAY)
-                    visible = true
-                }
-
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = MainAnimations.focusCardEntry,
-                    exit = MainAnimations.focusCardExit
-                ) {
-                    TodayFocusCard(
-                        recommendation = state.topRecommendation!!,
-                        onActionClick = onRecommendationAction,
-                        onDismiss = onDismissFocus
-                    )
-                }
+                TodayFocusCard(
+                    recommendation = state.topRecommendation!!,
+                    onActionClick = onRecommendationAction,
+                    onDismiss = onDismissFocus
+                )
             }
         }
 
@@ -124,29 +109,19 @@ private fun LazyListScope.subjectsSection(
         )
     }
 
-    // Subject cards
+    // Subject cards — no delayed visibility; starting invisible and flipping to true
+    // after a LaunchedEffect causes cards to briefly disappear whenever the list
+    // recomposes (e.g. after recommendation scores reorder subjects).
     items(
         count = subjects.size,
         key = { index -> subjects[index].subject.id }
     ) { index ->
         val subjectWithProgress = subjects[index]
-        var visible by remember { mutableStateOf(false) }
-
-        LaunchedEffect(Unit) {
-            delay(MainAnimations.cardEntryDelay(index).toLong())
-            visible = true
-        }
-
-        AnimatedVisibility(
-            visible = visible,
-            enter = MainAnimations.cardEntry(index)
-        ) {
-            SubjectCard(
-                subjectWithProgress = subjectWithProgress,
-                onClick = { onSubjectClick(subjectWithProgress.subject.id) },
-                onContinueClick = { onSubjectClick(subjectWithProgress.subject.id) },
-                onPracticeClick = { /* Navigate to quiz bank */ }
-            )
-        }
+        SubjectCard(
+            subjectWithProgress = subjectWithProgress,
+            onClick = { onSubjectClick(subjectWithProgress.subject.id) },
+            onContinueClick = { onSubjectClick(subjectWithProgress.subject.id) },
+            onPracticeClick = { /* Navigate to quiz bank */ }
+        )
     }
 }
