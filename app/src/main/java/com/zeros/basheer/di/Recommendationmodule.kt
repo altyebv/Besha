@@ -4,6 +4,7 @@ import com.zeros.basheer.domain.recommendation.RecommendationEngine
 import com.zeros.basheer.domain.repository.ContentRepository
 import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
+import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,12 +20,14 @@ object RecommendationModule {
     fun provideRecommendationEngine(
         contentRepository: ContentRepository,
         quizBankRepository: QuizBankRepository,
-        practiceRepository: PracticeRepository
+        practiceRepository: PracticeRepository,
+        userProfileRepository: UserProfileRepository
     ): RecommendationEngine {
         return RecommendationEngine(
-            quizBankRepository = quizBankRepository,
             contentRepository = contentRepository,
-            practiceRepository = practiceRepository
+            quizBankRepository = quizBankRepository,
+            practiceRepository = practiceRepository,
+            userProfileRepository = userProfileRepository
         )
     }
 }

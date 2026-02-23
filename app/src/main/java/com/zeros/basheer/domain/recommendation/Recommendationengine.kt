@@ -3,11 +3,12 @@ package com.zeros.basheer.domain.recommendation
 import com.zeros.basheer.domain.repository.ContentRepository
 import com.zeros.basheer.domain.model.*
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.subject.domain.model.Subject
+import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -34,37 +35,40 @@ data class RecommendationConfig(
 )
 
 /**
- * Smart recommendation engine using multi-factor scoring
+ * Smart recommendation engine using multi-factor scoring.
+ *
+ * Recommendations are scoped to the student's academic path (SCIENCE, LITERARY, COMMON)
+ * so students only see subjects relevant to them.
  */
 @Singleton
 class RecommendationEngine @Inject constructor(
     private val contentRepository: ContentRepository,
     private val quizBankRepository: QuizBankRepository,
     private val practiceRepository: com.zeros.basheer.feature.practice.domain.repository.PracticeRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val config: RecommendationConfig = RecommendationConfig()
 ) {
 
     /**
-     * Generate top recommendations across all subjects
+     * Generate top recommendations scoped to the student's academic path.
      */
     suspend fun getTopRecommendations(limit: Int = 3): List<ScoredRecommendation> {
-        val subjects = contentRepository.getAllSubjects().first()
+        // Resolve path filter from profile — fall back to COMMON only if no profile yet
+        val profile = userProfileRepository.getProfileOnce()
+        val pathFilter = profile?.subjectsFilter ?: listOf(StudentPath.COMMON)
+
+        // Only recommend subjects that belong to this student's path
+        val subjects = contentRepository.getSubjectsByPathFilter(pathFilter).first()
+
         val allRecommendations = mutableListOf<ScoredRecommendation>()
 
-        // Get current time context
-        val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-        val isMorning = currentHour in 6..11
-
-        // Generate recommendations for each subject
         for (subject in subjects) {
             val context = buildSubjectContext(subject.id)
             val subjectRecs = generateSubjectRecommendations(subject, context)
                 .take(config.maxRecommendationsPerSubject)
-
             allRecommendations.addAll(subjectRecs)
         }
 
-        // Sort by score and return top N
         return allRecommendations
             .sortedByDescending { it.score }
             .take(min(limit, config.maxTotalRecommendations))
@@ -116,18 +120,13 @@ class RecommendationEngine @Inject constructor(
             lessons.any { it.id == progress.lessonId }
         }
 
-        // Get quiz performance
         val questionCounts = quizBankRepository.getQuestionCounts(subjectId)
         val avgScore = practiceRepository.getAverageScore(subjectId).first()
-
-        // Get weak concepts
         val weakConcepts = getWeakConcepts(subjectId)
 
-        // Get recency data
         val recentLessons = contentRepository.getRecentlyAccessedLessons(1).first()
         val lastStudied = recentLessons.firstOrNull()?.lastAccessedAt
 
-        // Count today's sessions
         val todayStart = java.util.Calendar.getInstance().apply {
             set(java.util.Calendar.HOUR_OF_DAY, 0)
             set(java.util.Calendar.MINUTE, 0)
@@ -148,19 +147,12 @@ class RecommendationEngine @Inject constructor(
             totalQuestionsAsked = questionCounts.total,
             lastStudiedTimestamp = lastStudied,
             studySessionsToday = sessionsToday,
-            studySessionsThisWeek = 0, // TODO: implement week counting
-            upcomingExamDays = null // TODO: implement exam tracking
+            studySessionsThisWeek = 0,
+            upcomingExamDays = null
         )
     }
 
-    /**
-     * Get concepts with low success rates
-     */
-    private suspend fun getWeakConcepts(subjectId: String): List<String> {
-        // This would query QuestionStats to find concepts with < 60% success
-        // For now, return empty - will implement when concept stats are available
-        return emptyList()
-    }
+    private suspend fun getWeakConcepts(subjectId: String): List<String> = emptyList()
 
     // ==================== RECOMMENDATION GENERATORS ====================
 
@@ -168,11 +160,15 @@ class RecommendationEngine @Inject constructor(
         subject: Subject,
         context: SubjectContext
     ): ScoredRecommendation? {
-        // Find most recently accessed incomplete lesson
         val recentLessons = contentRepository.getRecentlyAccessedLessons(5).first()
         val completedLessonIds = contentRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
 
+        // Only consider lessons that belong to this subject
+        val subjectLessonIds = contentRepository.getLessonsBySubject(subject.id).first()
+            .map { it.id }.toSet()
+
         val inProgressLesson = recentLessons
+            .filter { subjectLessonIds.contains(it.lessonId) }
             .firstOrNull { !completedLessonIds.contains(it.lessonId) }
             ?: return null
 
@@ -214,13 +210,12 @@ class RecommendationEngine @Inject constructor(
             return null
         }
 
-        // TODO: Get actual weak concept details when stats are available
         val recommendation = Recommendation.QuickReview(
             questionCount = 10,
             estimatedMinutes = 5
         )
 
-        val score = scoreWeakConcept(context, 0.45f) // Placeholder success rate
+        val score = scoreWeakConcept(context, 0.45f)
 
         return ScoredRecommendation(
             subject = subject,
@@ -235,7 +230,6 @@ class RecommendationEngine @Inject constructor(
         subject: Subject,
         context: SubjectContext
     ): ScoredRecommendation? {
-        // Find units that are 80%+ complete
         val units = contentRepository.getUnitsBySubject(subject.id).first()
 
         for (unit in units) {
@@ -258,12 +252,10 @@ class RecommendationEngine @Inject constructor(
                     percentComplete = percentComplete
                 )
 
-                val score = scoreCompleteUnit(context, percentComplete)
-
                 return ScoredRecommendation(
                     subject = subject,
                     recommendation = recommendation,
-                    score = score,
+                    score = scoreCompleteUnit(context, percentComplete),
                     badge = RecommendationBadge.ALMOST_DONE,
                     reason = "باقي ${lessons.size - completedCount} دروس فقط!"
                 )
@@ -282,12 +274,10 @@ class RecommendationEngine @Inject constructor(
             estimatedMinutes = 5
         )
 
-        val score = scoreQuickReview(context)
-
         return ScoredRecommendation(
             subject = subject,
             recommendation = recommendation,
-            score = score,
+            score = scoreQuickReview(context),
             badge = RecommendationBadge.QUICK_WIN,
             reason = "مراجعة سريعة - 10 أسئلة"
         )
@@ -297,7 +287,6 @@ class RecommendationEngine @Inject constructor(
         subject: Subject,
         context: SubjectContext
     ): ScoredRecommendation? {
-        // Find first incomplete unit
         val units = contentRepository.getUnitsBySubject(subject.id).first()
         val completedLessons = contentRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
 
@@ -312,12 +301,10 @@ class RecommendationEngine @Inject constructor(
                     lessonCount = lessons.size
                 )
 
-                val score = scoreStartNewUnit(context)
-
                 return ScoredRecommendation(
                     subject = subject,
                     recommendation = recommendation,
-                    score = score,
+                    score = scoreStartNewUnit(context),
                     badge = RecommendationBadge.NEW_CONTENT,
                     reason = "ابدأ وحدة جديدة"
                 )
@@ -331,18 +318,16 @@ class RecommendationEngine @Inject constructor(
 
     private fun scoreContinueLesson(context: SubjectContext, progress: Float): Float {
         val urgency = when {
-            context.studySessionsToday == 0 -> 90f // Not studied today
-            progress > 0.7f -> 85f // Almost done
+            context.studySessionsToday == 0 -> 90f
+            progress > 0.7f -> 85f
             else -> 70f
         }
-
         val relevance = when {
             context.lastStudiedTimestamp != null &&
                     System.currentTimeMillis() - context.lastStudiedTimestamp < 24 * 60 * 60 * 1000 -> 90f
             else -> 60f
         }
-
-        val impact = min(100f, progress * 100 + 30) // Higher progress = higher impact
+        val impact = min(100f, progress * 100 + 30)
         val recency = if (context.lastStudiedTimestamp != null) 80f else 40f
 
         return urgency * config.urgencyWeight +
@@ -353,13 +338,12 @@ class RecommendationEngine @Inject constructor(
 
     private fun scoreWeakConcept(context: SubjectContext, successRate: Float): Float {
         val urgency = when {
-            successRate < config.criticalWeakThreshold -> 95f // Critical
-            successRate < config.weakAreaThreshold -> 80f // Weak
+            successRate < config.criticalWeakThreshold -> 95f
+            successRate < config.weakAreaThreshold -> 80f
             else -> 50f
         }
-
         val relevance = if (context.totalQuestionsAsked > 20) 85f else 60f
-        val impact = 100f - (successRate * 100) // Lower success = higher impact
+        val impact = 100f - (successRate * 100)
         val recency = 70f
 
         return urgency * config.urgencyWeight +
@@ -369,9 +353,9 @@ class RecommendationEngine @Inject constructor(
     }
 
     private fun scoreCompleteUnit(context: SubjectContext, percentComplete: Float): Float {
-        val urgency = min(100f, percentComplete * 100 + 20) // Higher % = more urgent
+        val urgency = min(100f, percentComplete * 100 + 20)
         val relevance = 75f
-        val impact = 85f // Completing a unit is high impact
+        val impact = 85f
         val recency = 70f
 
         return urgency * config.urgencyWeight +
