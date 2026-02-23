@@ -9,6 +9,7 @@ import com.zeros.basheer.feature.progress.domain.model.UserProgress
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.subject.domain.model.Units
+import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -35,6 +36,9 @@ class ContentRepository @Inject constructor(
 
     fun getAllSubjects(): Flow<List<Subject>> =
         subjectRepository.getAllSubjects()
+
+    fun getSubjectsByPathFilter(paths: List<StudentPath>): Flow<List<Subject>> =
+        subjectRepository.getSubjectsByPathFilter(paths)
 
     suspend fun getSubjectById(subjectId: String): Subject? =
         subjectRepository.getSubjectById(subjectId)
