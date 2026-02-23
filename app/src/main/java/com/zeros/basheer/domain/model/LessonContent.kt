@@ -2,6 +2,8 @@ package com.zeros.basheer.domain.model
 
 import com.zeros.basheer.feature.lesson.data.entity.BlockType
 
+import com.zeros.basheer.feature.lesson.data.entity.LearningType
+
 /**
  * UI-ready lesson content model.
  * Flattened and optimized for rendering in LazyColumn.
@@ -18,6 +20,7 @@ data class SectionUiModel(
     val id: String,
     val title: String,
     val order: Int,
+    val learningType: LearningType = LearningType.UNDERSTANDING,
     val blocks: List<BlockUiModel>
 )
 
@@ -37,19 +40,19 @@ data class BlockUiModel(
  */
 sealed class BlockMetadata {
     data class Heading(val level: Int) : BlockMetadata()
-    
+
     data class List(
         val style: ListStyle,
         val items: kotlin.collections.List<ListItem>
     ) : BlockMetadata()
-    
+
     data class HighlightBox(val style: HighlightStyle) : BlockMetadata()
-    
+
     data class Table(
         val headers: kotlin.collections.List<String>,
         val rows: kotlin.collections.List<kotlin.collections.List<String>>
     ) : BlockMetadata()
-    
+
     data class Image(val aspectRatio: Float?) : BlockMetadata()
 }
 
@@ -60,7 +63,7 @@ enum class ListStyle {
 data class ListItem(
     val text: String,
     val conceptRef: String? = null,
-    val children: kotlin.collections.List<ListItem>? = null
+    val children: List<ListItem>? = null
 )
 
 enum class HighlightStyle {

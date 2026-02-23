@@ -1,5 +1,6 @@
 package com.zeros.basheer.feature.lesson.domain.repository
 
+import com.zeros.basheer.feature.lesson.data.mapper.LessonMapper
 
 import com.zeros.basheer.core.domain.model.Result
 import com.zeros.basheer.feature.lesson.data.dao.*
@@ -83,16 +84,8 @@ class LessonRepositoryImpl @Inject constructor(
         }
     }
 
-    // Mapper extension
-    private fun BlockEntity.toBlockUiModel() = com.zeros.basheer.domain.model.BlockUiModel(
-        id = id,
-        type = type,
-        content = content,
-        order = order,
-        conceptRef = conceptRef,
-        caption = caption,
-        metadata = null  // Parse metadata if needed
-    )
+    // Delegate to LessonMapper so metadata (tables, headings, lists, etc.) is fully parsed
+    private fun BlockEntity.toBlockUiModel() = LessonMapper.toBlockUiModelPublic(this)
 
     override fun getLessonsByUnit(unitId: String): Flow<List<LessonDomain>> {
         return lessonDao.getLessonsByUnit(unitId)

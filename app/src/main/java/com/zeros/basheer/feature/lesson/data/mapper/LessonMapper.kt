@@ -36,11 +36,15 @@ object LessonMapper {
             id = section.sectionEntity.id,
             title = section.sectionEntity.title,
             order = section.sectionEntity.order,
+            learningType = section.sectionEntity.learningType,
             blocks = section.blocks
                 .sortedBy { it.order }
                 .map { toBlockUiModel(it) }
         )
     }
+
+    /** Public entry point for callers outside this mapper (e.g. LessonRepositoryImpl). */
+    fun toBlockUiModelPublic(block: BlockEntity): BlockUiModel = toBlockUiModel(block)
 
     private fun toBlockUiModel(block: BlockEntity): BlockUiModel {
         return BlockUiModel(
@@ -55,6 +59,9 @@ object LessonMapper {
     }
 
     private fun parseMetadata(block: BlockEntity): BlockMetadata? {
+        // TABLE blocks store their data in content, not metadata — handle before the null check
+        if (block.type == BlockType.TABLE) return parseTableMetadata(block.content)
+
         val metadataJson = block.metadata ?: return getDefaultMetadata(block.type)
 
         return try {
@@ -162,8 +169,16 @@ object LessonMapper {
 
             val rows = json.optJSONArray("rows")?.let { rowsArr ->
                 (0 until rowsArr.length()).map { i ->
-                    val row = rowsArr.getJSONArray(i)
-                    (0 until row.length()).map { j -> row.getString(j) }
+                    // Support two row formats:
+                    // 1. Plain array:       ["القوة", "F", "نيوتن"]
+                    // 2. Object with cells: {"cells": ["القوة", "F", "نيوتن"]}
+                    val rowElement = rowsArr.get(i)
+                    val cellsArray = when (rowElement) {
+                        is JSONArray -> rowElement
+                        is JSONObject -> rowElement.optJSONArray("cells") ?: JSONArray()
+                        else -> JSONArray()
+                    }
+                    (0 until cellsArray.length()).map { j -> cellsArray.getString(j) }
                 }
             } ?: emptyList()
 

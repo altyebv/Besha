@@ -41,9 +41,15 @@ fun LessonReaderScreen(
     // Exit-confirmation dialog state
     var showExitDialog by remember { mutableStateOf(false) }
 
-    // Intercept hardware/gesture back press — always ask first
+    // Intercept hardware/gesture back press
+    // Skip dialog if lesson is already completed — no progress to lose
     BackHandler(enabled = true) {
-        showExitDialog = true
+        if (state.progress?.completed == true) {
+            viewModel.pauseTimeTracking()
+            onBackClick()
+        } else {
+            showExitDialog = true
+        }
     }
 
     // Exit confirmation dialog
@@ -97,7 +103,14 @@ fun LessonReaderScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { showExitDialog = true }) {
+                    IconButton(onClick = {
+                        if (state.progress?.completed == true) {
+                            viewModel.pauseTimeTracking()
+                            onBackClick()
+                        } else {
+                            showExitDialog = true
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "رجوع"
