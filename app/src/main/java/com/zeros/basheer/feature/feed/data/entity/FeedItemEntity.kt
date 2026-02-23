@@ -38,6 +38,7 @@ data class FeedItemEntity(
     val subjectId: String,
     val type: String,  // Maps to FeedItemType enum
     val contentAr: String,
+    val back: String? = null,
     val contentEn: String? = null,
     val imageUrl: String? = null,
     val interactionType: String? = null,  // Maps to InteractionType enum
