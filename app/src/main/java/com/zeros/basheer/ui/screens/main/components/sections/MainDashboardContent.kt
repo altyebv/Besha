@@ -1,36 +1,31 @@
 package com.zeros.basheer.ui.screens.main.components.sections
 
-
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zeros.basheer.domain.model.ScoredRecommendation
-import com.zeros.basheer.ui.components.common.SectionHeader
 import com.zeros.basheer.ui.screens.main.MainScreenState
-import com.zeros.basheer.ui.screens.main.components.cards.OverallStatsBanner
-import com.zeros.basheer.ui.screens.main.components.cards.SubjectCard
-import com.zeros.basheer.ui.screens.main.components.cards.TodayFocusCard
-import com.zeros.basheer.ui.screens.main.components.foundation.MainAnimations
+import com.zeros.basheer.ui.screens.main.SubjectWithProgress
+import com.zeros.basheer.ui.screens.main.components.cards.*
 import com.zeros.basheer.ui.screens.main.components.foundation.MainMetrics
 
 /**
- * Main dashboard content with scrollable sections.
+ * Main dashboard content — 4 clear zones:
  *
- * Sections:
- * - Overall stats banner
- * - Today's focus card (if available)
- * - Subjects grid
+ *  1. HomeHeader      — compact amber strip: greeting, streak, XP, overall progress
+ *  2. DailyGoalBar    — "هدف اليوم" with dot progress toward 3 lessons
+ *  3. MissionCard     — primary CTA: subject-colored, uses recommendation engine
+ *  4. Subject cards   — full list, each with its own color identity
  *
- * @param state Main screen state
- * @param onSubjectClick Callback when subject clicked
- * @param onRecommendationAction Callback when recommendation action clicked
- * @param onDismissFocus Callback when focus card dismissed
- * @param modifier Standard modifier
+ * The hierarchy answers three questions immediately:
+ *  "Who am I?" (header) → "What's left today?" (goal bar) → "What should I do next?" (mission)
  */
 @Composable
 fun MainDashboardContent(
@@ -49,79 +44,85 @@ fun MainDashboardContent(
         ),
         verticalArrangement = Arrangement.spacedBy(MainMetrics.cardSpacing)
     ) {
-        // Overall stats banner
-        item(key = "stats_banner") {
-            AnimatedContent(
-                targetState = state.isLoading,
-                transitionSpec = { MainAnimations.bannerTransition },
-                label = "stats_banner"
-            ) { loading ->
-                if (!loading) {
-                    OverallStatsBanner(
-                        userName = state.userName,
-                        streakDays = state.streakStatus.currentStreak,
-                        streakLevel = state.streakStatus.todayLevel,
-                        overallProgress = state.overallProgress,
-                        completedLessons = state.completedLessonsCount,
-                        totalLessons = state.totalLessonsCount,
-                        xpSummary = state.xpSummary
-                    )
-                }
-            }
+        // ── Zone 1: Compact header ────────────────────────────────────────
+        item(key = "home_header") {
+            HomeHeader(
+                userName = state.userName,
+                streakDays = state.streakStatus.currentStreak,
+                streakLevel = state.streakStatus.todayLevel,
+                overallProgress = state.overallProgress,
+                completedLessons = state.completedLessonsCount,
+                totalLessons = state.totalLessonsCount,
+                xpSummary = state.xpSummary
+            )
         }
 
-        // Today's focus card
-        if (state.topRecommendation != null && !state.focusCardDismissed) {
-            item(key = "focus_card") {
-                TodayFocusCard(
-                    recommendation = state.topRecommendation!!,
+        // ── Zone 2: Daily goal bar ────────────────────────────────────────
+        item(key = "daily_goal") {
+            DailyGoalBar(
+                todayActivity = state.todayActivity,
+                dailyGoal = 3
+            )
+        }
+
+        // ── Zone 3: Mission card (always shown — empty state if no rec) ───
+        if (!state.focusCardDismissed) {
+            item(key = "mission_card") {
+                MissionCard(
+                    recommendation = state.topRecommendation,
                     onActionClick = onRecommendationAction,
                     onDismiss = onDismissFocus
                 )
             }
         }
 
-        // Subjects section
+        // ── Zone 4: Subject cards ─────────────────────────────────────────
         subjectsSection(
             subjects = state.subjects,
             onSubjectClick = onSubjectClick
         )
 
-        // Bottom spacing
+        // Bottom breathing room for nav bar
         item {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
-/**
- * Subjects section within LazyColumn
- */
+// ── Subjects section ───────────────────────────────────────────────────────────
+
 private fun LazyListScope.subjectsSection(
-    subjects: List<com.zeros.basheer.ui.screens.main.SubjectWithProgress>,
+    subjects: List<SubjectWithProgress>,
     onSubjectClick: (String) -> Unit
 ) {
-    // Section header
+    if (subjects.isEmpty()) return
+
     item(key = "subjects_header") {
-        SectionHeader(
-            title = "المواد الدراسية",
-            count = subjects.size
-        )
+        SubjectsHeader()
     }
 
-    // Subject cards — no delayed visibility; starting invisible and flipping to true
-    // after a LaunchedEffect causes cards to briefly disappear whenever the list
-    // recomposes (e.g. after recommendation scores reorder subjects).
     items(
         count = subjects.size,
         key = { index -> subjects[index].subject.id }
     ) { index ->
-        val subjectWithProgress = subjects[index]
+        val s = subjects[index]
         SubjectCard(
-            subjectWithProgress = subjectWithProgress,
-            onClick = { onSubjectClick(subjectWithProgress.subject.id) },
-            onContinueClick = { onSubjectClick(subjectWithProgress.subject.id) },
-            onPracticeClick = { /* Navigate to quiz bank */ }
+            subjectWithProgress = s,
+            onClick = { onSubjectClick(s.subject.id) },
+            onContinueClick = { onSubjectClick(s.subject.id) },
+            onPracticeClick = { /* TODO: navigate to practice with subject filter */ },
+            subjectIndex = index
         )
     }
+}
+
+@Composable
+private fun SubjectsHeader() {
+    Text(
+        text = "استمر في دراستك",
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(vertical = 4.dp)
+    )
 }
