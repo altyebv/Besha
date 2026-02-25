@@ -1,11 +1,15 @@
 package com.zeros.basheer.ui.screens.main.components.cards
 
-
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,26 +24,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.zeros.basheer.core.ui.theme.StreakFlame
 import com.zeros.basheer.ui.screens.main.SubjectWithProgress
 import com.zeros.basheer.ui.screens.main.components.foundation.MainAnimations
+import com.zeros.basheer.ui.screens.main.components.foundation.MainColors
 import com.zeros.basheer.ui.screens.main.components.foundation.MainMetrics
 
 /**
- * Subject card displaying subject info, progress, and quick actions.
+ * Compact subject row card.
  *
- * Features:
- * - Subject name and stats (units, lessons)
- * - Status badge (New/Active/Almost Done)
- * - Next lesson preview
- * - Animated progress bar
- * - Continue and Practice buttons
+ * Layout:
+ *   ▌ [emoji]  [name          ]  [progress bar]  [practice btn]
+ *              [next lesson…  ]
  *
- * @param subjectWithProgress Subject data with progress
- * @param onClick Action when card body clicked
- * @param onContinueClick Action when Continue button clicked
- * @param onPracticeClick Action when Practice button clicked
- * @param modifier Standard modifier
+ * - Full row tap → lessons screen
+ * - Icon button (trailing) → practice
+ * - Color strip (leading 4dp) identifies the subject at a glance
+ * - No action buttons inside — keeps the list fast to scan
  */
 @Composable
 fun SubjectCard(
@@ -47,358 +49,197 @@ fun SubjectCard(
     onClick: () -> Unit,
     onContinueClick: () -> Unit,
     onPracticeClick: () -> Unit,
+    subjectIndex: Int = 0,
     modifier: Modifier = Modifier
 ) {
-    val progress = calculateProgress(subjectWithProgress)
+    val progress = if (subjectWithProgress.totalLessons > 0)
+        subjectWithProgress.completedLessons.toFloat() / subjectWithProgress.totalLessons
+    else 0f
 
-    // Animate progress
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
         animationSpec = MainAnimations.progressAnimationSpec,
         label = "subject_progress"
     )
 
-    val (badge, badgeColor) = determineSubjectBadge(subjectWithProgress, progress)
-    val progressColor = getProgressColor(progress)
+    val subjectColor = MainColors.subjectColorByName(
+        subjectWithProgress.subject.nameAr, subjectIndex
+    )
+    val subjectEmoji = MainColors.subjectEmoji(subjectWithProgress.subject.nameAr)
 
-    Card(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
             .clickable(
                 role = Role.Button,
-                onClickLabel = "Open ${subjectWithProgress.subject.nameAr}"
+                onClickLabel = "فتح ${subjectWithProgress.subject.nameAr}"
             ) { onClick() }
             .semantics {
                 role = Role.Button
-                contentDescription = "${subjectWithProgress.subject.nameAr}, " +
-                        "${(progress * 100).toInt()}% complete, " +
-                        "${subjectWithProgress.completedLessons} of ${subjectWithProgress.totalLessons} lessons"
+                contentDescription = "${subjectWithProgress.subject.nameAr}، " +
+                        "${(progress * 100).toInt()}% مكتمل"
             },
-        shape = MaterialTheme.shapes.extraLarge,
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = MainMetrics.subjectCardElevation
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(MainMetrics.subjectCardPadding),
-            verticalArrangement = Arrangement.spacedBy(MainMetrics.subjectCardSpacing)
-        ) {
-            // Header with name and badge
-            SubjectHeader(
-                name = subjectWithProgress.subject.nameAr,
-                unitsCount = subjectWithProgress.units.size,
-                lessonsCount = subjectWithProgress.totalLessons,
-                badge = badge,
-                badgeColor = badgeColor,
-                isComplete = progress >= 1.0f
-            )
-
-            // Next lesson preview
-            if (subjectWithProgress.nextLessonTitle != null) {
-                NextLessonPreview(
-                    lessonTitle = subjectWithProgress.nextLessonTitle,
-                    progressColor = progressColor
-                )
-            }
-
-            // Progress section
-            ProgressSection(
-                progress = animatedProgress,
-                completed = subjectWithProgress.completedLessons,
-                total = subjectWithProgress.totalLessons,
-                progressColor = progressColor
-            )
-
-            // Quick action buttons
-            ActionButtons(
-                hasNextLesson = subjectWithProgress.nextLessonTitle != null,
-                progressColor = progressColor,
-                onContinue = onContinueClick,
-                onPractice = onPracticeClick
-            )
-        }
-    }
-}
-
-// ============================================================================
-// SUB-COMPONENTS
-// ============================================================================
-
-/**
- * Subject header with name, stats, and optional badge
- */
-@Composable
-private fun SubjectHeader(
-    name: String,
-    unitsCount: Int,
-    lessonsCount: Int,
-    badge: String?,
-    badgeColor: Color,
-    isComplete: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "$unitsCount ${if (unitsCount == 1) "وحدة" else "وحدات"} • " +
-                        "$lessonsCount ${if (lessonsCount == 1) "درس" else "دروس"}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        // Badge or completion icon
-        if (badge != null) {
-            SubjectBadge(
-                text = badge,
-                color = badgeColor
-            )
-        } else if (isComplete) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = "مكتمل",
-                tint = Color(0xFF4CAF50),
-                modifier = Modifier.size(32.dp)
-            )
-        }
-    }
-}
-
-/**
- * Status badge (New/Active/Almost Done)
- */
-@Composable
-private fun SubjectBadge(
-    text: String,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        color = color.copy(alpha = 0.15f)
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Medium,
-            color = color
-        )
-    }
-}
-
-/**
- * Next lesson preview box
- */
-@Composable
-private fun NextLessonPreview(
-    lessonTitle: String,
-    progressColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.PlayCircle,
-                contentDescription = null,
-                tint = progressColor,
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = "التالي: $lessonTitle",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-/**
- * Progress section with bar and stats
- */
-@Composable
-private fun ProgressSection(
-    progress: Float,
-    completed: Int,
-    total: Int,
-    progressColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "التقدم",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            // ── Color strip ───────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(72.dp)
+                    .background(
+                        color = subjectColor,
+                        shape = RoundedCornerShape(
+                            topStart = 12.dp, bottomStart = 12.dp
+                        )
+                    )
             )
-            Text(
-                text = "$completed/$total",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = progressColor
-            )
-        }
 
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp)
-                .clip(MaterialTheme.shapes.small),
-            color = progressColor,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+            // ── Emoji badge ───────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(subjectColor.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = subjectEmoji, fontSize = 18.sp)
+            }
+
+            // ── Name + next lesson + progress bar ─────────────────────────
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                // Top row: name + badge
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = subjectWithProgress.subject.nameAr,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    StatusIndicator(
+                        progress = progress,
+                        subjectWithProgress = subjectWithProgress,
+                        color = subjectColor
+                    )
+                }
+
+                // Next lesson or completion label
+                Text(
+                    text = when {
+                        progress >= 1f -> "مكتمل ✓"
+                        subjectWithProgress.nextLessonTitle != null ->
+                            subjectWithProgress.nextLessonTitle
+                        else -> "${subjectWithProgress.totalLessons} دروس"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (progress >= 1f) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // Progress bar
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .clip(MaterialTheme.shapes.small),
+                    color = subjectColor,
+                    trackColor = subjectColor.copy(alpha = 0.15f)
+                )
+            }
+
+            // ── Practice icon button ───────────────────────────────────────
+            IconButton(
+                onClick = onPracticeClick,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(subjectColor.copy(alpha = 0.1f))
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                    contentDescription = "تدريب ${subjectWithProgress.subject.nameAr}",
+                    tint = subjectColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
     }
 }
 
-/**
- * Action buttons (Continue and Practice)
- */
+// ── Status indicator — compact, trailing, non-intrusive ───────────────────────
+
 @Composable
-private fun ActionButtons(
-    hasNextLesson: Boolean,
-    progressColor: Color,
-    onContinue: () -> Unit,
-    onPractice: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // Continue button
-        Button(
-            onClick = onContinue,
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = progressColor
-            ),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = if (hasNextLesson) "متابعة" else "ابدأ",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        // Practice button
-        OutlinedButton(
-            onClick = onPractice,
-            modifier = Modifier.weight(1f),
-            shape = MaterialTheme.shapes.medium,
-            border = ButtonDefaults.outlinedButtonBorder.copy(width = 2.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Quiz,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "تدريب",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Calculate subject progress percentage
- */
-private fun calculateProgress(subjectWithProgress: SubjectWithProgress): Float {
-    return if (subjectWithProgress.totalLessons > 0) {
-        subjectWithProgress.completedLessons.toFloat() / subjectWithProgress.totalLessons
-    } else 0f
-}
-
-/**
- * Determine subject badge and color
- * Returns a pair of (badge text, color) or (null, transparent) if no badge
- */
-@Composable
-private fun determineSubjectBadge(
+private fun StatusIndicator(
+    progress: Float,
     subjectWithProgress: SubjectWithProgress,
-    progress: Float
-): Pair<String?, Color> {
-    return when {
-        // Almost done
-        progress >= 0.8f && progress < 1.0f ->
-            "قارب على الانتهاء 🎯" to Color(0xFFFF9800)
-
-        // Active (studied within last 24 hours)
+    color: Color
+) {
+    when {
+        progress >= 1f -> {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = Color(0xFF10B981),
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        progress >= 0.8f -> {
+            StatusPill(text = "🎯 ${(progress * 100).toInt()}%", color = color)
+        }
         subjectWithProgress.lastStudied != null &&
-                System.currentTimeMillis() - subjectWithProgress.lastStudied < 24 * 60 * 60 * 1000 ->
-            "نشط 🔥" to StreakFlame
-
-        // New (no lessons completed)
-        subjectWithProgress.completedLessons == 0 ->
-            "جديد ✨" to MaterialTheme.colorScheme.primary
-
-        // No badge
-        else -> null to Color.Transparent
+                System.currentTimeMillis() - subjectWithProgress.lastStudied < 86_400_000L -> {
+            StatusPill(text = "🔥 نشط", color = StreakFlame)
+        }
+        subjectWithProgress.completedLessons == 0 -> {
+            StatusPill(text = "جديد", color = color)
+        }
+        else -> {
+            Text(
+                text = "${(progress * 100).toInt()}%",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = color
+            )
+        }
     }
 }
 
-/**
- * Get progress bar color based on completion percentage
- */
 @Composable
-private fun getProgressColor(progress: Float): Color {
-    return when {
-        progress >= 0.8f -> Color(0xFF4CAF50) // Green - almost done
-        progress >= 0.5f -> Color(0xFFFF9800) // Orange - halfway
-        else -> MaterialTheme.colorScheme.primary // Blue - starting
+private fun StatusPill(text: String, color: Color) {
+    Surface(
+        shape = MaterialTheme.shapes.extraSmall,
+        color = color.copy(alpha = 0.1f)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = color
+        )
     }
 }

@@ -1,8 +1,13 @@
 package com.zeros.basheer.feature.practice.presentation.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
@@ -13,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -22,28 +28,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeros.basheer.feature.quizbank.domain.model.Question
 
-/**
- * Card for True/False questions with swipe gestures.
- * Swipe right = True (صح)
- * Swipe left = False (خطأ)
- */
 @Composable
 fun TrueFalseCard(
     question: Question,
     interactionState: QuestionInteractionState,
     onAnswer: (String) -> Unit,
     onContinue: () -> Unit,
+    feedMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var dragOffset by remember { mutableFloatStateOf(0f) }
     val swipeThreshold = 150f
+    val isAnswered = interactionState is QuestionInteractionState.Answered
 
-    // Animate color based on drag direction
-    val backgroundColor by animateColorAsState(
+    val swipeBgColor by animateColorAsState(
         targetValue = when {
-            dragOffset > swipeThreshold / 2 -> Color(0xFF4CAF50).copy(alpha = 0.2f)
-            dragOffset < -swipeThreshold / 2 -> Color(0xFFF44336).copy(alpha = 0.2f)
-            else -> Color.Transparent
+            dragOffset > swipeThreshold / 2  -> Color(0xFF22C55E).copy(alpha = 0.15f)
+            dragOffset < -swipeThreshold / 2 -> Color(0xFFEF4444).copy(alpha = 0.15f)
+            else                             -> Color.Transparent
         },
         animationSpec = tween(150),
         label = "bgColor"
@@ -55,90 +57,98 @@ fun TrueFalseCard(
         label = "rotation"
     )
 
+    val questionTextColor = if (feedMode) Color.White.copy(alpha = 0.90f)
+    else MaterialTheme.colorScheme.onSurface
+
+    // Correct answer label for the panel ("صح" or "خطأ")
+    val correctLabel = if (question.correctAnswer == "true") "صح ✓" else "خطأ ✗"
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(swipeBgColor)
             .then(
-                if (interactionState is QuestionInteractionState.Idle ||
-                    interactionState is QuestionInteractionState.Interacting) {
-                    Modifier.pointerInput(Unit) {
-                        detectHorizontalDragGestures(
-                            onDragEnd = {
-                                when {
-                                    dragOffset > swipeThreshold -> onAnswer("true")
-                                    dragOffset < -swipeThreshold -> onAnswer("false")
-                                }
-                                dragOffset = 0f
-                            },
-                            onDragCancel = {
-                                dragOffset = 0f
-                            },
-                            onHorizontalDrag = { _, dragAmount ->
-                                dragOffset += dragAmount
+                if (!isAnswered) Modifier.pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            when {
+                                dragOffset > swipeThreshold  -> onAnswer("true")
+                                dragOffset < -swipeThreshold -> onAnswer("false")
                             }
-                        )
-                    }
-                } else {
-                    Modifier
-                }
+                            dragOffset = 0f
+                        },
+                        onDragCancel = { dragOffset = 0f },
+                        onHorizontalDrag = { _, amount -> dragOffset += amount }
+                    )
+                } else Modifier
             ),
         contentAlignment = Alignment.Center
     ) {
-        when (interactionState) {
-            is QuestionInteractionState.Idle,
-            is QuestionInteractionState.Interacting -> {
-                // Question content
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp)
-                        .graphicsLayer {
-                            rotationZ = cardRotation
-                            translationX = dragOffset
-                        },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(32.dp)
-                ) {
-                    Text(
-                        text = question.textAr,
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            lineHeight = 36.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+        // ── Question text — dims when panel rises ──────────────────────────
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .padding(bottom = if (feedMode && isAnswered) 200.dp else 0.dp)
+                .alpha(if (feedMode && isAnswered) 0.35f else 1f)
+                .then(
+                    if (!isAnswered) Modifier.graphicsLayer {
+                        rotationZ = cardRotation
+                        translationX = dragOffset
+                    } else Modifier
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            Text(
+                text = question.textAr,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    lineHeight = 36.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                textAlign = TextAlign.Center,
+                color = questionTextColor
+            )
+        }
 
-                // Swipe hints
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 48.dp, start = 32.dp, end = 32.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Left hint (False)
-                    SwipeHint(
-                        text = "صح",
-                        icon = Icons.Default.Check,
-                        color = Color(0xFF4CAF50),
-                        alpha = if (dragOffset < 30) 1f else 0.5f
-                    )
+        // ── Swipe hints (only while waiting for answer) ────────────────────
+        if (!isAnswered) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 48.dp, start = 32.dp, end = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                SwipeHint("صح",  Icons.Default.Check, Color(0xFF22C55E), if (dragOffset < 30) 1f else 0.5f)
+                SwipeHint("خطأ", Icons.Default.Close, Color(0xFFEF4444), if (dragOffset > -30) 1f else 0.5f)
+            }
+        }
 
-                    // Right hint (True)
-                    SwipeHint(
-                        text = "خطأ",
-                        icon = Icons.Default.Close,
-                        color = Color(0xFFF44336),
-                        alpha = if (dragOffset > -30) 1f else 0.5f
+        // ── Slide-up panel ─────────────────────────────────────────────────
+        if (feedMode) {
+            AnimatedVisibility(
+                visible = isAnswered,
+                enter = slideInVertically(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) { fullHeight -> fullHeight } + fadeIn(),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                if (interactionState is QuestionInteractionState.Answered) {
+                    FeedAnswerPanel(
+                        isCorrect = interactionState.isCorrect,
+                        correctAnswerLabel = if (!interactionState.isCorrect) correctLabel else null,
+                        explanation = question.explanation,
+                        onContinue = onContinue
                     )
                 }
             }
-
-            is QuestionInteractionState.Answered -> {
-                // Result display
+        } else {
+            // Practice mode — full result screen
+            if (isAnswered && interactionState is QuestionInteractionState.Answered) {
                 AnswerResult(
                     isCorrect = interactionState.isCorrect,
                     explanation = question.explanation,
@@ -161,18 +171,8 @@ private fun SwipeHint(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.graphicsLayer { this.alpha = alpha }
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+        Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
     }
 }
 
@@ -184,29 +184,22 @@ fun AnswerResult(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+        modifier = modifier.fillMaxWidth().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Result icon
         Icon(
             imageVector = if (isCorrect) Icons.Default.Check else Icons.Default.Close,
             contentDescription = null,
-            tint = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336),
+            tint = if (isCorrect) Color(0xFF22C55E) else Color(0xFFEF4444),
             modifier = Modifier.size(72.dp)
         )
-
-        // Result text
         Text(
             text = if (isCorrect) "إجابة صحيحة!" else "إجابة خاطئة",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336)
+            color = if (isCorrect) Color(0xFF22C55E) else Color(0xFFEF4444)
         )
-
-        // Explanation
         explanation?.let { exp ->
             Surface(
                 shape = MaterialTheme.shapes.medium,
@@ -222,15 +215,7 @@ fun AnswerResult(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Continue button
-        Button(
-            onClick = onContinue,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("متابعة")
-        }
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) { Text("متابعة") }
     }
 }

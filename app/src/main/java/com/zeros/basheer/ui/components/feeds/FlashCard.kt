@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -26,6 +27,7 @@ import com.zeros.basheer.feature.feed.domain.model.FeedCard
 @Composable
 fun FlashCard(
     card: FeedCard,
+    subjectColor: Color,
     interactionState: CardInteractionState,
     onFlip: () -> Unit,
     onKnewIt: () -> Unit,
@@ -35,6 +37,11 @@ fun FlashCard(
     val isFlipped = interactionState is CardInteractionState.Flipped ||
             interactionState is CardInteractionState.Answered
 
+    val frontContainer = Color(0xFF1C1A14)
+    val backContainer  = subjectColor.copy(alpha = 0.18f)
+    val frontText      = Color.White.copy(alpha = 0.92f)
+    val backText       = subjectColor
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -42,7 +49,6 @@ fun FlashCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Card — tapping flips it via fade crossfade
         AnimatedContent(
             targetState = isFlipped,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -59,30 +65,29 @@ fun FlashCard(
                     ) { onFlip() },
                 shape = MaterialTheme.shapes.extraLarge,
                 colors = CardDefaults.cardColors(
-                    containerColor = if (flipped)
-                        MaterialTheme.colorScheme.secondaryContainer
-                    else
-                        MaterialTheme.colorScheme.primaryContainer
+                    containerColor = if (flipped) backContainer else frontContainer
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = BorderStroke(
+                    width = 1.5.dp,
+                    color = if (flipped) subjectColor.copy(alpha = 0.45f)
+                    else subjectColor.copy(alpha = 0.18f)
+                )
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (flipped) (card.back ?: "") else card.contentAr,
+                        text = if (flipped) (card.back ?: card.explanation ?: card.contentEn ?: "") else card.contentAr,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = if (flipped) FontWeight.Normal else FontWeight.Bold,
                             fontSize = if (flipped) 20.sp else 26.sp,
-                            lineHeight = 34.sp
+                            lineHeight = 36.sp
                         ),
-                        color = if (flipped)
-                            MaterialTheme.colorScheme.onSecondaryContainer
-                        else
-                            MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = if (flipped) backText else frontText,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(24.dp)
+                        modifier = Modifier.padding(28.dp)
                     )
                 }
             }
@@ -94,7 +99,7 @@ fun FlashCard(
             Text(
                 text = "اضغط للكشف",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                color = Color.White.copy(alpha = 0.35f)
             )
         } else {
             Column(
@@ -105,18 +110,18 @@ fun FlashCard(
                 Text(
                     text = "هل كنت تعرف الإجابة؟",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.White.copy(alpha = 0.55f)
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Button(
                         onClick = onDidntKnow,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935).copy(alpha = 0.15f),
-                            contentColor = Color(0xFFE53935)
+                            containerColor = Color(0xFFE53935).copy(alpha = 0.18f),
+                            contentColor = Color(0xFFEF5350)
                         ),
                         elevation = ButtonDefaults.buttonElevation(0.dp),
                         shape = MaterialTheme.shapes.large
@@ -129,8 +134,8 @@ fun FlashCard(
                         onClick = onKnewIt,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF43A047).copy(alpha = 0.15f),
-                            contentColor = Color(0xFF43A047)
+                            containerColor = subjectColor.copy(alpha = 0.22f),
+                            contentColor = subjectColor
                         ),
                         elevation = ButtonDefaults.buttonElevation(0.dp),
                         shape = MaterialTheme.shapes.large

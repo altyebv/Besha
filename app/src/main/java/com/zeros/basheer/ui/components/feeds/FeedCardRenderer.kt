@@ -7,14 +7,15 @@ import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.feature.feed.domain.model.FeedItemType
 import com.zeros.basheer.feature.feed.domain.model.InteractionType
-import com.zeros.basheer.ui.components.feeds.FlashCard
 import com.zeros.basheer.feature.practice.presentation.components.McqCard
 import com.zeros.basheer.feature.practice.presentation.components.TrueFalseCard
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.quizbank.domain.model.Question
+import com.zeros.basheer.ui.screens.main.components.foundation.MainColors
 
 /**
  * Central dispatcher for rendering feed cards based on their type.
+ * Resolves subject color/emoji once here and passes them to all child cards.
  */
 @Composable
 fun FeedCardRenderer(
@@ -27,16 +28,20 @@ fun FeedCardRenderer(
     onDidntKnow: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Resolve once per card — consistent across top bar and card face
+    val subjectColor = MainColors.subjectColorByName(card.subjectName, 0)
+    val subjectEmoji = MainColors.subjectEmoji(card.subjectName)
+
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // Top bar with subject name and card type
         FeedCardTopBar(
             subjectName = card.subjectName,
-            feedType = card.type
+            feedType = card.type,
+            subjectColor = subjectColor,
+            subjectEmoji = subjectEmoji
         )
 
-        // Card content
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -51,6 +56,7 @@ fun FeedCardRenderer(
                 FeedItemType.TIP -> {
                     DefinitionCard(
                         card = card,
+                        subjectColor = subjectColor,
                         onContinue = onContinue
                     )
                 }
@@ -58,6 +64,7 @@ fun FeedCardRenderer(
                 FeedItemType.FLASH_CARD -> {
                     FlashCard(
                         card = card,
+                        subjectColor = subjectColor,
                         interactionState = interactionState,
                         onFlip = onFlip,
                         onKnewIt = onKnewIt,
@@ -66,7 +73,6 @@ fun FeedCardRenderer(
                 }
 
                 FeedItemType.MINI_QUIZ -> {
-                    // Convert FeedCard to Question for practice components
                     val question = card.toQuestion()
                     val questionInteractionState = interactionState.toQuestionInteractionState()
 
@@ -76,25 +82,25 @@ fun FeedCardRenderer(
                                 question = question,
                                 interactionState = questionInteractionState,
                                 onAnswer = onAnswer,
-                                onContinue = onContinue
+                                onContinue = onContinue,
+                                feedMode = true
                             )
                         }
-
                         InteractionType.MCQ -> {
                             McqCard(
                                 question = question,
                                 interactionState = questionInteractionState,
                                 onAnswer = onAnswer,
-                                onContinue = onContinue
+                                onContinue = onContinue,
+                                feedMode = true
                             )
                         }
-
                         InteractionType.TAP_CONFIRM,
                         InteractionType.MATCH,
                         null -> {
-                            // Fallback to simple card
                             DefinitionCard(
                                 card = card,
+                                subjectColor = subjectColor,
                                 onContinue = onContinue
                             )
                         }
@@ -105,9 +111,6 @@ fun FeedCardRenderer(
     }
 }
 
-/**
- * Convert FeedCard to Question for practice components
- */
 private fun FeedCard.toQuestion(): Question {
     return Question(
         id = this.id,
@@ -123,7 +126,6 @@ private fun FeedCard.toQuestion(): Question {
         textEn = this.contentEn,
         correctAnswer = this.correctAnswer ?: "",
         options = this.options?.let { opts ->
-            // Convert List<String> to JSON string for Question model
             "[${opts.joinToString(",") { "\"$it\"" }}]"
         },
         explanation = this.explanation,
@@ -141,9 +143,6 @@ private fun FeedCard.toQuestion(): Question {
     )
 }
 
-/**
- * Convert CardInteractionState to QuestionInteractionState
- */
 private fun CardInteractionState.toQuestionInteractionState(): QuestionInteractionState {
     return when (this) {
         is CardInteractionState.Idle -> QuestionInteractionState.Idle
@@ -153,7 +152,6 @@ private fun CardInteractionState.toQuestionInteractionState(): QuestionInteracti
             isCorrect = this.isCorrect,
             explanation = this.explanation
         )
-        // Flipped is flash-card-only — quiz components treat it as Idle
         is CardInteractionState.Flipped -> QuestionInteractionState.Idle
     }
 }

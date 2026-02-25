@@ -1,45 +1,39 @@
 package com.zeros.basheer.ui.screens.main.components.cards
 
-
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.width
-import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.zeros.basheer.core.ui.theme.*
 import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.feature.user.domain.model.XpSummary
 import com.zeros.basheer.ui.screens.main.components.foundation.*
 
 /**
- * Overall stats banner displaying welcome message, streak, and progress.
+ * Hero banner — the first thing users see each session.
  *
- * Features:
- * - Personalized greeting
- * - Animated streak badge with pulsing effect
- * - Overall progress bar
- * - Completed lessons count
- *
- * @param userName User's display name
- * @param streakDays Current streak count
- * @param streakLevel Activity level (FLAME/SPARK/COLD)
- * @param overallProgress Overall completion (0.0 to 1.0)
- * @param completedLessons Number of completed lessons
- * @param totalLessons Total number of lessons
- * @param modifier Standard modifier
+ * Design intent: A warm amber gradient card that communicates
+ * momentum and progress immediately. The streak and XP badges
+ * are first-class citizens, not afterthoughts.
  */
 @Composable
 fun OverallStatsBanner(
@@ -52,63 +46,86 @@ fun OverallStatsBanner(
     xpSummary: XpSummary? = null,
     modifier: Modifier = Modifier
 ) {
-    // Animate progress
     val animatedProgress by animateFloatAsState(
         targetValue = overallProgress,
         animationSpec = MainAnimations.progressAnimationSpec,
-        label = "progress_animation"
+        label = "overall_progress"
     )
 
-    Card(
+    // Gradient: amber → warm orange — rich, warm, energetic
+    val heroGradient = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFFF59E0B),  // Amber gold
+            Color(0xFFF97316),  // Warm orange
+        )
+    )
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
+            .clip(MaterialTheme.shapes.extraLarge)
+            .background(heroGradient)
             .semantics {
-                contentDescription = "Overall stats: ${(overallProgress * 100).toInt()}% complete, $streakDays day streak"
-            },
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = MainMetrics.bannerElevation
-        )
+                contentDescription = "التقدم الكلي: ${(overallProgress * 100).toInt()}%، سلسلة $streakDays يوم"
+            }
     ) {
+        // Decorative circle — top left
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .offset(x = (-40).dp, y = (-40).dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.07f))
+        )
+        // Decorative circle — bottom right
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .align(Alignment.BottomEnd)
+                .offset(x = 30.dp, y = 30.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.07f))
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(MainMetrics.bannerPadding),
             verticalArrangement = Arrangement.spacedBy(MainMetrics.bannerSpacing)
         ) {
-            // Greeting + Streak badge
+            // ── Top row: Greeting + Streak badge ──────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                GreetingSection(
-                    userName = userName,
-                    modifier = Modifier.weight(1f)
-                )
+                // Greeting
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = greetingByTime(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+                    Text(
+                        text = userName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
+                }
 
+                // Streak + XP stacked
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    StreakBadge(
-                        days = streakDays,
-                        level = streakLevel
-                    )
-                    xpSummary?.let { XpChip(it) }
+                    StreakBadge(days = streakDays, level = streakLevel)
+                    xpSummary?.let { XpLevelBadge(it) }
                 }
             }
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
-                thickness = 1.dp
-            )
-
-            // Progress section
-            ProgressSection(
+            // ── Progress section ──────────────────────────────────────────
+            HeroBannerProgress(
                 progress = animatedProgress,
                 completedLessons = completedLessons,
                 totalLessons = totalLessons
@@ -118,35 +135,9 @@ fun OverallStatsBanner(
 }
 
 // ============================================================================
-// SUB-COMPONENTS
+// STREAK BADGE — pulsing fire icon with day count
 // ============================================================================
 
-/**
- * Greeting section with welcome message
- */
-@Composable
-private fun GreetingSection(
-    userName: String,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = "مرحباً، $userName",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-        Text(
-            text = "استمر في التقدم الرائع!",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-        )
-    }
-}
-
-/**
- * Animated streak badge showing current streak
- */
 @Composable
 fun StreakBadge(
     days: Int,
@@ -154,147 +145,172 @@ fun StreakBadge(
     modifier: Modifier = Modifier,
     animated: Boolean = true
 ) {
-    // Pulse animation
-    val infiniteTransition = rememberInfiniteTransition(label = "streak_pulse")
-    val streakScale by infiniteTransition.animateFloat(
+    val infiniteTransition = rememberInfiniteTransition(label = "streak")
+    val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (shouldPulseStreak(days, level)) 1.1f else 1f,
+        targetValue = if (shouldPulseStreak(days, level)) 1.08f else 1f,
         animationSpec = MainAnimations.streakPulseSpec,
         label = "streak_scale"
     )
 
     Surface(
         modifier = modifier.then(
-            if (animated) Modifier.scale(streakScale) else Modifier
+            if (animated) Modifier.scale(scale) else Modifier
         ),
         shape = MaterialTheme.shapes.medium,
-        color = MainColors.streakBackground(level),
+        color = Color.White.copy(alpha = 0.2f),
         shadowElevation = streakElevation(days)
     ) {
         Row(
-            modifier = Modifier.padding(
-                horizontal = MainMetrics.streakBadgePadding,
-                vertical = MainMetrics.streakBadgePaddingVertical
-            ),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = if (days > 0) {
-                    Icons.Filled.LocalFireDepartment
-                } else {
-                    Icons.Outlined.LocalFireDepartment
-                },
-                contentDescription = "Streak: $days days",
-                tint = MainColors.streakColor(level),
-                modifier = Modifier.size(MainMetrics.streakIconSize)
+                imageVector = if (days > 0) Icons.Filled.LocalFireDepartment
+                else Icons.Outlined.LocalFireDepartment,
+                contentDescription = null,
+                tint = if (level == StreakLevel.COLD) Color.White.copy(alpha = 0.6f)
+                else Color.White,
+                modifier = Modifier.size(18.dp)
             )
+            Text(
+                text = "$days",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
+            )
+            Text(
+                text = "يوم",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White.copy(alpha = 0.85f)
+            )
+        }
+    }
+}
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+// ============================================================================
+// XP LEVEL BADGE
+// ============================================================================
+
+@Composable
+private fun XpLevelBadge(xpSummary: XpSummary) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = xpSummary.progressInLevel,
+        animationSpec = androidx.compose.animation.core.tween(700),
+        label = "xp_progress"
+    )
+
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = Color.White.copy(alpha = 0.2f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Level circle
+            Box(
+                modifier = Modifier
+                    .size(22.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = "$days",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MainColors.streakColor(level)
-                )
-                Text(
-                    text = "يوم",
+                    text = "${xpSummary.level}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MainColors.streakColor(level).copy(alpha = 0.8f)
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    fontSize = 9.sp
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "${xpSummary.totalXp} XP",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .width(64.dp)
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(2.dp)),
+                    color = Color.White,
+                    trackColor = Color.White.copy(alpha = 0.3f)
                 )
             }
         }
     }
 }
 
-/**
- * Progress section with bar and lesson count
- */
+// ============================================================================
+// PROGRESS — inside the hero banner
+// ============================================================================
+
 @Composable
-private fun ProgressSection(
+private fun HeroBannerProgress(
     progress: Float,
     completedLessons: Int,
     totalLessons: Int,
-    xpSummary: XpSummary? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Progress header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "التقدم الإجمالي",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                text = "التقدم الكلي",
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White.copy(alpha = 0.9f)
             )
             Text(
                 text = "${(progress * 100).toInt()}%",
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
             )
         }
 
-        // Progress bar
+        // Progress bar — white on amber
         LinearProgressIndicator(
             progress = { progress },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(10.dp)
+                .height(MainMetrics.progressBarHeight)
                 .clip(MaterialTheme.shapes.small),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            color = Color.White,
+            trackColor = Color.White.copy(alpha = 0.25f)
         )
 
-        // Lesson count
         Text(
             text = "$completedLessons من $totalLessons درس مكتمل",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+            color = Color.White.copy(alpha = 0.8f)
         )
     }
 }
 
-/**
- * Compact XP level chip for the main dashboard banner.
- */
-@Composable
-private fun XpChip(xpSummary: XpSummary) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = xpSummary.progressInLevel,
-        animationSpec = androidx.compose.animation.core.tween(600),
-        label = "xp_chip_progress"
-    )
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            Text(
-                text = "Lv.${xpSummary.level}  •  ${xpSummary.totalXp} XP",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(3.dp)
-                    .clip(MaterialTheme.shapes.small),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f)
-            )
-        }
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/** Context-aware Arabic greeting by time of day */
+private fun greetingByTime(): String {
+    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    return when (hour) {
+        in 5..11  -> "صباح الخير،"
+        in 12..16 -> "مرحباً،"
+        in 17..20 -> "مساء الخير،"
+        else      -> "أهلاً بك،"
     }
 }

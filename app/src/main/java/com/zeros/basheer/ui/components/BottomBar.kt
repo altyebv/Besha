@@ -1,29 +1,32 @@
 package com.zeros.basheer.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.PlayCircle
-import androidx.compose.material.icons.outlined.Quiz
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.zeros.basheer.core.ui.theme.Secondary
 import com.zeros.basheer.ui.navigation.Screen
 
 data class BottomNavItem(
     val route: String,
     val label: String,
     val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector
+    val unselectedIcon: ImageVector,
+    val isFeatured: Boolean = false          // Special treatment for Feeds
 )
 
 val bottomNavItems = listOf(
@@ -43,7 +46,8 @@ val bottomNavItems = listOf(
         route = Screen.Feeds.route,
         label = "مراجعة",
         selectedIcon = Icons.Filled.PlayCircle,
-        unselectedIcon = Icons.Outlined.PlayCircle
+        unselectedIcon = Icons.Outlined.PlayCircle,
+        isFeatured = true                    // ← This tab gets the spotlight
     ),
     BottomNavItem(
         route = Screen.QuizBank.route,
@@ -59,49 +63,116 @@ val bottomNavItems = listOf(
     )
 )
 
+/**
+ * Basheer bottom navigation bar.
+ *
+ * The Feeds tab gets a floating pill treatment — a coral accent button
+ * that visually pops above the bar, signalling "this is where the
+ * dopamine loop lives." Inspired by Duolingo's Practice button.
+ */
 @Composable
-fun BasheerBottomBar(
-    navController: NavController
-) {
+fun BasheerBottomBar(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = 0.dp,
+        modifier = Modifier.navigationBarsPadding()
+    ) {
         bottomNavItems.forEach { item ->
-            // Check if current route matches this item's route pattern
-            // Handle both exact matches and routes with parameters
             val isSelected = currentRoute?.let { route ->
                 route == item.route || route.startsWith(item.route.split("/").first())
             } ?: false
 
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = {
-                    // Don't navigate if already on this screen
-                    if (currentRoute == item.route) return@NavigationBarItem
-
-                    navController.navigate(item.route) {
-                        // Pop everything up to Main (start destination)
-                        // This ensures clicking Home from anywhere takes you to Main
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-                        // Avoid multiple copies of the same destination
-                        launchSingleTop = true
-                        // Restore state when reselecting a previously selected item
-                        restoreState = true
-                    }
-                },
-                icon = {
-                    Icon(
-                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.label
+            if (item.isFeatured) {
+                // ── Featured Feeds tab ─────────────────────────────────────
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { navigateTo(navController, item.route, currentRoute) },
+                    icon = {
+                        FeaturedTabIcon(
+                            icon = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                            isSelected = isSelected
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) Secondary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        indicatorColor = Color.Transparent    // We draw our own indicator
                     )
-                },
-                label = {
-                    Text(text = item.label)
-                }
-            )
+                )
+            } else {
+                // ── Standard tab ──────────────────────────────────────────
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { navigateTo(navController, item.route, currentRoute) },
+                    icon = {
+                        Icon(
+                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                            contentDescription = item.label,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                )
+            }
         }
+    }
+}
+
+/**
+ * The featured Feeds tab icon — a coral-filled circle that stands out
+ * from the flat bar. When selected, it glows with the secondary color.
+ */
+@Composable
+private fun FeaturedTabIcon(icon: ImageVector, isSelected: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(
+                if (isSelected) Secondary
+                else Secondary.copy(alpha = 0.15f)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(26.dp),
+            tint = if (isSelected) Color.White else Secondary
+        )
+    }
+}
+
+private fun navigateTo(navController: NavController, route: String, currentRoute: String?) {
+    if (currentRoute == route) return
+    navController.navigate(route) {
+        popUpTo(navController.graph.startDestinationId) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }
