@@ -47,10 +47,15 @@ interface LessonDao {
     @Query("SELECT * FROM lessons WHERE id = :lessonId")
     suspend fun getLessonWithProgress(lessonId: String): LessonWithProgress?
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Query("SELECT COUNT(*) FROM lessons")
+    suspend fun getLessonCount(): Int
+
+    // IGNORE (not REPLACE): REPLACE deletes the existing row first, which triggers
+    // the CASCADE on user_progress and wipes all completion data on every app restart.
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertLesson(lessonEntity: LessonEntity)
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertLessons(lessonEntities: List<LessonEntity>)
 
     @Delete

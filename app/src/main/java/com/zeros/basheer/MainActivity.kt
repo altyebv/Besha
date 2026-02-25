@@ -49,17 +49,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
-            try {
-                seeder.seedFromAssets(this@MainActivity, "geographyy.json")
-                seeder.seedFromAssets(this@MainActivity, "military.json")
-                seeder.seedFromAssets(this@MainActivity, "physics.json")
-                seeder.seedFromAssets(this@MainActivity, "chemistry.json")
-                seeder.seedFromAssets(this@MainActivity, "arabic.json")
-                seeder.seedFromAssets(this@MainActivity, "islamic.json")
-                seeder.seedQuizBankFromAssets(this@MainActivity)
-                Log.d("Lessons", "Database seeded successfully!")
-            } catch (e: Exception) {
-                Log.e("Seeds", "Seeding failed", e)
+            // Guard: only seed when the DB is empty (first install / after clear data).
+            // Without this, REPLACE on insertLesson triggers CASCADE on user_progress
+            // and wipes all completion data on every restart.
+            if (seeder.isDatabaseEmpty()) {
+                try {
+                    seeder.seedFromAssets(this@MainActivity, "geographyy.json")
+                    seeder.seedFromAssets(this@MainActivity, "military.json")
+                    seeder.seedFromAssets(this@MainActivity, "physics.json")
+                    seeder.seedFromAssets(this@MainActivity, "chemistry.json")
+                    seeder.seedFromAssets(this@MainActivity, "arabic.json")
+                    seeder.seedFromAssets(this@MainActivity, "islamic.json")
+                    seeder.seedQuizBankFromAssets(this@MainActivity)
+                    Log.d("Lessons", "Database seeded successfully!")
+                } catch (e: Exception) {
+                    Log.e("Seeds", "Seeding failed", e)
+                }
+            } else {
+                Log.d("Lessons", "Database already seeded, skipping.")
             }
         }
         enableEdgeToEdge()
