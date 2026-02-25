@@ -1,40 +1,37 @@
 package com.zeros.basheer.feature.lesson.presentation.components.topbar
 
-
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import com.zeros.basheer.feature.lesson.presentation.components.foundation.formatLessonCount
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.zeros.basheer.ui.screens.main.components.foundation.MainColors
 
-/**
- * Top app bar for Lessons screen with integrated search functionality.
- *
- * Features:
- * - Subject name display
- * - Lesson count
- * - Search toggle
- * - Search input field (when active)
- * - Back navigation
- *
- * @param subjectName Name of the current subject
- * @param totalLessons Total number of lessons
- * @param searchQuery Current search query text
- * @param isSearchActive Whether search mode is active
- * @param onSearchQueryChange Callback when search query changes
- * @param onSearchToggle Callback to toggle search mode
- * @param onBack Callback for back navigation
- * @param modifier Standard modifier
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LessonsTopBar(
@@ -47,41 +44,60 @@ fun LessonsTopBar(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val subjectEmoji = MainColors.subjectEmoji(subjectName)
+
     TopAppBar(
         modifier = modifier.semantics {
-            contentDescription = if (isSearchActive) {
-                "Search lessons"
-            } else {
-                "Lessons in $subjectName"
+            contentDescription = if (isSearchActive) "البحث في الدروس"
+            else "دروس $subjectName"
+        },
+        navigationIcon = {
+            IconButton(onClick = if (isSearchActive) onSearchToggle else onBack) {
+                Icon(
+                    imageVector = if (isSearchActive) Icons.Default.Close
+                    else Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = if (isSearchActive) "إلغاء البحث" else "رجوع"
+                )
             }
         },
         title = {
-            if (isSearchActive) {
-                SearchTextField(
-                    query = searchQuery,
-                    onQueryChange = onSearchQueryChange
-                )
-            } else {
-                LessonsTitle(
-                    subjectName = subjectName,
-                    totalLessons = totalLessons
-                )
-            }
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "رجوع"
-                )
+            AnimatedContent(
+                targetState = isSearchActive,
+                transitionSpec = {
+                    if (targetState) {
+                        // Normal → Search: slide in from end
+                        (slideInHorizontally { it / 3 } + fadeIn()) togetherWith
+                                (slideOutHorizontally { -it / 3 } + fadeOut())
+                    } else {
+                        // Search → Normal: slide in from start
+                        (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith
+                                (slideOutHorizontally { it / 3 } + fadeOut())
+                    }
+                },
+                label = "topbar_title"
+            ) { searching ->
+                if (searching) {
+                    SearchField(
+                        query = searchQuery,
+                        onQueryChange = onSearchQueryChange,
+                        onClose = onSearchToggle
+                    )
+                } else {
+                    SubjectTitle(
+                        subjectName = subjectName,
+                        emoji = subjectEmoji
+                    )
+                }
             }
         },
         actions = {
-            IconButton(onClick = onSearchToggle) {
-                Icon(
-                    imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                    contentDescription = if (isSearchActive) "إغلاق البحث" else "بحث"
-                )
+            if (!isSearchActive) {
+                IconButton(onClick = onSearchToggle) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "بحث"
+                    )
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -90,54 +106,76 @@ fun LessonsTopBar(
     )
 }
 
-// ============================================================================
-// INTERNAL COMPONENTS
-// ============================================================================
+// ── Subject title ──────────────────────────────────────────────────────────────
 
-/**
- * Title section showing subject name and lesson count
- */
 @Composable
-private fun LessonsTitle(
-    subjectName: String,
-    totalLessons: Int
-) {
-    Column {
-        Text(
-            text = if (subjectName.isNotEmpty()) subjectName else "الدروس",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        if (totalLessons > 0) {
-            Text(
-                text = formatLessonCount(totalLessons),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+private fun SubjectTitle(subjectName: String, emoji: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Emoji badge
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = emoji, fontSize = 15.sp)
         }
+
+        Text(
+            text = subjectName.ifBlank { "الدروس" },
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
-/**
- * Search text field for entering search queries
- */
+// ── Search field ───────────────────────────────────────────────────────────────
+
 @Composable
-private fun SearchTextField(
+private fun SearchField(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
+    onClose: () -> Unit
 ) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = { Text("ابحث عن درس...") },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth()
-    )
+    val focusRequester = remember { FocusRequester() }
+    val textColor = MaterialTheme.colorScheme.onSurface
+    val hintColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val cursorColor = MaterialTheme.colorScheme.primary
+    val typography = MaterialTheme.typography.bodyLarge
+
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        if (query.isEmpty()) {
+            Text(
+                text = "ابحث في الدروس...",
+                style = typography,
+                color = hintColor
+            )
+        }
+        BasicTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
+            textStyle = typography.copy(color = textColor),
+            singleLine = true,
+            cursorBrush = SolidColor(cursorColor),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { /* results update live */ })
+        )
+    }
 }
