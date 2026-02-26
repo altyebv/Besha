@@ -74,6 +74,12 @@ class DatabaseSeeder @Inject constructor(
     }
 
     /**
+     * Returns true if the lesson table is empty — used by MainActivity
+     * as a guard so seeding only runs on first install, not every launch.
+     */
+    suspend fun isDatabaseEmpty(): Boolean = lessonDao.getLessonCount() == 0
+
+    /**
      * Seed lesson content from assets file
      */
     suspend fun seedFromAssets(context: Context, fileName: String) {
