@@ -17,6 +17,7 @@ import com.zeros.basheer.feature.quizbank.presentation.entry.ExamEntryScreen
 import com.zeros.basheer.feature.quizbank.presentation.exam.ExamSessionScreen
 import com.zeros.basheer.feature.quizbank.presentation.exam.ExamResultScreen
 import com.zeros.basheer.feature.lesson.presentation.LessonsScreen
+import com.zeros.basheer.feature.user.presentation.settings.SettingsScreen
 import com.zeros.basheer.ui.components.common.LessonsSubjectPicker
 import com.zeros.basheer.ui.screens.main.MainScreen
 import com.zeros.basheer.feature.practice.presentation.PracticeSessionScreen
@@ -124,7 +125,8 @@ fun BasheerNavHost(
         // ── Profile ───────────────────────────────────────────────────────────
         composable(Screen.Profile.route) {
             ProfileScreen(
-                onEditProfile = { navController.navigate(Screen.EditProfile.route) }
+                onEditProfile = { navController.navigate(Screen.EditProfile.route) },
+                onOpenSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
 
@@ -132,6 +134,16 @@ fun BasheerNavHost(
         composable(Screen.EditProfile.route) {
             EditProfileScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Settings ──────────────────────────────────────────────────────────
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onEditProfile = {
+                    navController.navigate(Screen.EditProfile.route)
+                }
             )
         }
 

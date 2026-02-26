@@ -3,6 +3,7 @@ package com.zeros.basheer.ui.navigation
 sealed class Screen(val route: String) {
     object Onboarding : Screen("onboarding")
     object EditProfile : Screen("edit_profile")
+    object Settings : Screen("settings")
     object Main : Screen("main")
     object Lessons : Screen("lessons?subjectId={subjectId}") {
         const val baseRoute = "lessons"
