@@ -10,8 +10,16 @@
     "colorHex": "#4CAF50"
   },
   "tags": [
-    { "id": "tag_chem_bonding", "nameAr": "الروابط الكيميائية", "nameEn": "Chemical Bonding" },
-    { "id": "tag_chem_reactions", "nameAr": "التفاعلات الكيميائية", "nameEn": "Chemical Reactions" }
+    {
+      "id": "tag_chem_bonding",
+      "nameAr": "الروابط الكيميائية",
+      "nameEn": "Chemical Bonding"
+    },
+    {
+      "id": "tag_chem_reactions",
+      "nameAr": "التفاعلات الكيميائية",
+      "nameEn": "Chemical Reactions"
+    }
   ],
   "concepts": [
     {
@@ -25,7 +33,9 @@
       "imageUrl": null,
       "difficulty": 1,
       "extraData": null,
-      "tagIds": ["tag_chem_bonding"]
+      "tagIds": [
+        "tag_chem_bonding"
+      ]
     },
     {
       "id": "concept_chem_ionic",
@@ -38,7 +48,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_chem_bonding"]
+      "tagIds": [
+        "tag_chem_bonding"
+      ]
     },
     {
       "id": "concept_chem_reaction",
@@ -51,7 +63,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_chem_reactions"]
+      "tagIds": [
+        "tag_chem_reactions"
+      ]
     }
   ],
   "units": [
@@ -72,7 +86,10 @@
               "id": "sec_chem_atom",
               "title": "تركيب الذرة",
               "order": 1,
-              "conceptIds": ["concept_chem_atom", "concept_chem_ionic"],
+              "conceptIds": [
+                "concept_chem_atom",
+                "concept_chem_ionic"
+              ],
               "blocks": [
                 {
                   "id": "blk_chem_text1",
@@ -111,10 +128,19 @@
                   "metadata": "{\"style\": \"bullet\"}"
                 },
                 {
+                  "id": "blk_chem_formula1",
+                  "type": "FORMULA",
+                  "content": "A = Z + N",
+                  "order": 5,
+                  "conceptRef": "concept_chem_atom",
+                  "caption": "العدد الكتلي = عدد البروتونات + عدد النيوترونات",
+                  "metadata": null
+                },
+                {
                   "id": "blk_chem_highlight1",
                   "type": "HIGHLIGHT_BOX",
                   "content": "الرابطة الأيونية: تتشكل عندما تنتقل إلكترونات من ذرة (تصبح موجبة - كاتيون) إلى ذرة أخرى (تصبح سالبة - أنيون)، ثم يتجاذب الأيونان كهربائياً.",
-                  "order": 5,
+                  "order": 6,
                   "conceptRef": "concept_chem_ionic",
                   "caption": null,
                   "metadata": "{\"style\": \"definition\"}"
@@ -123,16 +149,25 @@
                   "id": "blk_chem_example1",
                   "type": "EXAMPLE",
                   "content": "تكوين كلوريد الصوديوم (ملح الطعام NaCl):\n• ذرة الصوديوم (Na) تفقد إلكتروناً واحداً → تصبح أيون Na⁺\n• ذرة الكلور (Cl) تكتسب إلكتروناً واحداً → تصبح أيون Cl⁻\n• يتجاذب الأيونان ليكوّنا رابطة أيونية قوية",
-                  "order": 6,
+                  "order": 7,
                   "conceptRef": "concept_chem_ionic",
                   "caption": "مثال: تكوين ملح الطعام",
+                  "metadata": null
+                },
+                {
+                  "id": "blk_chem_formula2",
+                  "type": "FORMULA",
+                  "content": "\\text{Na} + \\text{Cl} \\rightarrow \\text{Na}^{+} + \\text{Cl}^{-} \\rightarrow \\text{NaCl}",
+                  "order": 8,
+                  "conceptRef": "concept_chem_ionic",
+                  "caption": "تكوين كلوريد الصوديوم بانتقال الإلكترون",
                   "metadata": null
                 },
                 {
                   "id": "blk_chem_tip1",
                   "type": "TIP",
                   "content": "قاعدة مفيدة: الفلزات تميل لفقد الإلكترونات (تتأين إيجاباً)، بينما اللافلزات تميل لاكتساب الإلكترونات (تتأين سلبياً).",
-                  "order": 7,
+                  "order": 9,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": null
@@ -141,7 +176,7 @@
                   "id": "blk_chem_divider1",
                   "type": "DIVIDER",
                   "content": "",
-                  "order": 8,
+                  "order": 10,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": null
@@ -150,7 +185,7 @@
                   "id": "blk_chem_heading2",
                   "type": "HEADING",
                   "content": "التفاعلات الكيميائية",
-                  "order": 9,
+                  "order": 11,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": "{\"level\": 2}"
@@ -159,7 +194,7 @@
                   "id": "blk_chem_text2",
                   "type": "TEXT",
                   "content": "التفاعل الكيميائي هو عملية تتحول فيها المواد الأصلية (المتفاعلات) إلى مواد جديدة (النواتج). خلال هذه العملية تُكسر بعض الروابط القديمة وتُكوَّن روابط جديدة. يُكتب التفاعل في معادلة كيميائية تُظهر المتفاعلات على اليسار والنواتج على اليمين.",
-                  "order": 10,
+                  "order": 12,
                   "conceptRef": "concept_chem_reaction",
                   "caption": null,
                   "metadata": null
@@ -168,7 +203,7 @@
                   "id": "blk_chem_quote1",
                   "type": "QUOTE",
                   "content": "لا تُخلق المادة ولا تُفنى، بل تتحول من شكل إلى آخر.",
-                  "order": 11,
+                  "order": 13,
                   "conceptRef": null,
                   "caption": "قانون حفظ المادة - لافوازييه",
                   "metadata": null
@@ -193,7 +228,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 1,
-      "conceptIds": ["concept_chem_atom"],
+      "conceptIds": [
+        "concept_chem_atom"
+      ],
       "estimatedSeconds": 20,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_chem_structure",
@@ -216,7 +253,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 2,
-      "conceptIds": ["concept_chem_ionic"],
+      "conceptIds": [
+        "concept_chem_ionic"
+      ],
       "estimatedSeconds": 40,
       "cognitiveLevel": "UNDERSTAND",
       "unitId": "unit_chem_structure",
@@ -239,7 +278,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 1,
-      "conceptIds": ["concept_chem_atom"],
+      "conceptIds": [
+        "concept_chem_atom"
+      ],
       "estimatedSeconds": 30,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_chem_structure",
@@ -262,7 +303,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 4,
-      "conceptIds": ["concept_chem_ionic"],
+      "conceptIds": [
+        "concept_chem_ionic"
+      ],
       "estimatedSeconds": 120,
       "cognitiveLevel": "UNDERSTAND",
       "unitId": "unit_chem_structure",
@@ -285,7 +328,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 4,
-      "conceptIds": ["concept_chem_reaction"],
+      "conceptIds": [
+        "concept_chem_reaction"
+      ],
       "estimatedSeconds": 120,
       "cognitiveLevel": "UNDERSTAND",
       "unitId": "unit_chem_structure",
@@ -308,7 +353,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 4,
-      "conceptIds": ["concept_chem_reaction"],
+      "conceptIds": [
+        "concept_chem_reaction"
+      ],
       "estimatedSeconds": 90,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_chem_structure",
@@ -331,7 +378,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 3,
-      "conceptIds": ["concept_chem_atom"],
+      "conceptIds": [
+        "concept_chem_atom"
+      ],
       "estimatedSeconds": 60,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_chem_structure",
@@ -354,7 +403,9 @@
       "tableData": null,
       "difficulty": 3,
       "points": 4,
-      "conceptIds": ["concept_chem_ionic"],
+      "conceptIds": [
+        "concept_chem_ionic"
+      ],
       "estimatedSeconds": 120,
       "cognitiveLevel": "ANALYZE",
       "unitId": "unit_chem_structure",
@@ -377,7 +428,9 @@
       "tableData": null,
       "difficulty": 3,
       "points": 4,
-      "conceptIds": ["concept_chem_reaction"],
+      "conceptIds": [
+        "concept_chem_reaction"
+      ],
       "estimatedSeconds": 120,
       "cognitiveLevel": "ANALYZE",
       "unitId": "unit_chem_structure",
@@ -400,7 +453,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 2,
-      "conceptIds": ["concept_chem_atom"],
+      "conceptIds": [
+        "concept_chem_atom"
+      ],
       "estimatedSeconds": 45,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_chem_structure",
