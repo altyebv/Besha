@@ -7,6 +7,7 @@ import com.zeros.basheer.feature.progress.domain.model.UserProgress
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
 import com.zeros.basheer.feature.lesson.data.mapper.LessonMapper
 import com.zeros.basheer.core.domain.model.Result
+import com.zeros.basheer.core.math.KatexRenderer
 import com.zeros.basheer.domain.model.LessonContent
 import com.zeros.basheer.feature.concept.domain.model.Concept
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
@@ -49,7 +50,8 @@ data class LessonReaderState(
     // Completion modal
     val showCompletionModal: Boolean = false,
     val xpEarned: Int = 0,
-    val isRepeatCompletion: Boolean = false
+    val isRepeatCompletion: Boolean = false,
+
 )
 
 @HiltViewModel
@@ -62,6 +64,7 @@ class LessonReaderViewModel @Inject constructor(
     private val recordLessonCompletedUseCase: RecordLessonCompletedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
     private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
+    val katexRenderer: KatexRenderer,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 

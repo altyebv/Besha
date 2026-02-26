@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.zeros.basheer.core.math.KatexRenderer
 import com.zeros.basheer.domain.model.LessonContent
 import com.zeros.basheer.ui.components.blocks.BlockRenderer
 import com.zeros.basheer.ui.components.common.ConceptModal
@@ -160,7 +161,9 @@ fun LessonReaderScreen(
                         onConceptClick = viewModel::onConceptClick,
                         onMarkComplete = viewModel::markAsCompleted,
                         onNextLesson = onNextLesson,
-                        listState = listState
+                        listState = listState,
+                        katexRenderer     = viewModel.katexRenderer
+
                     )
 
                     // Progress indicator at bottom
@@ -210,7 +213,8 @@ private fun LessonContent(
     onConceptClick: (String) -> Unit,
     onMarkComplete: () -> Unit,
     onNextLesson: (() -> Unit)?,
-    listState: LazyListState
+    listState: LazyListState,
+    katexRenderer: KatexRenderer
 ) {
     LazyColumn(
         state = listState,
@@ -239,7 +243,8 @@ private fun LessonContent(
             ) { block ->
                 BlockRenderer(
                     block = block,
-                    onConceptClick = onConceptClick
+                    onConceptClick = onConceptClick,
+                    katexRenderer = katexRenderer
                 )
             }
         }
