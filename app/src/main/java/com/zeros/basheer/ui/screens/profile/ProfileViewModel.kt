@@ -2,6 +2,7 @@ package com.zeros.basheer.ui.screens.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.streak.domain.model.DailyActivity
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import com.zeros.basheer.feature.user.domain.model.UserProfile
 import com.zeros.basheer.feature.user.domain.model.XpSummary
@@ -21,6 +22,7 @@ data class ProfileState(
     val totalCards: Int = 0,
     val totalQuestions: Int = 0,
     val totalMinutes: Long = 0,
+    val recentActivity: List<DailyActivity> = emptyList(),
     val isLoading: Boolean = true
 )
 
@@ -38,6 +40,7 @@ class ProfileViewModel @Inject constructor(
         loadProfile()
         loadXp()
         loadStats()
+        loadRecentActivity()
     }
 
     private fun loadProfile() {
@@ -90,6 +93,14 @@ class ProfileViewModel @Inject constructor(
                         isLoading = false
                     )
                 }
+            }
+        }
+    }
+
+    private fun loadRecentActivity() {
+        viewModelScope.launch {
+            streakRepository.getRecentActivity(days = 28).collect { activities ->
+                _state.update { it.copy(recentActivity = activities) }
             }
         }
     }
