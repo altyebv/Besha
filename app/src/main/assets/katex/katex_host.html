@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!--
+      Headless KaTeX host page.
+      Loaded once into a singleton WebView that is never part of the view hierarchy.
+      katex.min.js must be placed at assets/katex/katex.min.js (v0.16.x).
+
+      output: "mathml" — pure MathML, no CSS or font files required.
+      Android WebView (Chromium, API 24+) renders MathML natively.
+    -->
+    <link rel="stylesheet" href="katex.min.css">
+    <script src="katex.min.js"></script>
+</head>
+<body>
+<script>
+    /**
+     * Renders a LaTeX string to MathML.
+     * Called from Kotlin via WebView.evaluateJavascript().
+     *
+     * Returns a plain JS object — evaluateJavascript() serialises it to JSON
+     * automatically, so Kotlin receives {"ok":true,"html":"..."} directly.
+     *
+     * @param {string}  latex       Raw LaTeX expression.
+     * @param {boolean} displayMode true = block/display, false = inline.
+     */
+    function renderLatex(latex, displayMode) {
+      try {
+        var html = katex.renderToString(latex, {
+          output:       "mathml",
+          displayMode:  displayMode,
+          throwOnError: true
+        });
+        return { ok: true, html: html };
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    }
+</script>
+</body>
+</html>
