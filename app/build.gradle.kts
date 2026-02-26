@@ -100,6 +100,8 @@ dependencies {
 // Ensure you have these animation dependencies
     implementation("androidx.compose.animation:animation:1.5.4")
 
+    // Google fonts
+
 
 
     // Testing
