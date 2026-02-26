@@ -8,27 +8,29 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.zeros.basheer.core.data.DatabaseSeeder
+import com.zeros.basheer.core.ui.theme.BasheerTheme
+import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
+import com.zeros.basheer.feature.user.notification.ReminderNotificationManager
+import com.zeros.basheer.feature.user.notification.ReminderScheduler
 import com.zeros.basheer.ui.components.BasheerBottomBar
 import com.zeros.basheer.ui.navigation.BasheerNavHost
 import com.zeros.basheer.ui.navigation.Screen
-import com.zeros.basheer.core.ui.theme.BasheerTheme
-import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /** Routes where the bottom bar should be hidden (immersive/flow screens). */
 private val bottomBarHiddenRoutes = setOf(
     Screen.Onboarding.route,
     Screen.EditProfile.route,
+    Screen.Settings.route,
     Screen.LessonReader.route,
     Screen.ExamSession.route,
     Screen.ExamEntry.route,
@@ -40,18 +42,16 @@ private val bottomBarHiddenRoutes = setOf(
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var seeder: DatabaseSeeder
-
-    @Inject
-    lateinit var userPreferences: UserPreferencesRepository
+    @javax.inject.Inject lateinit var seeder: DatabaseSeeder
+    @javax.inject.Inject lateinit var userPreferences: UserPreferencesRepository
+    @javax.inject.Inject lateinit var notificationManager: ReminderNotificationManager
+    @javax.inject.Inject lateinit var scheduler: ReminderScheduler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ── Seed database (first launch only) ────────────────────────────────
         lifecycleScope.launch {
-            // Guard: only seed when the DB is empty (first install / after clear data).
-            // Without this, REPLACE on insertLesson triggers CASCADE on user_progress
-            // and wipes all completion data on every restart.
             if (seeder.isDatabaseEmpty()) {
                 try {
                     seeder.seedFromAssets(this@MainActivity, "geographyy.json")
@@ -61,25 +61,39 @@ class MainActivity : ComponentActivity() {
                     seeder.seedFromAssets(this@MainActivity, "arabic.json")
                     seeder.seedFromAssets(this@MainActivity, "islamic.json")
                     seeder.seedQuizBankFromAssets(this@MainActivity)
-                    Log.d("Lessons", "Database seeded successfully!")
+                    Log.d("Seeder", "Database seeded successfully!")
                 } catch (e: Exception) {
-                    Log.e("Seeds", "Seeding failed", e)
+                    Log.e("Seeder", "Seeding failed", e)
                 }
-            } else {
-                Log.d("Lessons", "Database already seeded, skipping.")
             }
         }
+
+        // ── Notification channel (idempotent, safe on every launch) ──────────
+        notificationManager.createChannel()
+
+        // ── Reschedule alarm if notifications are on ──────────────────────────
+        // Needed after app updates — the OS doesn't cancel alarms for updates,
+        // but we reschedule anyway to pick up any time changes that happened
+        // while the alarm wasn't active (e.g. after a clear-data).
+        scheduler.rescheduleIfEnabled()
+
         enableEdgeToEdge()
 
-        // Read synchronously — this is a single boolean pref read, safe on main thread
-        val startDestination = if (userPreferences.hasCompletedOnboarding()) {
-            Screen.Main.route
-        } else {
-            Screen.Onboarding.route
-        }
+        // ── Dark mode as reactive state ───────────────────────────────────────
+        val darkModeFlow = userPreferences.isDarkMode()
+            .stateIn(
+                scope   = lifecycleScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = false
+            )
+
+        val startDestination = if (userPreferences.hasCompletedOnboarding())
+            Screen.Main.route else Screen.Onboarding.route
 
         setContent {
-            BasheerTheme {
+            val isDarkMode by darkModeFlow.collectAsState()
+
+            BasheerTheme(darkTheme = isDarkMode) {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
@@ -90,7 +104,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier  = Modifier.fillMaxSize(),
                     bottomBar = {
                         if (showBottomBar) {
                             BasheerBottomBar(navController = navController)
@@ -98,9 +112,9 @@ class MainActivity : ComponentActivity() {
                     }
                 ) { innerPadding ->
                     BasheerNavHost(
-                        navController = navController,
+                        navController    = navController,
                         startDestination = startDestination,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier         = Modifier.padding(innerPadding)
                     )
                 }
             }
@@ -109,30 +123,12 @@ class MainActivity : ComponentActivity() {
 }
 
 private fun routeMatchesPattern(currentRoute: String, pattern: String): Boolean {
-    val liveBase = currentRoute.substringBefore("?")
-    val patternBase = pattern.substringBefore("?")
-    val liveSegments = liveBase.split("/")
-    val patternSegments = patternBase.split("/")
-    if (liveSegments.size != patternSegments.size) return false
-    return liveSegments.zip(patternSegments).all { (live, pat) ->
+    val liveBase     = currentRoute.substringBefore("?")
+    val patternBase  = pattern.substringBefore("?")
+    val liveSegs     = liveBase.split("/")
+    val patternSegs  = patternBase.split("/")
+    if (liveSegs.size != patternSegs.size) return false
+    return liveSegs.zip(patternSegs).all { (live, pat) ->
         pat.startsWith("{") || live == pat
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun MainActivityPreview() {
-    BasheerTheme {
-        val navController = rememberNavController()
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            bottomBar = { BasheerBottomBar(navController = navController) }
-        ) { innerPadding ->
-            BasheerNavHost(
-                navController = navController,
-                startDestination = Screen.Main.route,
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
     }
 }
