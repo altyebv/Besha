@@ -6,8 +6,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.zeros.basheer.feature.analytics.data.dao.AnalyticsEventDao
 import com.zeros.basheer.feature.analytics.data.entity.AnalyticsEventEntity
+import com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
 import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
+import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
+import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
@@ -24,6 +27,8 @@ class AnalyticsRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dao: AnalyticsEventDao,
     private val firestore: FirebaseFirestore,
+    private val preferencesRepository: UserPreferencesRepository,
+    private val userProfileRepository: UserProfileRepository,
 ) : AnalyticsRepository {
 
     private val prefs: SharedPreferences =
@@ -33,7 +38,7 @@ class AnalyticsRepositoryImpl @Inject constructor(
     // Install identity — stable, no auth required
     // ─────────────────────────────────────────────────────────────────────────
 
-    val installId: String
+    override val installId: String
         get() = prefs.getString(KEY_INSTALL_ID, null) ?: UUID.randomUUID().toString().also {
             prefs.edit().putString(KEY_INSTALL_ID, it).apply()
         }
@@ -92,8 +97,23 @@ class AnalyticsRepositoryImpl @Inject constructor(
      * With daily batching: ~1 write/user/day. Very comfortable under the 20k/day limit.
      */
     override suspend fun uploadPendingBatches(): Result<Int> = runCatching {
+        val consent = preferencesRepository.getAnalyticsConsent()
         val buckets = dao.getUnsyncedDateBuckets()
         var totalUploaded = 0
+
+        // Build profile snapshot once for FULL consent uploads
+        val profileSnapshot: Map<String, Any?>? = if (consent == AnalyticsConsent.FULL) {
+            userProfileRepository.getProfileOnce()?.let { p ->
+                mapOf(
+                    "studentPath" to p.studentPath.name,
+                    "state"       to p.state,
+                    "city"        to p.city,
+                    "schoolName"  to p.schoolName,
+                    "major"       to p.major,
+                    "dailyStudyMinutes" to p.dailyStudyMinutes,
+                )
+            }
+        } else null
 
         for (bucket in buckets) {
             val rows = dao.getUnsyncedForDate(bucket)
@@ -107,13 +127,19 @@ class AnalyticsRepositoryImpl @Inject constructor(
                 base
             }
 
-            val docData = hashMapOf(
-                "installId" to installId,
-                "date" to bucket,
-                "appVersion" to appVersion(),
-                "uploadedAt" to com.google.firebase.Timestamp.now(),
-                "events" to eventsArray.map { it.toMap() },
+            val docData = hashMapOf<String, Any?>(
+                "installId"   to installId,
+                "date"        to bucket,
+                "consentTier" to consent.name,
+                "appVersion"  to appVersion(),
+                "uploadedAt"  to com.google.firebase.Timestamp.now(),
+                "events"      to eventsArray.map { it.toMap() },
             )
+
+            // Attach profile context only for FULL consent
+            if (profileSnapshot != null) {
+                docData["userProfile"] = profileSnapshot
+            }
 
             firestore
                 .collection("analytics")
@@ -178,7 +204,12 @@ private fun BasheerEvent.toJson(): String = when (this) {
     is BasheerEvent.OnboardingCompleted -> JSONObject().apply {
         put("studentPath", studentPath)
         put("hasSchoolName", hasSchoolName)
-        put("hasTargetExamDate", hasTargetExamDate)
+        put("hasEmail", hasEmail)
+        state?.let { put("state", it) }
+        major?.let { put("major", it) }
+        put("dailyStudyMinutes", dailyStudyMinutes)
+        put("reminderEnabled", reminderEnabled)
+        put("consentTier", consentTier)
         put("durationSeconds", durationSeconds)
     }
     is BasheerEvent.LessonViewed -> JSONObject().apply {
