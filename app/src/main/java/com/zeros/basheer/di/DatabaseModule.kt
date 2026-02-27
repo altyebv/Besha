@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.room.Room
 import com.zeros.basheer.core.data.local.AppDatabase
 import com.zeros.basheer.core.data.DatabaseSeeder
+import com.zeros.basheer.feature.analytics.data.dao.AnalyticsEventDao
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.lesson.data.dao.LessonDao
@@ -53,6 +54,11 @@ object DatabaseModule {
 
     @Provides
     fun provideBlockDao(database: AppDatabase): BlockDao = database.blockDao()
+
+    @Provides
+    fun provideAnalyticsEventDao(database: AppDatabase): AnalyticsEventDao =
+        database.analyticsEventDao()
+
 
 
     @Provides
