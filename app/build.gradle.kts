@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)           // ← was hardcoded id, now via TOML
     kotlin("plugin.serialization")
 }
 
@@ -13,23 +14,18 @@ android {
 
     defaultConfig {
         applicationId = "com.zeros.basheer"
-        minSdk = 26  // Good choice - covers 98%+ devices
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0-alpha"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Add this for vector drawables support
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables { useSupportLibrary = true }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true  // CHANGED: Enable minification for smaller APK
-            isShrinkResources = true  // ADDED: Remove unused resources
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -38,24 +34,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17  // CHANGED: Use Java 17
+        sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
-    kotlinOptions {
-        jvmTarget = "17"  // CHANGED: Use Java 17
-    }
-
-    buildFeatures {
-        compose = true
-    }
-
-    // ADDED: For proper packaging
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
+    kotlinOptions { jvmTarget = "17" }
+    buildFeatures { compose = true }
+    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
 dependencies {
@@ -67,42 +51,48 @@ dependencies {
     // Compose
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
-    implementation(libs.bundles.compose)  // CHANGED: Use bundle
-
-    // Navigation - ADDED
+    implementation(libs.bundles.compose)
     implementation(libs.androidx.navigation.compose)
 
-    // Room Database - ADDED
+    // Room
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
 
-    // Hilt Dependency Injection - ADDED
+    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    // DataStore - ADDED
+    // DataStore
     implementation(libs.androidx.datastore.preferences)
 
-    // Coil for image loading - ADDED
+    // Coil
     implementation(libs.coil.compose)
 
-    // Coroutines - ADDED
+    // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
-    // gson
-    implementation("com.google.code.gson:gson:2.10.1")
+    // Gson
+    implementation(libs.google.gson)                          // ← was hardcoded, now via TOML
 
-// For SwipeRefresh (if not already present)
+    // Accompanist
     implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
-// Ensure you have these animation dependencies
     implementation("androidx.compose.animation:animation:1.5.4")
 
-    // Google fonts
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
 
+    // WorkManager + Hilt Worker
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.work.compiler)                     // ← needed for @HiltWorker
 
+    // Lifecycle Process (ProcessLifecycleOwner)
+    implementation(libs.androidx.lifecycle.process)
 
     // Testing
     testImplementation(libs.junit)
@@ -110,7 +100,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.ui.test.junit4)
-
-    // Debug - CHANGED: Use bundle
     debugImplementation(libs.bundles.compose.debug)
 }
