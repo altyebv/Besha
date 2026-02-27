@@ -91,12 +91,22 @@ class AnalyticsManager @Inject constructor(
     fun onboardingCompleted(
         studentPath: String,
         hasSchoolName: Boolean,
-        hasTargetExamDate: Boolean,
+        hasEmail: Boolean,
+        state: String?,
+        major: String?,
+        dailyStudyMinutes: Int,
+        reminderEnabled: Boolean,
+        consentTier: String,
         durationSeconds: Int,
     ) = track(BasheerEvent.OnboardingCompleted(
         studentPath = studentPath,
         hasSchoolName = hasSchoolName,
-        hasTargetExamDate = hasTargetExamDate,
+        hasEmail = hasEmail,
+        state = state,
+        major = major,
+        dailyStudyMinutes = dailyStudyMinutes,
+        reminderEnabled = reminderEnabled,
+        consentTier = consentTier,
         durationSeconds = durationSeconds,
     ))
 
@@ -258,7 +268,7 @@ class AnalyticsManager @Inject constructor(
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun track(event: BasheerEvent) {
-        if (!preferencesRepository.hasAnalyticsConsent()) return  // ← consent gate
+        if (!preferencesRepository.getAnalyticsConsent().isEnabled) return  // ← consent gate
         sessionActivityCount++
         scope.launch {
             runCatching { repository.enqueue(event) }
