@@ -3,6 +3,8 @@ package com.zeros.basheer.core.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.zeros.basheer.feature.analytics.data.dao.AnalyticsEventDao          // ADD
+import com.zeros.basheer.feature.analytics.data.entity.AnalyticsEventEntity    // ADD
 import com.zeros.basheer.feature.feed.data.dao.ContentVariantDao
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.streak.data.dao.DailyActivityDao
@@ -34,6 +36,9 @@ import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
         // User profile
         UserProfileEntity::class,
         XpTransactionEntity::class,
+
+        // Analytics queue
+        AnalyticsEventEntity::class,
 
         // Core content
         SubjectEntity::class,
@@ -69,9 +74,9 @@ import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
         QuizAttemptEntity::class,
         QuestionResponseEntity::class,
         SectionProgressEntity::class,
-        DailyActivityEntity::class
+        DailyActivityEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -79,6 +84,9 @@ abstract class AppDatabase : RoomDatabase() {
     // User profile
     abstract fun userProfileDao(): UserProfileDao
     abstract fun xpDao(): XpDao
+
+    // Analytics
+    abstract fun analyticsEventDao(): AnalyticsEventDao
 
     // Core content
     abstract fun subjectDao(): SubjectDao
