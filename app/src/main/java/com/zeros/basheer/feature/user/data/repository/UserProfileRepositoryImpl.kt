@@ -46,6 +46,12 @@ class UserProfileRepositoryImpl @Inject constructor(
         studentPath = studentPath,
         schoolName = schoolName,
         targetExamDate = targetExamDate,
+        email = email,
+        state = state,
+        city = city,
+        major = major,
+        academicTrack = academicTrack,
+        dailyStudyMinutes = dailyStudyMinutes,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -56,6 +62,12 @@ class UserProfileRepositoryImpl @Inject constructor(
         studentPath = studentPath,
         schoolName = schoolName,
         targetExamDate = targetExamDate,
+        email = email?.trim()?.ifBlank { null },
+        state = state,
+        city = city?.trim()?.ifBlank { null },
+        major = major,
+        academicTrack = academicTrack,
+        dailyStudyMinutes = dailyStudyMinutes,
         createdAt = createdAt,
         updatedAt = System.currentTimeMillis()
     )

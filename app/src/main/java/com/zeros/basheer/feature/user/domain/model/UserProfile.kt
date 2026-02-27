@@ -8,6 +8,14 @@ data class UserProfile(
     val studentPath: StudentPath,
     val schoolName: String? = null,
     val targetExamDate: Long? = null,
+    // New fields
+    val email: String? = null,
+    val state: String? = null,
+    val city: String? = null,
+    val major: String? = null,
+    val academicTrack: String? = null,
+    val dailyStudyMinutes: Int = 60,
+
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
