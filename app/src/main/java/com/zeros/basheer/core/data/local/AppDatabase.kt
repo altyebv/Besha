@@ -76,7 +76,7 @@ import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
         SectionProgressEntity::class,
         DailyActivityEntity::class,
     ],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
