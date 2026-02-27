@@ -11,9 +11,10 @@ interface UserPreferencesRepository {
 
     suspend fun setOnboardingComplete(complete: Boolean)
 
-    fun hasAnalyticsConsent(): Boolean
+    /** Returns the stored consent tier synchronously — used at every track() call. */
+    fun getAnalyticsConsent(): com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
 
-    suspend fun setAnalyticsConsent(granted: Boolean)
+    suspend fun setAnalyticsConsent(consent: com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent)
 
     // ── Appearance ────────────────────────────────────────────────────────────
 

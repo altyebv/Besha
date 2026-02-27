@@ -37,11 +37,13 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETE, complete).apply()
     }
 
-    override fun hasAnalyticsConsent(): Boolean =
-        prefs.getBoolean(KEY_ANALYTICS_CONSENT, false)
+    override fun getAnalyticsConsent(): com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent =
+        com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent.fromString(
+            prefs.getString(KEY_ANALYTICS_CONSENT, null)
+        )
 
-    override suspend fun setAnalyticsConsent(granted: Boolean) {
-        prefs.edit().putBoolean(KEY_ANALYTICS_CONSENT, granted).apply()
+    override suspend fun setAnalyticsConsent(consent: com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent) {
+        prefs.edit().putString(KEY_ANALYTICS_CONSENT, consent.name).apply()
     }
 
     // ── Appearance ────────────────────────────────────────────────────────────
