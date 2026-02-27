@@ -13,6 +13,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -22,7 +23,10 @@ import androidx.compose.ui.unit.sp
 fun IdentityStep(
     name: String,
     nameError: String?,
+    email: String,
+    emailError: String?,
     onNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
     onNext: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -42,7 +46,7 @@ fun IdentityStep(
         Spacer(modifier = Modifier.height(80.dp))
 
         Text(
-            text = "ما اسمك؟",
+            text = "ما اسمك في التطبيق؟",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -51,7 +55,7 @@ fun IdentityStep(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "سنستخدمه لتخصيص تجربتك",
+            text = "سنناديك به دائماً",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -65,17 +69,33 @@ fun IdentityStep(
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
-            label = { Text("الاسم") },
+            label = { Text("الاسم المستخدَم") },
             isError = nameError != null,
             supportingText = nameError?.let { { Text(it) } },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
+                imeAction = ImeAction.Next
+            ),
+            shape = MaterialTheme.shapes.medium
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = onEmailChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("البريد الإلكتروني (اختياري)") },
+            isError = emailError != null,
+            supportingText = emailError?.let { { Text(it) } }
+                ?: { Text("للاستعادة فقط، لن نشارك بياناتك", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done
             ),
-            keyboardActions = KeyboardActions(
-                onDone = { onNext() }
-            ),
+            keyboardActions = KeyboardActions(onDone = { onNext() }),
             shape = MaterialTheme.shapes.medium
         )
 
