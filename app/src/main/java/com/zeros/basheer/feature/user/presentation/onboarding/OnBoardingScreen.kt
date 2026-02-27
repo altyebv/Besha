@@ -9,8 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zeros.basheer.feature.user.presentation.onboarding.components.ConsentStep
+import com.zeros.basheer.feature.user.presentation.onboarding.components.GoalsStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.IdentityStep
+import com.zeros.basheer.feature.user.presentation.onboarding.components.LocationStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.PathStep
+import com.zeros.basheer.feature.user.presentation.onboarding.components.PreferencesStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.WelcomeStep
 import kotlinx.coroutines.flow.collectLatest
 
@@ -39,10 +42,15 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Progress bar — shown for IDENTITY and PATH only (not WELCOME or CONSENT)
-            if (state.step == OnboardingStep.IDENTITY || state.step == OnboardingStep.PATH) {
+            // Progress bar — shown for all steps except WELCOME and CONSENT
+            val progressSteps = listOf(
+                OnboardingStep.IDENTITY, OnboardingStep.LOCATION,
+                OnboardingStep.PATH, OnboardingStep.GOALS, OnboardingStep.PREFERENCES
+            )
+            if (state.step in progressSteps) {
                 StepIndicator(
                     currentStep = state.step,
+                    steps = progressSteps,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp, vertical = 16.dp)
@@ -67,24 +75,56 @@ fun OnboardingScreen(
                     OnboardingStep.WELCOME -> WelcomeStep(
                         onNext = viewModel::onNextFromWelcome
                     )
-                    OnboardingStep.CONSENT -> ConsentStep(
-                        onAccept = viewModel::onConsentAccepted,
-                        onDecline = viewModel::onConsentDeclined
-                    )
                     OnboardingStep.IDENTITY -> IdentityStep(
                         name = state.name,
                         nameError = state.nameError,
+                        email = state.email,
+                        emailError = state.emailError,
                         onNameChange = viewModel::onNameChange,
+                        onEmailChange = viewModel::onEmailChange,
                         onNext = viewModel::onNextFromIdentity,
+                        onBack = viewModel::onBack
+                    )
+                    OnboardingStep.LOCATION -> LocationStep(
+                        selectedState = state.state,
+                        city = state.city,
+                        schoolName = state.schoolName,
+                        onStateSelected = viewModel::onStateSelected,
+                        onCityChange = viewModel::onCityChange,
+                        onSchoolNameChange = viewModel::onSchoolNameChange,
+                        onNext = viewModel::onNextFromLocation,
                         onBack = viewModel::onBack
                     )
                     OnboardingStep.PATH -> PathStep(
                         name = state.name,
                         selectedPath = state.selectedPath,
-                        isSaving = state.isSaving,
+                        selectedTrack = state.academicTrack,
+                        isSaving = false,
                         onPathSelected = viewModel::onPathSelected,
-                        onComplete = viewModel::onCompleteOnboarding,
+                        onTrackSelected = viewModel::onAcademicTrackSelected,
+                        onComplete = viewModel::onNextFromPath,
                         onBack = viewModel::onBack
+                    )
+                    OnboardingStep.GOALS -> GoalsStep(
+                        selectedMajor = state.major,
+                        onMajorSelected = viewModel::onMajorSelected,
+                        onNext = viewModel::onNextFromGoals,
+                        onBack = viewModel::onBack
+                    )
+                    OnboardingStep.PREFERENCES -> PreferencesStep(
+                        dailyStudyMinutes = state.dailyStudyMinutes,
+                        reminderEnabled = state.reminderEnabled,
+                        reminderHour = state.reminderHour,
+                        reminderMinute = state.reminderMinute,
+                        onDailyStudyMinutesChanged = viewModel::onDailyStudyMinutesChanged,
+                        onReminderEnabledChanged = viewModel::onReminderEnabledChanged,
+                        onReminderTimeChanged = viewModel::onReminderTimeChanged,
+                        onNext = viewModel::onNextFromPreferences,
+                        onBack = viewModel::onBack
+                    )
+                    OnboardingStep.CONSENT -> ConsentStep(
+                        isSaving = state.isSaving,
+                        onConsentChosen = viewModel::onConsentChosen
                     )
                 }
             }
@@ -95,12 +135,12 @@ fun OnboardingScreen(
 @Composable
 private fun StepIndicator(
     currentStep: OnboardingStep,
+    steps: List<OnboardingStep>,
     modifier: Modifier = Modifier
 ) {
-    val steps = listOf(OnboardingStep.IDENTITY, OnboardingStep.PATH)
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         steps.forEach { step ->
             val isActive = step.ordinal <= currentStep.ordinal
