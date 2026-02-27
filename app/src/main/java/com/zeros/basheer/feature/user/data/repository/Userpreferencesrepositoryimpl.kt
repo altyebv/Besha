@@ -20,6 +20,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         private const val KEY_REMINDER_MINUTE       = "pref_reminder_minute"
         private const val KEY_DAILY_GOAL_MINUTES    = "pref_daily_goal_minutes"
 
+        private const val KEY_ANALYTICS_CONSENT = "pref_analytics_consent"
+
         // Defaults
         private const val DEFAULT_REMINDER_HOUR    = 20  // 8 PM
         private const val DEFAULT_REMINDER_MINUTE  = 0
@@ -33,6 +35,13 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun setOnboardingComplete(complete: Boolean) {
         prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETE, complete).apply()
+    }
+
+    override fun hasAnalyticsConsent(): Boolean =
+        prefs.getBoolean(KEY_ANALYTICS_CONSENT, false)
+
+    override suspend fun setAnalyticsConsent(granted: Boolean) {
+        prefs.edit().putBoolean(KEY_ANALYTICS_CONSENT, granted).apply()
     }
 
     // ── Appearance ────────────────────────────────────────────────────────────

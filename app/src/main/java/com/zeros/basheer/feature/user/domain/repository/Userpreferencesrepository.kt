@@ -11,6 +11,10 @@ interface UserPreferencesRepository {
 
     suspend fun setOnboardingComplete(complete: Boolean)
 
+    fun hasAnalyticsConsent(): Boolean
+
+    suspend fun setAnalyticsConsent(granted: Boolean)
+
     // ── Appearance ────────────────────────────────────────────────────────────
 
     fun isDarkMode(): Flow<Boolean>
