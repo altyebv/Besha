@@ -8,6 +8,8 @@ import com.zeros.basheer.domain.model.ScoredRecommendation
 import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import com.zeros.basheer.domain.recommendation.RecommendationEngine
+import com.zeros.basheer.feature.analytics.AnalyticsManager
+import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
@@ -23,6 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -72,8 +75,12 @@ class MainViewModel @Inject constructor(
     private val streakRepository: StreakRepository,
     private val prefs: SharedPreferences,
     private val userProfileRepository: UserProfileRepository,
-    private val getUserXpUseCase: GetUserXpUseCase
-) : ViewModel() {
+    private val getUserXpUseCase: GetUserXpUseCase,
+    private val analyticsManager: AnalyticsManager,
+    private val analyticsRepository: AnalyticsRepository,
+
+
+    ) : ViewModel() {
 
     companion object {
         private const val PREF_FOCUS_DISMISSED_DATE = "focus_card_dismissed_date"
@@ -90,6 +97,18 @@ class MainViewModel @Inject constructor(
         val todayDate = java.time.LocalDate.now().toString()
         if (dismissedDate == todayDate) {
             _state.update { it.copy(focusCardDismissed = true) }
+        }
+        viewModelScope.launch {
+            // Fire a test event
+            analyticsManager.lessonViewed(
+                lessonId = "test_lesson",
+                subjectId = "test_subject",
+                unitId = "test_unit",
+            )
+
+            // Force immediate upload (remove this after confirming)
+            delay(1000) // give the queue time to write to Room
+            analyticsRepository.uploadPendingBatches()
         }
 
         loadData()
