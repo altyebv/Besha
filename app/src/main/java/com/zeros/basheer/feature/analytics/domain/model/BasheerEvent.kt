@@ -58,7 +58,12 @@ sealed class BasheerEvent {
     data class OnboardingCompleted(
         val studentPath: String,
         val hasSchoolName: Boolean,
-        val hasTargetExamDate: Boolean,
+        val hasEmail: Boolean,
+        val state: String?,                 // Sudan state if provided
+        val major: String?,                 // Career goal key if provided
+        val dailyStudyMinutes: Int,
+        val reminderEnabled: Boolean,
+        val consentTier: String,            // "FULL" | "ANONYMOUS" | "NONE"
         val durationSeconds: Int,           // Time from WelcomeStep to completion
     ) : BasheerEvent()
 
