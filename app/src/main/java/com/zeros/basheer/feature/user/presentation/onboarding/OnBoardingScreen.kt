@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zeros.basheer.feature.user.presentation.onboarding.components.ConsentStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.IdentityStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.PathStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.WelcomeStep
@@ -20,7 +21,6 @@ fun OnboardingScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    // Collect one-shot navigation events
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -29,20 +29,18 @@ fun OnboardingScreen(
         }
     }
 
-    // Handle system back button
     BackHandler(enabled = state.step != OnboardingStep.WELCOME) {
         viewModel.onBack()
     }
 
-    // Progress indicator at the top (hidden on welcome)
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Step progress dots
-            if (state.step != OnboardingStep.WELCOME) {
+            // Progress bar — shown for IDENTITY and PATH only (not WELCOME or CONSENT)
+            if (state.step == OnboardingStep.IDENTITY || state.step == OnboardingStep.PATH) {
                 StepIndicator(
                     currentStep = state.step,
                     modifier = Modifier
@@ -51,7 +49,6 @@ fun OnboardingScreen(
                 )
             }
 
-            // Animated step content
             AnimatedContent(
                 targetState = state.step,
                 transitionSpec = {
@@ -69,6 +66,10 @@ fun OnboardingScreen(
                 when (step) {
                     OnboardingStep.WELCOME -> WelcomeStep(
                         onNext = viewModel::onNextFromWelcome
+                    )
+                    OnboardingStep.CONSENT -> ConsentStep(
+                        onAccept = viewModel::onConsentAccepted,
+                        onDecline = viewModel::onConsentDeclined
                     )
                     OnboardingStep.IDENTITY -> IdentityStep(
                         name = state.name,
@@ -96,7 +97,6 @@ private fun StepIndicator(
     currentStep: OnboardingStep,
     modifier: Modifier = Modifier
 ) {
-    // Only 2 real steps to show (IDENTITY + PATH), welcome has no indicator
     val steps = listOf(OnboardingStep.IDENTITY, OnboardingStep.PATH)
     Row(
         modifier = modifier,

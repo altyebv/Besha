@@ -15,7 +15,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class OnboardingStep { WELCOME, IDENTITY, PATH }
+// CONSENT added as the first real step after WELCOME
+enum class OnboardingStep { WELCOME, CONSENT, IDENTITY, PATH }
 
 data class OnboardingUiState(
     val step: OnboardingStep = OnboardingStep.WELCOME,
@@ -50,7 +51,21 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onNextFromWelcome() {
-        _state.update { it.copy(step = OnboardingStep.IDENTITY) }
+        _state.update { it.copy(step = OnboardingStep.CONSENT) }
+    }
+
+    fun onConsentAccepted() {
+        viewModelScope.launch {
+            preferencesRepository.setAnalyticsConsent(true)
+            _state.update { it.copy(step = OnboardingStep.IDENTITY) }
+        }
+    }
+
+    fun onConsentDeclined() {
+        viewModelScope.launch {
+            preferencesRepository.setAnalyticsConsent(false)
+            _state.update { it.copy(step = OnboardingStep.IDENTITY) }
+        }
     }
 
     fun onNextFromIdentity() {
@@ -71,7 +86,8 @@ class OnboardingViewModel @Inject constructor(
             it.copy(
                 step = when (it.step) {
                     OnboardingStep.PATH     -> OnboardingStep.IDENTITY
-                    OnboardingStep.IDENTITY -> OnboardingStep.WELCOME
+                    OnboardingStep.IDENTITY -> OnboardingStep.CONSENT
+                    OnboardingStep.CONSENT  -> OnboardingStep.WELCOME
                     OnboardingStep.WELCOME  -> OnboardingStep.WELCOME
                 }
             )
@@ -80,7 +96,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun onCompleteOnboarding() {
         val state = _state.value
-        val path = state.selectedPath ?: return // button disabled if null, but guard anyway
+        val path = state.selectedPath ?: return
         _state.update { it.copy(isSaving = true) }
 
         viewModelScope.launch {
