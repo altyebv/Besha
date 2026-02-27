@@ -5,6 +5,13 @@ import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
 interface AnalyticsRepository {
 
     /**
+     * Stable anonymous identifier for this install.
+     * Generated once on first use, persisted in SharedPreferences.
+     * Used as both the analytics document path and the users/ document ID.
+     */
+    val installId: String
+
+    /**
      * Enqueue a single event to the local Room queue.
      * This is fire-and-forget — the caller does not wait for Firestore.
      */
