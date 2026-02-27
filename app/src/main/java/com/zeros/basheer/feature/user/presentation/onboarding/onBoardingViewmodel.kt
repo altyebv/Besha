@@ -2,6 +2,7 @@ package com.zeros.basheer.feature.user.presentation.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
 import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.user.domain.model.UserProfile
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
@@ -15,14 +16,31 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// CONSENT added as the first real step after WELCOME
-enum class OnboardingStep { WELCOME, CONSENT, IDENTITY, PATH }
+// New flow: WELCOME → IDENTITY → LOCATION → PATH → GOALS → PREFERENCES → CONSENT
+enum class OnboardingStep { WELCOME, IDENTITY, LOCATION, PATH, GOALS, PREFERENCES, CONSENT }
 
 data class OnboardingUiState(
     val step: OnboardingStep = OnboardingStep.WELCOME,
+    // IDENTITY
     val name: String = "",
     val nameError: String? = null,
+    val email: String = "",
+    val emailError: String? = null,
+    // LOCATION
+    val state: String? = null,
+    val city: String = "",
+    val schoolName: String = "",
+    // PATH
     val selectedPath: StudentPath? = null,
+    val academicTrack: String? = null,  // 7th subject: BIOLOGY/ARCHITECTURE/COMPUTER or MILITARY/ISLAMIC
+    // GOALS
+    val major: String? = null,
+    // PREFERENCES
+    val dailyStudyMinutes: Int = 60,
+    val reminderEnabled: Boolean = false,
+    val reminderHour: Int = 20,
+    val reminderMinute: Int = 0,
+    // meta
     val isSaving: Boolean = false
 )
 
@@ -42,30 +60,60 @@ class OnboardingViewModel @Inject constructor(
     private val _events = MutableSharedFlow<OnboardingEvent>()
     val events = _events.asSharedFlow()
 
+    // Track how long onboarding takes for analytics
+    private val onboardingStartMs = System.currentTimeMillis()
+
+    // ── Field updates ─────────────────────────────────────────────────────────
+
     fun onNameChange(value: String) {
         _state.update { it.copy(name = value, nameError = null) }
     }
 
-    fun onPathSelected(path: StudentPath) {
-        _state.update { it.copy(selectedPath = path) }
+    fun onEmailChange(value: String) {
+        _state.update { it.copy(email = value, emailError = null) }
     }
+
+    fun onStateSelected(value: String) {
+        _state.update { it.copy(state = value) }
+    }
+
+    fun onCityChange(value: String) {
+        _state.update { it.copy(city = value) }
+    }
+
+    fun onSchoolNameChange(value: String) {
+        _state.update { it.copy(schoolName = value) }
+    }
+
+    fun onPathSelected(path: StudentPath) {
+        // Clear track when path changes — previous selection no longer valid
+        _state.update { it.copy(selectedPath = path, academicTrack = null) }
+    }
+
+    fun onAcademicTrackSelected(track: String) {
+        _state.update { it.copy(academicTrack = track) }
+    }
+
+    fun onMajorSelected(major: String?) {
+        _state.update { it.copy(major = major) }
+    }
+
+    fun onDailyStudyMinutesChanged(minutes: Int) {
+        _state.update { it.copy(dailyStudyMinutes = minutes) }
+    }
+
+    fun onReminderEnabledChanged(enabled: Boolean) {
+        _state.update { it.copy(reminderEnabled = enabled) }
+    }
+
+    fun onReminderTimeChanged(hour: Int, minute: Int) {
+        _state.update { it.copy(reminderHour = hour, reminderMinute = minute) }
+    }
+
+    // ── Navigation ────────────────────────────────────────────────────────────
 
     fun onNextFromWelcome() {
-        _state.update { it.copy(step = OnboardingStep.CONSENT) }
-    }
-
-    fun onConsentAccepted() {
-        viewModelScope.launch {
-            preferencesRepository.setAnalyticsConsent(true)
-            _state.update { it.copy(step = OnboardingStep.IDENTITY) }
-        }
-    }
-
-    fun onConsentDeclined() {
-        viewModelScope.launch {
-            preferencesRepository.setAnalyticsConsent(false)
-            _state.update { it.copy(step = OnboardingStep.IDENTITY) }
-        }
+        _state.update { it.copy(step = OnboardingStep.IDENTITY) }
     }
 
     fun onNextFromIdentity() {
@@ -78,34 +126,85 @@ class OnboardingViewModel @Inject constructor(
             _state.update { it.copy(nameError = "الاسم قصير جداً") }
             return
         }
+        val email = _state.value.email.trim()
+        if (email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _state.update { it.copy(emailError = "البريد الإلكتروني غير صحيح") }
+            return
+        }
+        _state.update { it.copy(step = OnboardingStep.LOCATION) }
+    }
+
+    fun onNextFromLocation() {
         _state.update { it.copy(step = OnboardingStep.PATH) }
+    }
+
+    fun onNextFromPath() {
+        val s = _state.value
+        if (s.selectedPath == null || s.academicTrack == null) return
+        _state.update { it.copy(step = OnboardingStep.GOALS) }
+    }
+
+    fun onNextFromGoals() {
+        _state.update { it.copy(step = OnboardingStep.PREFERENCES) }
+    }
+
+    fun onNextFromPreferences() {
+        _state.update { it.copy(step = OnboardingStep.CONSENT) }
+    }
+
+    fun onConsentChosen(consent: AnalyticsConsent) {
+        viewModelScope.launch {
+            preferencesRepository.setAnalyticsConsent(consent)
+            completeOnboarding(consent)
+        }
     }
 
     fun onBack() {
         _state.update {
             it.copy(
                 step = when (it.step) {
-                    OnboardingStep.PATH     -> OnboardingStep.IDENTITY
-                    OnboardingStep.IDENTITY -> OnboardingStep.CONSENT
-                    OnboardingStep.CONSENT  -> OnboardingStep.WELCOME
-                    OnboardingStep.WELCOME  -> OnboardingStep.WELCOME
+                    OnboardingStep.IDENTITY    -> OnboardingStep.WELCOME
+                    OnboardingStep.LOCATION    -> OnboardingStep.IDENTITY
+                    OnboardingStep.PATH        -> OnboardingStep.LOCATION
+                    OnboardingStep.GOALS       -> OnboardingStep.PATH
+                    OnboardingStep.PREFERENCES -> OnboardingStep.GOALS
+                    OnboardingStep.CONSENT     -> OnboardingStep.PREFERENCES
+                    OnboardingStep.WELCOME     -> OnboardingStep.WELCOME
                 }
             )
         }
     }
 
-    fun onCompleteOnboarding() {
-        val state = _state.value
-        val path = state.selectedPath ?: return
+    // ── Completion ────────────────────────────────────────────────────────────
+
+    /** Called after consent is chosen — saves profile + prefs then fires nav event. */
+    private fun completeOnboarding(consent: AnalyticsConsent) {
+        val s = _state.value
+        val path = s.selectedPath ?: return
         _state.update { it.copy(isSaving = true) }
 
         viewModelScope.launch {
             profileRepository.saveProfile(
                 UserProfile(
-                    name = state.name.trim(),
-                    studentPath = path
+                    name = s.name.trim(),
+                    studentPath = path,
+                    schoolName = s.schoolName.trim().ifBlank { null },
+                    email = s.email.trim().ifBlank { null },
+                    state = s.state,
+                    city = s.city.trim().ifBlank { null },
+                    major = s.major,
+                    academicTrack = s.academicTrack,
+                    dailyStudyMinutes = s.dailyStudyMinutes
                 )
             )
+            preferencesRepository.setDailyGoalMinutes(s.dailyStudyMinutes)
+            if (s.reminderEnabled) {
+                preferencesRepository.setNotificationsEnabled(true)
+                preferencesRepository.setReminderHour(s.reminderHour)
+                preferencesRepository.setReminderMinute(s.reminderMinute)
+            } else {
+                preferencesRepository.setNotificationsEnabled(false)
+            }
             preferencesRepository.setOnboardingComplete(true)
             _state.update { it.copy(isSaving = false) }
             _events.emit(OnboardingEvent.NavigateToMain)
