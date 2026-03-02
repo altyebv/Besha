@@ -2,6 +2,7 @@ package com.zeros.basheer.feature.user.presentation.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.AnalyticsManager
 import com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
 import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.user.domain.model.UserProfile
@@ -51,7 +52,8 @@ sealed interface OnboardingEvent {
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val profileRepository: UserProfileRepository,
-    private val preferencesRepository: UserPreferencesRepository
+    private val preferencesRepository: UserPreferencesRepository,
+    private val analytics: AnalyticsManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OnboardingUiState())
@@ -209,5 +211,17 @@ class OnboardingViewModel @Inject constructor(
             _state.update { it.copy(isSaving = false) }
             _events.emit(OnboardingEvent.NavigateToMain)
         }
+        // at the end of completeOnboarding(), before emitting the event:
+        analytics.onboardingCompleted(
+            studentPath = path.name,
+            hasSchoolName = s.schoolName.isNotBlank(),
+            hasEmail = s.email.isNotBlank(),
+            state = s.state,
+            major = s.major,
+            dailyStudyMinutes = s.dailyStudyMinutes,
+            reminderEnabled = s.reminderEnabled,
+            consentTier = consent.name,
+            durationSeconds = ((System.currentTimeMillis() - onboardingStartMs) / 1000).toInt()
+        )
     }
 }
