@@ -2,31 +2,31 @@ package com.zeros.basheer.feature.feed.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-
-import com.zeros.basheer.feature.feed.data.mapper.FeedMapper
 import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
-import com.zeros.basheer.feature.concept.domain.model.Rating
-import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.feed.domain.model.FeedItemType
 import com.zeros.basheer.feature.feed.domain.model.InteractionType
-import com.zeros.basheer.feature.feed.domain.repository.FeedRepository
-import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
+import com.zeros.basheer.feature.feed.domain.usecase.BuildFeedSessionUseCase
+import com.zeros.basheer.feature.feed.domain.usecase.FeedSessionResult
+import com.zeros.basheer.feature.concept.domain.model.Rating
+import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.streak.domain.usecase.RecordCardsReviewedUseCase
 import com.zeros.basheer.feature.user.domain.model.XpSource
 import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
-import com.zeros.basheer.feature.subject.domain.repository.SubjectRepository
-import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
-import com.zeros.basheer.feature.subject.data.entity.StudentPath
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionStats
+import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class FeedEmptyReason { NO_SUBJECTS, NO_CONTENT }
+
 data class FeedsState(
     val feedCards: List<FeedCard> = emptyList(),
     val currentIndex: Int = 0,
     val isLoading: Boolean = true,
+    val emptyReason: FeedEmptyReason? = null,
 
     // Interaction state for current card
     val cardInteractionState: CardInteractionState = CardInteractionState.Idle,
@@ -35,111 +35,95 @@ data class FeedsState(
     val cardsViewed: Int = 0,
     val correctAnswers: Int = 0,
     val wrongAnswers: Int = 0,
-    val sessionComplete: Boolean = false,
-
-    // Config
-    val maxCardsPerSession: Int = 30
+    val sessionComplete: Boolean = false
 )
 
 @HiltViewModel
 class FeedsViewModel @Inject constructor(
-    private val repository: LessonRepository,
-    private val subjectRepository: SubjectRepository,
-    private val feedRepository: FeedRepository,
+    private val buildFeedSession: BuildFeedSessionUseCase,
     private val conceptRepository: ConceptRepository,
+    private val quizBankRepository: QuizBankRepository,
     private val recordCardsReviewedUseCase: RecordCardsReviewedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
-    private val userProfileRepository: UserProfileRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedsState())
     val state: StateFlow<FeedsState> = _state.asStateFlow()
 
     init {
-        loadFeedItems()
+        loadFeedSession()
     }
 
-    private fun loadFeedItems() {
+    private fun loadFeedSession() {
         viewModelScope.launch {
-            val profile = userProfileRepository.getProfileOnce()
-            val pathFilter = profile?.subjectsFilter
-                ?: listOf(StudentPath.COMMON)
-
-            val subjects = subjectRepository.getSubjectsByPathFilter(pathFilter).first()
-            if (subjects.isEmpty()) {
-                _state.update { it.copy(isLoading = false) }
-                return@launch
-            }
-
-            val subjectMap = subjects.associateBy { it.id }
-            val subjectIds = subjects.map { it.id }
-
-            feedRepository.getFeedItemsBySubjects(subjectIds).collect { feedItems ->
-                val cards = FeedMapper.toFeedCards(
-                    feedItems.take(_state.value.maxCardsPerSession),
-                    subjectMap
-                )
-                _state.update { it.copy(feedCards = cards, isLoading = false) }
+            _state.update { it.copy(isLoading = true, emptyReason = null) }
+            when (val result = buildFeedSession()) {
+                is FeedSessionResult.Success    ->
+                    _state.update { it.copy(feedCards = result.cards, isLoading = false) }
+                is FeedSessionResult.NoSubjects ->
+                    _state.update { it.copy(feedCards = emptyList(), isLoading = false, emptyReason = FeedEmptyReason.NO_SUBJECTS) }
+                is FeedSessionResult.NoContent  ->
+                    _state.update { it.copy(feedCards = emptyList(), isLoading = false, emptyReason = FeedEmptyReason.NO_CONTENT) }
             }
         }
     }
 
     fun onPageChanged(index: Int) {
-        _state.update { it.copy(
-            currentIndex = index,
-            cardInteractionState = CardInteractionState.Idle
-        )}
+        _state.update {
+            it.copy(
+                currentIndex = index,
+                cardInteractionState = CardInteractionState.Idle
+            )
+        }
     }
 
     fun onAnswer(answer: String) {
         val currentCard = _state.value.feedCards.getOrNull(_state.value.currentIndex) ?: return
+        val isCorrect   = answer.equals(currentCard.correctAnswer, ignoreCase = true)
 
-        val isCorrect = answer.equals(currentCard.correctAnswer, ignoreCase = true)
+        _state.update {
+            it.copy(
+                cardInteractionState = CardInteractionState.Answered(
+                    userAnswer  = answer,
+                    isCorrect   = isCorrect,
+                    explanation = currentCard.explanation
+                ),
+                correctAnswers = if (isCorrect) it.correctAnswers + 1 else it.correctAnswers,
+                wrongAnswers   = if (!isCorrect) it.wrongAnswers + 1 else it.wrongAnswers
+            )
+        }
 
-        _state.update { it.copy(
-            cardInteractionState = CardInteractionState.Answered(
-                userAnswer = answer,
-                isCorrect = isCorrect,
-                explanation = currentCard.explanation
-            ),
-            correctAnswers = if (isCorrect) it.correctAnswers + 1 else it.correctAnswers,
-            wrongAnswers = if (!isCorrect) it.wrongAnswers + 1 else it.wrongAnswers
-        )}
-
-        // Record review for spaced repetition + award correctness XP
         viewModelScope.launch {
             val rating = if (isCorrect) Rating.GOOD else Rating.HARD
             conceptRepository.recordReview(currentCard.conceptId, rating)
+
+            // Track feed exposure on quiz-bank questions
+            if (currentCard.type == FeedItemType.MINI_QUIZ) {
+                recordQuizFeedExposure(currentCard.id)
+            }
+
             if (isCorrect) awardXpUseCase(XpSource.CARD_CORRECT)
         }
     }
 
-
-    /**
-     * Called when the user taps a flash card to flip it.
-     * Transitions state to Flipped so the back face renders and rating buttons appear.
-     */
     fun onFlip() {
         _state.update { it.copy(cardInteractionState = CardInteractionState.Flipped) }
     }
 
-    /**
-     * Called when the user rates themselves after a flash card flip.
-     * [knew] true = ✓ knew it, false = ✗ didn't know it.
-     * Records spaced repetition rating and XP, then advances to next card.
-     */
     fun onSelfRate(knew: Boolean) {
         val currentCard = _state.value.feedCards.getOrNull(_state.value.currentIndex) ?: return
 
-        _state.update { it.copy(
-            cardInteractionState = CardInteractionState.Answered(
-                userAnswer = if (knew) "knew" else "didnt_know",
-                isCorrect = knew,
-                explanation = null
-            ),
-            correctAnswers = if (knew) it.correctAnswers + 1 else it.correctAnswers,
-            wrongAnswers = if (!knew) it.wrongAnswers + 1 else it.wrongAnswers
-        )}
+        _state.update {
+            it.copy(
+                cardInteractionState = CardInteractionState.Answered(
+                    userAnswer  = if (knew) "knew" else "didnt_know",
+                    isCorrect   = knew,
+                    explanation = null
+                ),
+                correctAnswers = if (knew) it.correctAnswers + 1 else it.correctAnswers,
+                wrongAnswers   = if (!knew) it.wrongAnswers + 1 else it.wrongAnswers
+            )
+        }
 
         viewModelScope.launch {
             val rating = if (knew) Rating.GOOD else Rating.HARD
@@ -150,60 +134,69 @@ class FeedsViewModel @Inject constructor(
 
     fun onContinue(): Boolean {
         val currentIndex = _state.value.currentIndex
-        val totalCards = _state.value.feedCards.size
+        val totalCards   = _state.value.feedCards.size
 
-        _state.update { it.copy(
-            cardsViewed = it.cardsViewed + 1
-        )}
+        _state.update { it.copy(cardsViewed = it.cardsViewed + 1) }
 
-        // Record card reviewed for streak tracking
         viewModelScope.launch {
             recordCardsReviewedUseCase(1)
             awardXpUseCase(XpSource.CARD_REVIEWED)
         }
 
-        // Check if session is complete
         if (currentIndex >= totalCards - 1) {
             _state.update { it.copy(sessionComplete = true) }
-            return false // Can't move to next
+            return false
         }
 
-        // Reset interaction state for next card
-        _state.update { it.copy(
-            cardInteractionState = CardInteractionState.Idle
-        )}
-
-        return true // Can move to next
+        _state.update { it.copy(cardInteractionState = CardInteractionState.Idle) }
+        return true
     }
 
     fun canSwipeToNext(): Boolean {
-        val currentCard = _state.value.feedCards.getOrNull(_state.value.currentIndex) ?: return true
+        val currentCard      = _state.value.feedCards.getOrNull(_state.value.currentIndex) ?: return true
         val interactionState = _state.value.cardInteractionState
 
-        // Non-interactive cards can always swipe
         if (currentCard.interactionType == null ||
-            currentCard.interactionType == InteractionType.TAP_CONFIRM) {
-            return true
-        }
+            currentCard.interactionType == InteractionType.TAP_CONFIRM) return true
 
-        // Flash cards need to be rated before swiping
-        if (currentCard.type == FeedItemType.FLASH_CARD) {
-            return interactionState is CardInteractionState.Answered
-        }
-
-        // Other interactive cards need to be answered first
         return interactionState is CardInteractionState.Answered
     }
 
     fun restartSession() {
-        _state.update { it.copy(
-            currentIndex = 0,
-            cardsViewed = 0,
-            correctAnswers = 0,
-            wrongAnswers = 0,
-            sessionComplete = false,
-            cardInteractionState = CardInteractionState.Idle
-        )}
-        loadFeedItems()
+        _state.update {
+            it.copy(
+                currentIndex         = 0,
+                cardsViewed          = 0,
+                correctAnswers       = 0,
+                wrongAnswers         = 0,
+                sessionComplete      = false,
+                emptyReason          = null,
+                cardInteractionState = CardInteractionState.Idle
+            )
+        }
+        loadFeedSession()
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Updates [QuestionStats.lastShownInFeed] and [QuestionStats.feedShowCount]
+     * after a quiz-bank card is shown in the feed.
+     *
+     * Card ids for quiz-bank questions are prefixed with "quiz_" by
+     * [ConceptGroupBuilder] — strip the prefix to recover the real question id.
+     */
+    private suspend fun recordQuizFeedExposure(cardId: String) {
+        val questionId = cardId.removePrefix("quiz_")
+        val existing   = quizBankRepository.getStatsForQuestion(questionId)
+            ?: QuestionStats.forNewQuestion(questionId)
+
+        quizBankRepository.updateStats(
+            existing.copy(
+                lastShownInFeed = System.currentTimeMillis(),
+                feedShowCount   = existing.feedShowCount + 1,
+                updatedAt       = System.currentTimeMillis()
+            )
+        )
     }
 }
