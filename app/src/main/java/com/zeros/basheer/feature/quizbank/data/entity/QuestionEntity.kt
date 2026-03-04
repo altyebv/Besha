@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
+import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
 import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
 import com.zeros.basheer.feature.subject.data.entity.UnitEntity
 
@@ -29,16 +30,24 @@ import com.zeros.basheer.feature.subject.data.entity.UnitEntity
             parentColumns = ["id"],
             childColumns = ["lessonId"],
             onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = SectionEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["sectionId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
         Index("subjectId"),
         Index("unitId"),
         Index("lessonId"),
+        Index("sectionId"),
         Index("type"),
         Index("difficulty"),
         Index("source"),
-        Index("sourceExamId")
+        Index("sourceExamId"),
+        Index("isCheckpoint")
     ]
 )
 data class QuestionEntity(
@@ -47,6 +56,12 @@ data class QuestionEntity(
     val subjectId: String,
     val unitId: String? = null,
     val lessonId: String? = null,
+    /**
+     * Links this question to a specific section for checkpoint use.
+     * When [isCheckpoint] is true, this is the section gate the question guards.
+     * FK → sections(id) ON DELETE SET NULL.
+     */
+    val sectionId: String? = null,
     val type: String,
     val textAr: String,
     val textEn: String? = null,
@@ -64,6 +79,15 @@ data class QuestionEntity(
     val points: Int = 1,
     val estimatedSeconds: Int = 60,
     val feedEligible: Boolean = true,
+    /**
+     * When true, this question is an inline lesson checkpoint.
+     * It will be surfaced by [QuestionDao.getCheckpointForSection]
+     * and rendered as a gate card inside the lesson reader.
+     *
+     * Checkpoint questions should use type MCQ or ORDER only.
+     * The [explanation] field doubles as the remediation hint shown on wrong answers.
+     */
+    val isCheckpoint: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
