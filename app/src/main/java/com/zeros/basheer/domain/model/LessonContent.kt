@@ -4,6 +4,8 @@ import com.zeros.basheer.feature.lesson.data.entity.BlockType
 
 import com.zeros.basheer.feature.lesson.data.entity.LearningType
 
+import com.zeros.basheer.feature.lesson.domain.model.LessonMetadata
+
 /**
  * UI-ready lesson content model.
  * Flattened and optimized for rendering in LazyColumn.
@@ -13,7 +15,9 @@ data class LessonContent(
     val title: String,
     val estimatedMinutes: Int,
     val summary: String?,
-    val sections: List<SectionUiModel>
+    val sections: List<SectionUiModel>,
+    /** Parsed lesson metadata (hook, orientation, forwardPull). Null if not authored. */
+    val metadata: LessonMetadata? = null
 )
 
 data class SectionUiModel(
@@ -21,7 +25,9 @@ data class SectionUiModel(
     val title: String,
     val order: Int,
     val learningType: LearningType = LearningType.UNDERSTANDING,
-    val blocks: List<BlockUiModel>
+    val blocks: List<BlockUiModel>,
+    /** Part this section belongs to (0-indexed). Derived from [SectionEntity.partIndex]. */
+    val partIndex: Int = 0
 )
 
 data class BlockUiModel(
