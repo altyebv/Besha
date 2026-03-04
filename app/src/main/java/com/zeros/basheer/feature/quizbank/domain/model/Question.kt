@@ -9,6 +9,8 @@ data class Question(
     val subjectId: String,
     val unitId: String?,
     val lessonId: String?,
+    /** Section this question guards as a checkpoint. Null for non-checkpoint questions. */
+    val sectionId: String?,
     val type: QuestionType,
     val textAr: String,
     val textEn: String?,
@@ -26,6 +28,8 @@ data class Question(
     val points: Int,
     val estimatedSeconds: Int,
     val feedEligible: Boolean,
+    /** True when this question is an inline lesson reader gate, not a standalone practice question. */
+    val isCheckpoint: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

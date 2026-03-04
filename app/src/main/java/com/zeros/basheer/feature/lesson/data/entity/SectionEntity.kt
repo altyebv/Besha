@@ -29,5 +29,14 @@ data class SectionEntity(
     val lessonId: String,
     val title: String,                      // "مقدمة", "الشرح", etc.
     val order: Int,
-    val learningType: LearningType = LearningType.UNDERSTANDING
+    val learningType: LearningType = LearningType.UNDERSTANDING,
+    /**
+     * Groups sections into lesson parts (0-indexed).
+     *
+     * Sections sharing the same [partIndex] belong to the same part.
+     * The reader derives the part-progress pills from distinct partIndex values.
+     *
+     * Default 0 means all existing sections are implicitly Part 1 —
+     */
+    val partIndex: Int = 0
 )

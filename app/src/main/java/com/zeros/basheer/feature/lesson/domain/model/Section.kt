@@ -11,5 +11,7 @@ data class Section(
     val title: String,
     val order: Int,
     val learningType: LearningType = LearningType.UNDERSTANDING,
-    val blocks: List<Block> = emptyList()
+    val blocks: List<Block> = emptyList(),
+    /** Matches [SectionEntity.partIndex]. Sections with the same value belong to the same part. */
+    val partIndex: Int = 0
 )

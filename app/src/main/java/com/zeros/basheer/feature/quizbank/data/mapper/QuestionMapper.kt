@@ -19,6 +19,7 @@ fun QuestionEntity.toDomain(): Question =
         subjectId = subjectId,
         unitId = unitId,
         lessonId = lessonId,
+        sectionId = sectionId,
         type = QuestionType.valueOf(type),
         textAr = textAr,
         textEn = textEn,
@@ -36,6 +37,7 @@ fun QuestionEntity.toDomain(): Question =
         points = points,
         estimatedSeconds = estimatedSeconds,
         feedEligible = feedEligible,
+        isCheckpoint = isCheckpoint,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
