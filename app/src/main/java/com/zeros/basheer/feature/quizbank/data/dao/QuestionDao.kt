@@ -9,6 +9,22 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface QuestionDao {
 
+    // ==================== Checkpoint Queries ====================
+
+    /**
+     * Returns the single checkpoint question for a section, or null if none exists.
+     * Only one checkpoint per section is supported — the first one by id is returned.
+     */
+    @Query("SELECT * FROM questions WHERE sectionId = :sectionId AND isCheckpoint = 1 LIMIT 1")
+    suspend fun getCheckpointForSection(sectionId: String): QuestionEntity?
+
+    /**
+     * Returns all checkpoint questions for a lesson, keyed by sectionId.
+     * Used by the reader to pre-fetch checkpoints for the entire lesson in one query.
+     */
+    @Query("SELECT * FROM questions WHERE lessonId = :lessonId AND isCheckpoint = 1")
+    suspend fun getCheckpointsForLesson(lessonId: String): List<QuestionEntity>
+
     // ==================== Basic Queries ====================
 
     @Query("SELECT * FROM questions WHERE id = :questionId")
