@@ -26,4 +26,18 @@ data class LessonEntity(  // Renamed from Lesson
     val estimatedMinutes: Int = 15,
     val summary: String? = null,
     val content: String = "",
+    /**
+     * JSON blob for optional lesson-level metadata.
+     * Parsed into [LessonMetadata] by LessonMapper.
+     *
+     * Shape:
+     * {
+     *   "hook": "هل تساءلت يوماً كيف...",
+     *   "orientation": ["ستفهم...", "ستحسب..."],
+     *   "forwardPull": "درس واحد يفصلك عن إكمال وحدة..."
+     * }
+     *
+     * All fields are optional — a null metadata column is valid.
+     */
+    val metadata: String? = null
 )
