@@ -11,6 +11,7 @@ import com.zeros.basheer.feature.lesson.data.entity.BlockEntity
 import com.zeros.basheer.feature.lesson.data.entity.BlockType
 import com.zeros.basheer.feature.lesson.data.relations.LessonFull
 import com.zeros.basheer.feature.lesson.data.relations.SectionWithBlocksAndConcepts
+import com.zeros.basheer.feature.lesson.domain.model.LessonMetadata
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -25,10 +26,29 @@ object LessonMapper {
             title = lessonFull.lessonEntity.title,
             estimatedMinutes = lessonFull.lessonEntity.estimatedMinutes,
             summary = lessonFull.lessonEntity.summary,
+            metadata = parseLessonMetadata(lessonFull.lessonEntity.metadata),
             sections = lessonFull.sections
                 .sortedBy { it.sectionEntity.order }
                 .map { toSectionUiModel(it) }
         )
+    }
+
+    private fun parseLessonMetadata(json: String?): LessonMetadata? {
+        json ?: return null
+        return try {
+            val obj = JSONObject(json)
+            val orientationArray = obj.optJSONArray("orientation")
+            val orientation = if (orientationArray != null) {
+                (0 until orientationArray.length()).map { orientationArray.getString(it) }
+            } else emptyList()
+            LessonMetadata(
+                hook = obj.optString("hook").takeIf { it.isNotEmpty() },
+                orientation = orientation,
+                forwardPull = obj.optString("forwardPull").takeIf { it.isNotEmpty() }
+            )
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun toSectionUiModel(section: SectionWithBlocksAndConcepts): SectionUiModel {
@@ -37,6 +57,7 @@ object LessonMapper {
             title = section.sectionEntity.title,
             order = section.sectionEntity.order,
             learningType = section.sectionEntity.learningType,
+            partIndex = section.sectionEntity.partIndex,
             blocks = section.blocks
                 .sortedBy { it.order }
                 .map { toBlockUiModel(it) }

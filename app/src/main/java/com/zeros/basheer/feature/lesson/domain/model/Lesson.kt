@@ -10,5 +10,6 @@ data class LessonDomain(
     val estimatedMinutes: Int,
     val summary: String?,
     val isCompleted: Boolean = false,
-    val progress: Float = 0f
+    val progress: Float = 0f,
+    val metadata: LessonMetadata? = null
 )
