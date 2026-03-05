@@ -25,6 +25,15 @@ interface QuestionDao {
     @Query("SELECT * FROM questions WHERE lessonId = :lessonId AND isCheckpoint = 1")
     suspend fun getCheckpointsForLesson(lessonId: String): List<QuestionEntity>
 
+    @Query("""
+    SELECT q.* FROM questions q
+    INNER JOIN sections s ON q.sectionId = s.id
+    WHERE q.lessonId = :lessonId
+      AND q.isCheckpoint = 1
+      AND s.partIndex = :partIndex
+""")
+    suspend fun getCheckpointsForPart(lessonId: String, partIndex: Int): List<QuestionEntity>
+
     // ==================== Basic Queries ====================
 
     @Query("SELECT * FROM questions WHERE id = :questionId")

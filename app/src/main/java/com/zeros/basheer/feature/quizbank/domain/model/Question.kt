@@ -59,10 +59,14 @@ enum class QuestionType {
 enum class QuestionSource {
     MINISTRY_FINAL,
     MINISTRY_SEMIFINAL,
+    MINISTRY,           // alias used in some JSON files
     SCHOOL_EXAM,
+    SCHOOL,             // alias used in some JSON files
     REVISION_SHEET,
     TEACHER_CONTRIB,
-    ORIGINAL
+    ORIGINAL,
+    CUSTOM,             // contributor-authored questions
+    PRACTICE            // practice/drill questions
 }
 
 

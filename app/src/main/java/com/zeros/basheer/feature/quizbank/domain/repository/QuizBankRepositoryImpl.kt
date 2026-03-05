@@ -1,10 +1,26 @@
 package com.zeros.basheer.feature.quizbank.domain.repository
 
-
-import com.zeros.basheer.feature.quizbank.data.dao.*
-import com.zeros.basheer.feature.quizbank.data.entity.*
+import com.zeros.basheer.feature.quizbank.data.dao.ExamDao
+import com.zeros.basheer.feature.quizbank.data.dao.ExamQuestionDao
+import com.zeros.basheer.feature.quizbank.data.dao.QuestionConceptDao
+import com.zeros.basheer.feature.quizbank.data.dao.QuestionDao
+import com.zeros.basheer.feature.quizbank.data.dao.QuestionResponseDao
+import com.zeros.basheer.feature.quizbank.data.dao.QuestionStatsDao
+import com.zeros.basheer.feature.quizbank.data.dao.QuizAttemptDao
+import com.zeros.basheer.feature.quizbank.data.mapper.toDomain
 import com.zeros.basheer.feature.quizbank.data.mapper.toDomainList
-import com.zeros.basheer.feature.quizbank.domain.model.*
+import com.zeros.basheer.feature.quizbank.data.mapper.toEntity
+import com.zeros.basheer.feature.quizbank.domain.model.Exam
+import com.zeros.basheer.feature.quizbank.domain.model.ExamAttemptStatus
+import com.zeros.basheer.feature.quizbank.domain.model.ExamQuestion
+import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
+import com.zeros.basheer.feature.quizbank.domain.model.Question
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionConcept
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionCounts
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionResponse
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionStats
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
+import com.zeros.basheer.feature.quizbank.domain.model.QuizAttempt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -22,231 +38,42 @@ class QuizBankRepositoryImpl @Inject constructor(
     private val questionStatsDao: QuestionStatsDao
 ) : QuizBankRepository {
 
-    // ==================== Mappers ====================
-
-    private fun questionEntityToDomain(entity: QuestionEntity): Question = Question(
-        id = entity.id,
-        subjectId = entity.subjectId,
-        unitId = entity.unitId,
-        lessonId = entity.lessonId,
-        type = QuestionType.valueOf(entity.type),
-        textAr = entity.textAr,
-        textEn = entity.textEn,
-        correctAnswer = entity.correctAnswer,
-        options = entity.options,
-        explanation = entity.explanation,
-        imageUrl = entity.imageUrl,
-        tableData = entity.tableData,
-        source = QuestionSource.valueOf(entity.source),
-        sourceExamId = entity.sourceExamId,
-        sourceDetails = entity.sourceDetails,
-        sourceYear = entity.sourceYear,
-        difficulty = entity.difficulty,
-        cognitiveLevel = CognitiveLevel.valueOf(entity.cognitiveLevel),
-        points = entity.points,
-        estimatedSeconds = entity.estimatedSeconds,
-        feedEligible = entity.feedEligible,
-        createdAt = entity.createdAt,
-        updatedAt = entity.updatedAt
-    )
-
-    private fun questionDomainToEntity(question: Question): QuestionEntity = QuestionEntity(
-        id = question.id,
-        subjectId = question.subjectId,
-        unitId = question.unitId,
-        lessonId = question.lessonId,
-        type = question.type.name,
-        textAr = question.textAr,
-        textEn = question.textEn,
-        correctAnswer = question.correctAnswer,
-        options = question.options,
-        explanation = question.explanation,
-        imageUrl = question.imageUrl,
-        tableData = question.tableData,
-        source = question.source.name,
-        sourceExamId = question.sourceExamId,
-        sourceDetails = question.sourceDetails,
-        sourceYear = question.sourceYear,
-        difficulty = question.difficulty,
-        cognitiveLevel = question.cognitiveLevel.name,
-        points = question.points,
-        estimatedSeconds = question.estimatedSeconds,
-        feedEligible = question.feedEligible,
-        createdAt = question.createdAt,
-        updatedAt = question.updatedAt
-    )
-
-    private fun examEntityToDomain(entity: ExamEntity): Exam = Exam(
-        id = entity.id,
-        subjectId = entity.subjectId,
-        titleAr = entity.titleAr,
-        titleEn = entity.titleEn,
-        source = ExamSource.valueOf(entity.source),
-        year = entity.year,
-        schoolName = entity.schoolName,
-        duration = entity.duration,
-        totalPoints = entity.totalPoints,
-        description = entity.description,
-        examType = entity.examType?.let { ExamType.valueOf(it) },
-        sectionsJson = entity.sectionsJson
-    )
-
-    private fun examDomainToEntity(exam: Exam): ExamEntity = ExamEntity(
-        id = exam.id,
-        subjectId = exam.subjectId,
-        titleAr = exam.titleAr,
-        titleEn = exam.titleEn,
-        source = exam.source.name,
-        year = exam.year,
-        schoolName = exam.schoolName,
-        duration = exam.duration,
-        totalPoints = exam.totalPoints,
-        description = exam.description,
-        examType = exam.examType?.name,
-        sectionsJson = exam.sectionsJson
-    )
-
-    private fun examQuestionEntityToDomain(entity: ExamQuestionEntity): ExamQuestion = ExamQuestion(
-        examId = entity.examId,
-        questionId = entity.questionId,
-        order = entity.order,
-        sectionLabel = entity.sectionLabel,
-        points = entity.points
-    )
-
-    private fun examQuestionDomainToEntity(examQuestion: ExamQuestion): ExamQuestionEntity = ExamQuestionEntity(
-        examId = examQuestion.examId,
-        questionId = examQuestion.questionId,
-        order = examQuestion.order,
-        sectionLabel = examQuestion.sectionLabel,
-        points = examQuestion.points
-    )
-
-    private fun questionConceptEntityToDomain(entity: QuestionConceptEntity): QuestionConcept = QuestionConcept(
-        questionId = entity.questionId,
-        conceptId = entity.conceptId,
-        isPrimary = entity.isPrimary
-    )
-
-    private fun questionConceptDomainToEntity(questionConcept: QuestionConcept): QuestionConceptEntity = QuestionConceptEntity(
-        questionId = questionConcept.questionId,
-        conceptId = questionConcept.conceptId,
-        isPrimary = questionConcept.isPrimary
-    )
-
-    private fun quizAttemptEntityToDomain(entity: QuizAttemptEntity): QuizAttempt = QuizAttempt(
-        id = entity.id,
-        examId = entity.examId,
-        startedAt = entity.startedAt,
-        completedAt = entity.completedAt,
-        score = entity.score,
-        totalPoints = entity.totalPoints,
-        percentage = entity.percentage,
-        timeSpentSeconds = entity.timeSpentSeconds,
-        status = try {
-            ExamAttemptStatus.valueOf(entity.status)
-        } catch (e: Exception) {
-            ExamAttemptStatus.IN_PROGRESS
-        },
-        flaggedQuestions = entity.flaggedQuestions
-    )
-
-    private fun quizAttemptDomainToEntity(attempt: QuizAttempt): QuizAttemptEntity = QuizAttemptEntity(
-        id = attempt.id,
-        examId = attempt.examId,
-        startedAt = attempt.startedAt,
-        completedAt = attempt.completedAt,
-        score = attempt.score,
-        totalPoints = attempt.totalPoints,
-        percentage = attempt.percentage,
-        timeSpentSeconds = attempt.timeSpentSeconds,
-        status = attempt.status.name,
-        flaggedQuestions = attempt.flaggedQuestions
-    )
-
-    private fun questionResponseEntityToDomain(entity: QuestionResponseEntity): QuestionResponse = QuestionResponse(
-        id = entity.id,
-        attemptId = entity.attemptId,
-        questionId = entity.questionId,
-        userAnswer = entity.userAnswer,
-        isCorrect = entity.isCorrect,
-        pointsEarned = entity.pointsEarned,
-        timeSpentSeconds = entity.timeSpentSeconds,
-        answeredAt = entity.answeredAt
-    )
-
-    private fun questionResponseDomainToEntity(response: QuestionResponse): QuestionResponseEntity = QuestionResponseEntity(
-        id = response.id,
-        attemptId = response.attemptId,
-        questionId = response.questionId,
-        userAnswer = response.userAnswer,
-        isCorrect = response.isCorrect,
-        pointsEarned = response.pointsEarned,
-        timeSpentSeconds = response.timeSpentSeconds,
-        answeredAt = response.answeredAt
-    )
-
-    private fun questionStatsEntityToDomain(entity: QuestionStatsEntity): QuestionStats = QuestionStats(
-        questionId = entity.questionId,
-        timesAsked = entity.timesAsked,
-        timesCorrect = entity.timesCorrect,
-        avgTimeSeconds = entity.avgTimeSeconds,
-        successRate = entity.successRate,
-        lastShownInFeed = entity.lastShownInFeed,
-        feedShowCount = entity.feedShowCount,
-        lastAskedAt = entity.lastAskedAt,
-        updatedAt = entity.updatedAt
-    )
-
-    private fun questionStatsDomainToEntity(stats: QuestionStats): QuestionStatsEntity = QuestionStatsEntity(
-        questionId = stats.questionId,
-        timesAsked = stats.timesAsked,
-        timesCorrect = stats.timesCorrect,
-        avgTimeSeconds = stats.avgTimeSeconds,
-        successRate = stats.successRate,
-        lastShownInFeed = stats.lastShownInFeed,
-        feedShowCount = stats.feedShowCount,
-        lastAskedAt = stats.lastAskedAt,
-        updatedAt = stats.updatedAt
-    )
-
     // ==================== Questions ====================
 
     override suspend fun getQuestionById(questionId: String): Question? =
-        questionDao.getQuestionById(questionId)?.let { questionEntityToDomain(it) }
+        questionDao.getQuestionById(questionId)?.toDomain()
+
+    override suspend fun getCheckpointsForLesson(lessonId: String): Map<String, Question> =
+        questionDao.getCheckpointsForLesson(lessonId)
+            .filter { it.sectionId != null }
+            .associate { entity -> entity.sectionId!! to entity.toDomain() }
+
+    override suspend fun getCheckpointsForPart(lessonId: String, partIndex: Int): Map<String, Question> =
+        questionDao.getCheckpointsForPart(lessonId, partIndex)
+            .filter { it.sectionId != null }
+            .associate { entity -> entity.sectionId!! to entity.toDomain() }
+
 
     override fun getQuestionsBySubject(subjectId: String): Flow<List<Question>> =
-        questionDao.getQuestionsBySubject(subjectId).map { entities ->
-            entities.map { questionEntityToDomain(it) }
-        }
+        questionDao.getQuestionsBySubject(subjectId).map { it.map { e -> e.toDomain() } }
 
     override fun getQuestionsByUnit(unitId: String): Flow<List<Question>> =
-        questionDao.getQuestionsByUnit(unitId).map { entities ->
-            entities.map { questionEntityToDomain(it) }
-        }
+        questionDao.getQuestionsByUnit(unitId).map { it.map { e -> e.toDomain() } }
 
     override fun getQuestionsByLesson(lessonId: String): Flow<List<Question>> =
-        questionDao.getQuestionsByLesson(lessonId).map { entities ->
-            entities.map { questionEntityToDomain(it) }
-        }
+        questionDao.getQuestionsByLesson(lessonId).map { it.map { e -> e.toDomain() } }
 
     override fun getQuestionsByType(subjectId: String, type: QuestionType): Flow<List<Question>> =
-        questionDao.getQuestionsBySubjectAndType(subjectId, type.name).map { entities ->
-            entities.map { questionEntityToDomain(it) }
-        }
+        questionDao.getQuestionsBySubjectAndType(subjectId, type.name).map { it.map { e -> e.toDomain() } }
 
     override fun getFeedEligibleQuestions(subjectId: String): Flow<List<Question>> =
-        questionDao.getFeedEligibleQuestions(subjectId).map { entities ->
-            entities.map { questionEntityToDomain(it) }
-        }
+        questionDao.getFeedEligibleQuestions(subjectId).map { it.map { e -> e.toDomain() } }
 
     override fun getQuestionsByConcept(conceptId: String): Flow<List<Question>> =
-        questionDao.getQuestionsByConcept(conceptId).map { entities ->
-            entities.map { questionEntityToDomain(it) }
-        }
+        questionDao.getQuestionsByConcept(conceptId).map { it.map { e -> e.toDomain() } }
 
     override suspend fun getQuestionsForConcepts(conceptIds: List<String>, limit: Int): List<Question> =
-        questionDao.getQuestionsForConcepts(conceptIds, limit).map { questionEntityToDomain(it) }
+        questionDao.getQuestionsForConcepts(conceptIds, limit).map { it.toDomain() }
 
     override suspend fun getFilteredQuestions(
         subjectId: String,
@@ -265,23 +92,19 @@ class QuizBankRepositoryImpl @Inject constructor(
             minDifficulty = minDifficulty,
             maxDifficulty = maxDifficulty,
             limit = limit
-        ).map { questionEntityToDomain(it) }
+        ).map { it.toDomain() }
 
     override suspend fun insertQuestion(question: Question) =
-        questionDao.insertQuestion(questionDomainToEntity(question))
+        questionDao.insertQuestion(question.toEntity())
 
     override suspend fun insertQuestions(questions: List<Question>) =
-        questionDao.insertQuestions(questions.map { questionDomainToEntity(it) })
+        questionDao.insertQuestions(questions.map { it.toEntity() })
 
     override suspend fun deleteQuestionById(questionId: String) =
         questionDao.deleteQuestionById(questionId)
 
     override suspend fun getQuestionCounts(subjectId: String): QuestionCounts {
-        val all = questionDao
-            .getQuestionsBySubject(subjectId)
-            .toDomainList()   // 👈 THIS is what fixes the original error
-            .first()
-
+        val all = questionDao.getQuestionsBySubject(subjectId).toDomainList().first()
         return QuestionCounts(
             total = all.size,
             byType = all.groupBy { it.type }.mapValues { it.value.size },
@@ -291,40 +114,31 @@ class QuizBankRepositoryImpl @Inject constructor(
         )
     }
 
-
     // ==================== Exams ====================
 
     override fun getAllExams(): Flow<List<Exam>> =
-        examDao.getAllExams().map { entities ->
-            entities.map { examEntityToDomain(it) }
-        }
+        examDao.getAllExams().map { it.map { e -> e.toDomain() } }
 
     override fun getExamsBySubject(subjectId: String): Flow<List<Exam>> =
-        examDao.getExamsBySubject(subjectId).map { entities ->
-            entities.map { examEntityToDomain(it) }
-        }
+        examDao.getExamsBySubject(subjectId).map { it.map { e -> e.toDomain() } }
 
     override fun getExamsBySource(subjectId: String, source: ExamSource): Flow<List<Exam>> =
-        examDao.getExamsBySubjectAndSource(subjectId, source.name).map { entities ->
-            entities.map { examEntityToDomain(it) }
-        }
+        examDao.getExamsBySubjectAndSource(subjectId, source.name).map { it.map { e -> e.toDomain() } }
 
     override suspend fun getExamById(examId: String): Exam? =
-        examDao.getExamById(examId)?.let { examEntityToDomain(it) }
+        examDao.getExamById(examId)?.toDomain()
 
     override suspend fun getQuestionsForExam(examId: String): List<Question> =
-        questionDao.getQuestionsForExam(examId).map { questionEntityToDomain(it) }
+        questionDao.getQuestionsForExam(examId).map { it.toDomain() }
 
     override fun getQuestionsForExamFlow(examId: String): Flow<List<Question>> =
-        questionDao.getQuestionsForExamFlow(examId).map { entities ->
-            entities.map { questionEntityToDomain(it) }
-        }
+        questionDao.getQuestionsForExamFlow(examId).map { it.map { e -> e.toDomain() } }
 
     override suspend fun insertExam(exam: Exam) =
-        examDao.insertExam(examDomainToEntity(exam))
+        examDao.insertExam(exam.toEntity())
 
     override suspend fun insertExams(exams: List<Exam>) =
-        examDao.insertExams(exams.map { examDomainToEntity(it) })
+        examDao.insertExams(exams.map { it.toEntity() })
 
     override suspend fun deleteExamsBySubject(subjectId: String) =
         examDao.deleteExamsBySubject(subjectId)
@@ -332,10 +146,10 @@ class QuizBankRepositoryImpl @Inject constructor(
     // ==================== ExamQuestions Junction ====================
 
     override suspend fun insertExamQuestion(examQuestion: ExamQuestion) =
-        examQuestionDao.insert(examQuestionDomainToEntity(examQuestion))
+        examQuestionDao.insert(examQuestion.toEntity())
 
     override suspend fun insertExamQuestions(examQuestions: List<ExamQuestion>) =
-        examQuestionDao.insertAll(examQuestions.map { examQuestionDomainToEntity(it) })
+        examQuestionDao.insertAll(examQuestions.map { it.toEntity() })
 
     override suspend fun deleteExamQuestionsByExam(examId: String) =
         examQuestionDao.deleteByExamId(examId)
@@ -343,10 +157,10 @@ class QuizBankRepositoryImpl @Inject constructor(
     // ==================== QuestionConcepts Junction ====================
 
     override suspend fun insertQuestionConcept(questionConcept: QuestionConcept) =
-        questionConceptDao.insert(questionConceptDomainToEntity(questionConcept))
+        questionConceptDao.insert(questionConcept.toEntity())
 
     override suspend fun insertQuestionConcepts(questionConcepts: List<QuestionConcept>) =
-        questionConceptDao.insertAll(questionConcepts.map { questionConceptDomainToEntity(it) })
+        questionConceptDao.insertAll(questionConcepts.map { it.toEntity() })
 
     override suspend fun deleteQuestionConceptsByQuestion(questionId: String) =
         questionConceptDao.deleteByQuestionId(questionId)
@@ -354,26 +168,22 @@ class QuizBankRepositoryImpl @Inject constructor(
     // ==================== Quiz Attempts ====================
 
     override fun getAttemptsByExam(examId: String): Flow<List<QuizAttempt>> =
-        quizAttemptDao.getAttemptsByExam(examId).map { entities ->
-            entities.map { quizAttemptEntityToDomain(it) }
-        }
+        quizAttemptDao.getAttemptsByExam(examId).map { it.map { e -> e.toDomain() } }
 
     override suspend fun getAttemptById(attemptId: Long): QuizAttempt? =
-        quizAttemptDao.getAttemptById(attemptId)?.let { quizAttemptEntityToDomain(it) }
+        quizAttemptDao.getAttemptById(attemptId)?.toDomain()
 
     override fun getRecentAttempts(limit: Int): Flow<List<QuizAttempt>> =
-        quizAttemptDao.getRecentAttempts(limit).map { entities ->
-            entities.map { quizAttemptEntityToDomain(it) }
-        }
+        quizAttemptDao.getRecentAttempts(limit).map { it.map { e -> e.toDomain() } }
 
     override suspend fun getLastAttemptForExam(examId: String): QuizAttempt? =
-        quizAttemptDao.getLastAttemptForExam(examId)?.let { quizAttemptEntityToDomain(it) }
+        quizAttemptDao.getLastAttemptForExam(examId)?.toDomain()
 
     override suspend fun insertAttempt(attempt: QuizAttempt): Long =
-        quizAttemptDao.insertAttempt(quizAttemptDomainToEntity(attempt))
+        quizAttemptDao.insertAttempt(attempt.toEntity())
 
     override suspend fun updateAttempt(attempt: QuizAttempt) =
-        quizAttemptDao.updateAttempt(quizAttemptDomainToEntity(attempt))
+        quizAttemptDao.updateAttempt(attempt.toEntity())
 
     override suspend fun completeAttempt(attemptId: Long, score: Int, totalPoints: Int, timeSpentSeconds: Int) =
         quizAttemptDao.completeAttempt(attemptId, score, totalPoints, timeSpentSeconds)
@@ -384,53 +194,45 @@ class QuizBankRepositoryImpl @Inject constructor(
     // ==================== Question Responses ====================
 
     override fun getResponsesByAttempt(attemptId: Long): Flow<List<QuestionResponse>> =
-        questionResponseDao.getResponsesByAttempt(attemptId).map { entities ->
-            entities.map { questionResponseEntityToDomain(it) }
-        }
+        questionResponseDao.getResponsesByAttempt(attemptId).map { it.map { e -> e.toDomain() } }
 
     override suspend fun getResponse(attemptId: Long, questionId: String): QuestionResponse? =
-        questionResponseDao.getResponse(attemptId, questionId)?.let { questionResponseEntityToDomain(it) }
+        questionResponseDao.getResponse(attemptId, questionId)?.toDomain()
 
     override suspend fun insertResponse(response: QuestionResponse): Long =
-        questionResponseDao.insertResponse(questionResponseDomainToEntity(response))
+        questionResponseDao.insertResponse(response.toEntity())
 
     override suspend fun insertResponses(responses: List<QuestionResponse>) =
-        questionResponseDao.insertResponses(responses.map { questionResponseDomainToEntity(it) })
+        questionResponseDao.insertResponses(responses.map { it.toEntity() })
 
     // ==================== Question Stats ====================
 
     override suspend fun getStatsForQuestion(questionId: String): QuestionStats? =
-        questionStatsDao.getStatsForQuestion(questionId)?.let { questionStatsEntityToDomain(it) }
+        questionStatsDao.getStatsForQuestion(questionId)?.toDomain()
 
     override fun getStatsForQuestionFlow(questionId: String): Flow<QuestionStats?> =
-        questionStatsDao.getStatsForQuestionFlow(questionId).map { entity ->
-            entity?.let { questionStatsEntityToDomain(it) }
-        }
+        questionStatsDao.getStatsForQuestionFlow(questionId).map { it?.toDomain() }
 
     override suspend fun getStatsForQuestions(questionIds: List<String>): List<QuestionStats> =
-        questionStatsDao.getStatsForQuestions(questionIds).map { questionStatsEntityToDomain(it) }
+        questionStatsDao.getStatsForQuestions(questionIds).map { it.toDomain() }
 
     override fun getHardestQuestions(limit: Int): Flow<List<QuestionStats>> =
-        questionStatsDao.getHardestQuestions(limit).map { entities ->
-            entities.map { questionStatsEntityToDomain(it) }
-        }
+        questionStatsDao.getHardestQuestions(limit).map { it.map { e -> e.toDomain() } }
 
     override fun getEasiestQuestions(limit: Int): Flow<List<QuestionStats>> =
-        questionStatsDao.getEasiestQuestions(limit).map { entities ->
-            entities.map { questionStatsEntityToDomain(it) }
-        }
+        questionStatsDao.getEasiestQuestions(limit).map { it.map { e -> e.toDomain() } }
 
     override suspend fun insertStats(stats: QuestionStats) =
-        questionStatsDao.insertStats(questionStatsDomainToEntity(stats))
+        questionStatsDao.insertStats(stats.toEntity())
 
     override suspend fun updateStats(stats: QuestionStats) =
-        questionStatsDao.updateStats(questionStatsDomainToEntity(stats))
+        questionStatsDao.updateStats(stats.toEntity())
 
     // ==================== Convenience Methods ====================
 
     override suspend fun startQuizAttempt(examId: String): Long {
         val attempt = QuizAttempt(
-            id = 0, // Auto-generated
+            id = 0,
             examId = examId,
             startedAt = System.currentTimeMillis(),
             completedAt = null,
@@ -460,9 +262,8 @@ class QuizBankRepositoryImpl @Inject constructor(
         pointsEarned: Int,
         timeSpentSeconds: Int
     ) {
-        // Create and insert the response
         val response = QuestionResponse(
-            id = 0, // Auto-generated
+            id = 0,
             attemptId = attemptId,
             questionId = questionId,
             userAnswer = userAnswer,
@@ -473,19 +274,13 @@ class QuizBankRepositoryImpl @Inject constructor(
         )
         insertResponse(response)
 
-        // Update question stats
         val currentStats = getStatsForQuestion(questionId)
         val updatedStats = if (currentStats != null) {
             currentStats.withNewResponse(isCorrect, timeSpentSeconds)
         } else {
-            QuestionStats.forNewQuestion(questionId)
-                .withNewResponse(isCorrect, timeSpentSeconds)
+            QuestionStats.forNewQuestion(questionId).withNewResponse(isCorrect, timeSpentSeconds)
         }
 
-        if (currentStats != null) {
-            updateStats(updatedStats)
-        } else {
-            insertStats(updatedStats)
-        }
+        if (currentStats != null) updateStats(updatedStats) else insertStats(updatedStats)
     }
 }

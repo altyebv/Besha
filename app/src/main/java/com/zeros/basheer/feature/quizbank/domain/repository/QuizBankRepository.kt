@@ -12,6 +12,14 @@ interface QuizBankRepository {
 
     // ==================== Questions ====================
     suspend fun getQuestionById(questionId: String): Question?
+
+    /**
+     * Returns all checkpoint questions for a lesson, mapped by sectionId.
+     * Used by LessonReaderViewModel to pre-fetch gates in a single query.
+     */
+    suspend fun getCheckpointsForLesson(lessonId: String): Map<String, Question>
+
+    suspend fun getCheckpointsForPart(lessonId: String, partIndex: Int): Map<String, Question>
     fun getQuestionsBySubject(subjectId: String): Flow<List<Question>>
 
     fun getQuestionsByUnit(unitId: String): Flow<List<Question>>
