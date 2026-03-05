@@ -117,6 +117,7 @@ private fun FeedCard.toQuestion(): Question {
         subjectId = this.subjectId,
         unitId = null,
         lessonId = null,
+        sectionId = null,
         type = when (this.interactionType) {
             InteractionType.SWIPE_TF -> com.zeros.basheer.feature.quizbank.domain.model.QuestionType.TRUE_FALSE
             InteractionType.MCQ -> com.zeros.basheer.feature.quizbank.domain.model.QuestionType.MCQ
