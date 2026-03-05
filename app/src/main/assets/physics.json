@@ -86,13 +86,14 @@
               "id": "sec_phys_intro",
               "title": "مقدمة في ديناميكا الحركة",
               "order": 1,
+              "partIndex": 0,
               "conceptIds": [
                 "concept_phys_newton2",
                 "concept_phys_velocity"
               ],
               "blocks": [
                 {
-                  "id": "blk_phys_text1",
+                  "id": "blk_p_intro_txt1",
                   "type": "TEXT",
                   "content": "تُعدّ قوانين نيوتن للحركة من أهم الإنجازات العلمية في تاريخ الفيزياء الكلاسيكية. صاغها العالم الإنجليزي إسحاق نيوتن في القرن السابع عشر، وما زالت حتى اليوم الأساس الذي تُبنى عليه الميكانيكا الكلاسيكية وتطبيقاتها الهندسية.",
                   "order": 1,
@@ -101,7 +102,7 @@
                   "metadata": null
                 },
                 {
-                  "id": "blk_phys_heading1",
+                  "id": "blk_p_intro_head1",
                   "type": "HEADING",
                   "content": "قانون نيوتن الثاني",
                   "order": 2,
@@ -110,7 +111,7 @@
                   "metadata": "{\"level\": 2}"
                 },
                 {
-                  "id": "blk_phys_highlight1",
+                  "id": "blk_p_intro_hl1",
                   "type": "HIGHLIGHT_BOX",
                   "content": "القانون الثاني: القوة المحصلة على جسم تساوي كتلته مضروبة في تسارعه.\nF = m × a\nحيث: F = القوة (نيوتن)، m = الكتلة (كيلوجرام)، a = التسارع (م/ث²)",
                   "order": 3,
@@ -119,7 +120,7 @@
                   "metadata": "{\"style\": \"definition\"}"
                 },
                 {
-                  "id": "blk_phys_formula1",
+                  "id": "blk_p_intro_form1",
                   "type": "FORMULA",
                   "content": "F = m \\times a",
                   "order": 4,
@@ -128,101 +129,262 @@
                   "metadata": "{\"displayMode\": true}"
                 },
                 {
-                  "id": "blk_phys_divider1",
-                  "type": "DIVIDER",
-                  "content": "",
+                  "id": "blk_p_intro_txt2",
+                  "type": "TEXT",
+                  "content": "يُعبّر هذا القانون عن علاقة جوهرية: كلما زادت القوة المؤثرة على جسم ذي كتلة ثابتة، زاد تسارعه. وعلى العكس، كلما زادت كتلة الجسم تحت تأثير قوة ثابتة، قلّ تسارعه.",
                   "order": 5,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": null
                 },
                 {
-                  "id": "blk_phys_heading2",
+                  "id": "blk_p_intro_head2",
                   "type": "HEADING",
-                  "content": "وحدات القياس",
+                  "content": "الكميات الأساسية في القانون",
                   "order": 6,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": "{\"level\": 3}"
                 },
                 {
-                  "id": "blk_phys_table1",
+                  "id": "blk_p_intro_table1",
                   "type": "TABLE",
-                  "content": "{\"headers\":[\"الكمية\",\"الرمز\",\"الوحدة\"],\"rows\":[{\"cells\":[\"القوة\",\"F\",\"نيوتن (N)\"]},{\"cells\":[\"الكتلة\",\"m\",\"كيلوجرام (kg)\"]},{\"cells\":[\"التسارع\",\"a\",\"م/ث²\"]},{\"cells\":[\"السرعة\",\"v\",\"م/ث\"]}]}",
+                  "content": "{\"headers\":[\"الكمية\",\"الرمز\",\"الوحدة\",\"نوعها\"],\"rows\":[[\"القوة\",\"F\",\"نيوتن (N)\",\"متجهة\"],[\"الكتلة\",\"m\",\"كيلوجرام (kg)\",\"قياسية\"],[\"التسارع\",\"a\",\"م/ث² (m/s²)\",\"متجهة\"]]}",
                   "order": 7,
                   "conceptRef": null,
-                  "caption": "وحدات الكميات الفيزيائية الأساسية",
+                  "caption": "جدول الكميات الأساسية في قانون نيوتن الثاني",
                   "metadata": null
                 },
                 {
-                  "id": "blk_phys_tip1",
+                  "id": "blk_p_intro_tip1",
                   "type": "TIP",
-                  "content": "تذكر: عند حل المسائل، تأكد دائماً من توحيد الوحدات قبل التعويض في المعادلة.",
+                  "content": "الكميات المتجهة لها اتجاه بالإضافة إلى المقدار — تأكد دائماً من تحديد اتجاه القوة في رسم المتجهات الحر (FBD) قبل تطبيق القانون.",
                   "order": 8,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": null
                 },
                 {
-                  "id": "blk_phys_example1",
-                  "type": "EXAMPLE",
-                  "content": "جسم كتلته 5 كيلوجرام يتحرك بتسارع 3 م/ث². احسب القوة المؤثرة عليه.\n\nالحل:\nF = m × a\nF = 5 × 3\nF = 15 نيوتن",
+                  "id": "blk_p_intro_divider",
+                  "type": "DIVIDER",
+                  "content": "",
                   "order": 9,
-                  "conceptRef": "concept_phys_newton2",
-                  "caption": "مثال تطبيقي على القانون الثاني",
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
+            },
+            {
+              "id": "sec_phys_tatbeeq",
+              "title": "التطبيق والقياس",
+              "order": 2,
+              "partIndex": 1,
+              "conceptIds": [
+                "concept_phys_newton2"
+              ],
+              "blocks": [
+                {
+                  "id": "blk_p_tat_head1",
+                  "type": "HEADING",
+                  "content": "وحدات القياس والتحويل",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 2}"
+                },
+                {
+                  "id": "blk_p_tat_txt1",
+                  "type": "TEXT",
+                  "content": "قبل حل أي مسألة، يجب توحيد الوحدات إلى النظام الدولي (SI). النيوتن هو وحدة القوة وتعرّف على أنها القوة اللازمة لإعطاء كتلة مقدارها كيلوجرام واحد تسارعاً مقداره م/ث².",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
                   "metadata": null
                 },
                 {
-                  "id": "blk_phys_list1",
-                  "type": "LIST",
-                  "content": "قانون القصور الذاتي: الجسم الساكن يبقى ساكناً والمتحرك يبقى متحركاً ما لم تؤثر عليه قوة\nقانون التسارع: القوة المحصلة = الكتلة × التسارع\nقانون التفاعل: لكل فعل رد فعل مساوٍ له في المقدار ومعاكس له في الاتجاه",
-                  "order": 10,
+                  "id": "blk_p_tat_form1",
+                  "type": "FORMULA",
+                  "content": "1\\text{ N} = 1\\text{ kg} \\cdot \\text{m/s}^2",
+                  "order": 3,
                   "conceptRef": null,
-                  "caption": "قوانين نيوتن الثلاثة مختصرة",
-                  "metadata": "{\"style\": \"numbered\"}"
+                  "caption": "تعريف وحدة النيوتن",
+                  "metadata": "{\"displayMode\": true}"
                 },
                 {
-                  "id": "blk_phys_quote1",
+                  "id": "blk_p_tat_table1",
+                  "type": "TABLE",
+                  "content": "{\"headers\":[\"الكمية\",\"الرمز\",\"الوحدة\"],\"rows\":[[\"القوة\",\"F\",\"نيوتن (N)\"],[\"الكتلة\",\"m\",\"كيلوجرام (kg)\"],[\"التسارع\",\"a\",\"م/ث² (m/s²)\"]]}",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_p_tat_tip1",
+                  "type": "TIP",
+                  "content": "تذكّر: عند حل المسائل، تأكد دائماً من توحيد الوحدات قبل التعويض في القانون.",
+                  "order": 5,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_p_tat_head2",
+                  "type": "HEADING",
+                  "content": "مثال تطبيقي",
+                  "order": 6,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 3}"
+                },
+                {
+                  "id": "blk_p_tat_ex1",
+                  "type": "EXAMPLE",
+                  "content": "جسم كتلته 5 كيلوجرام يتحرك بتسارع 3 م/ث².\nالمطلوب: احسب القوة المحصلة المؤثرة عليه.\nالحل: F = m × a = 5 × 3 = 15 نيوتن",
+                  "order": 7,
+                  "conceptRef": "concept_phys_newton2",
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_p_tat_head3",
+                  "type": "HEADING",
+                  "content": "قوانين نيوتن الثلاثة — ملخص",
+                  "order": 8,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 3}"
+                },
+                {
+                  "id": "blk_p_tat_list1",
+                  "type": "LIST",
+                  "content": "[{\"text\":\"القانون الأول (القصور الذاتي): الجسم الساكن يبقى ساكناً والمتحرك يبقى متحركاً بسرعة ثابتة ما لم تؤثر عليه قوة محصلة.\"},{\"text\":\"القانون الثاني: القوة المحصلة تساوي الكتلة × التسارع (F = ma).\"},{\"text\":\"القانون الثالث (الفعل وردّ الفعل): لكل فعل ردّ فعل مساوٍ له في المقدار ومعاكس له في الاتجاه.\"}]",
+                  "order": 9,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"style\": \"numbered\", \"hasConceptLinks\": true}"
+                },
+                {
+                  "id": "blk_p_tat_quote1",
                   "type": "QUOTE",
                   "content": "إذا رأيت أبعد مما رآه غيري، فذلك لأنني وقفت على أكتاف العمالقة.",
-                  "order": 11,
+                  "order": 10,
                   "conceptRef": null,
                   "caption": "إسحاق نيوتن",
                   "metadata": null
                 }
               ]
+            },
+            {
+              "id": "sec_phys_masail",
+              "title": "المسائل والتطبيقات المتقدمة",
+              "order": 3,
+              "partIndex": 2,
+              "conceptIds": [
+                "concept_phys_newton2"
+              ],
+              "blocks": [
+                {
+                  "id": "blk_p_mas_txt1",
+                  "type": "TEXT",
+                  "content": "في هذا الجزء ستطبّق قوانين نيوتن على مسائل حقيقية تجمع بين الأجسام المترابطة، والمنحدرات، وقوى الاحتكاك. الهدف ليس الحفظ — بل بناء حدس فيزيائي يمكّنك من قراءة أي مسألة بثقة.",
+                  "order": 1,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_p_mas_head1",
+                  "type": "HEADING",
+                  "content": "مسألة: السيارة والتسارع",
+                  "order": 2,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 3}"
+                },
+                {
+                  "id": "blk_p_mas_ex1",
+                  "type": "EXAMPLE",
+                  "content": "سيارة كتلتها 1200 كيلوجرام تسير بتسارع 3 م/ث².\nالمطلوب: ما القوة المحصلة على السيارة؟\nالحل: F = m × a = 1200 × 3 = 3600 نيوتن",
+                  "order": 3,
+                  "conceptRef": "concept_phys_newton2",
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_p_mas_head2",
+                  "type": "HEADING",
+                  "content": "مسألة: الجسم المعلق",
+                  "order": 4,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 3}"
+                },
+                {
+                  "id": "blk_p_mas_ex2",
+                  "type": "EXAMPLE",
+                  "content": "جسم كتلته 5 كيلوجرام معلّق بحبل شاقولي ساكن (g = 10 م/ث²).\nالمطلوب: احسب شدّ الحبل.\nالحل: بما أن الجسم ساكن فالقوة المحصلة = صفر\nإذن: T - mg = 0  →  T = mg = 5 × 10 = 50 نيوتن",
+                  "order": 5,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_p_mas_hl1",
+                  "type": "HIGHLIGHT_BOX",
+                  "content": "خطوات حل مسائل نيوتن:\n1. ارسم مخطط الجسم الحر (FBD) وحدد كل القوى المؤثرة.\n2. اختر إشارة موجبة للاتجاه الرئيسي للحركة.\n3. طبّق F_net = ma في كل اتجاه على حدة.\n4. حل المعادلة للمجهول.",
+                  "order": 6,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"style\": \"tip\"}"
+                },
+                {
+                  "id": "blk_p_mas_head3",
+                  "type": "HEADING",
+                  "content": "مسألة: جسمان مترابطان",
+                  "order": 7,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": "{\"level\": 3}"
+                },
+                {
+                  "id": "blk_p_mas_ex3",
+                  "type": "EXAMPLE",
+                  "content": "جسمان A وB متصلان بحبل عبر بكرة خفيفة. كتلة A = 3 كغ، كتلة B = 2 كغ (g = 10 م/ث²).\nالمطلوب: أوجد تسارع الجهاز وشد الحبل.\nالحل:\nللجهاز كاملاً: F_net = (3-2)×10 = 10 نيوتن، m_total = 5 كغ\na = 10/5 = 2 م/ث²\nلإيجاد T من معادلة B: T - 2×10 = 2×2  →  T = 24 نيوتن",
+                  "order": 8,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                },
+                {
+                  "id": "blk_p_mas_tip1",
+                  "type": "TIP",
+                  "content": "في مسائل الجهاز المترابط، ابدأ دائماً بمعادلة الجهاز كاملاً لإيجاد التسارع، ثم طبّق القانون على جسم واحد لإيجاد شد الحبل.",
+                  "order": 9,
+                  "conceptRef": null,
+                  "caption": null,
+                  "metadata": null
+                }
+              ]
             }
-          ]
+          ],
+          "metadata": {
+            "hook": "لماذا تنزلق الأجسام على الجليد بسهولة أكبر مقارنةً بالأرض الخشنة؟ والأهم — كيف عرف نيوتن قبل 350 سنة كيف تتحرك الكواكب حول الشمس؟",
+            "orientation": [
+              "صياغة قانون نيوتن الثاني وتطبيقه في حل المسائل",
+              "التمييز بين الكميات القياسية والمتجهة",
+              "حساب التسارع من القوة والكتلة",
+              "قراءة الرسوم البيانية للحركة وتفسيرها"
+            ],
+            "forwardPull": "الدرس القادم: قانون الجاذبية العالمية — لماذا تسقط التفاحة وتدور القمر معاً"
+          },
+          "partCount": 3
         }
       ]
     }
   ],
   "questions": [
-    {
-      "id": "q_phys_tf1",
-      "type": "TRUE_FALSE",
-      "textAr": "وحدة قياس القوة في النظام الدولي هي النيوتن",
-      "textEn": null,
-      "correctAnswer": "true",
-      "options": null,
-      "explanation": "نعم، وحدة القوة هي النيوتن (N) وتساوي كيلوجرام × متر / ثانية²",
-      "imageUrl": null,
-      "tableData": null,
-      "difficulty": 1,
-      "points": 1,
-      "conceptIds": [
-        "concept_phys_newton2"
-      ],
-      "estimatedSeconds": 20,
-      "cognitiveLevel": "RECALL",
-      "unitId": "unit_phys_mechanics",
-      "lessonId": "lesson_phys_newton",
-      "source": "ORIGINAL",
-      "sourceExamId": null,
-      "sourceDetails": null,
-      "sourceYear": null,
-      "feedEligible": true
-    },
     {
       "id": "q_phys_tf2",
       "type": "TRUE_FALSE",
@@ -246,32 +408,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
-    },
-    {
-      "id": "q_phys_mcq1",
-      "type": "MCQ",
-      "textAr": "جسم كتلته 10 كيلوجرام تؤثر عليه قوة محصلة 50 نيوتن. ما تسارعه؟",
-      "textEn": null,
-      "correctAnswer": "5 م/ث²",
-      "options": "[\"2 م/ث²\", \"5 م/ث²\", \"10 م/ث²\", \"50 م/ث²\"]",
-      "explanation": "من قانون نيوتن الثاني: a = F/m = 50/10 = 5 م/ث²",
-      "imageUrl": null,
-      "tableData": null,
-      "difficulty": 2,
-      "points": 2,
-      "conceptIds": [
-        "concept_phys_newton2"
-      ],
-      "estimatedSeconds": 45,
-      "cognitiveLevel": "APPLY",
-      "unitId": "unit_phys_mechanics",
-      "lessonId": "lesson_phys_newton",
-      "source": "ORIGINAL",
-      "sourceExamId": null,
-      "sourceDetails": null,
-      "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_phys_mcq2",
@@ -296,7 +435,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_phys_fill1",
@@ -321,7 +462,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_phys_fill2",
@@ -346,7 +489,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_phys_short1",
@@ -371,7 +516,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_phys_short2",
@@ -396,7 +543,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_phys_table1",
@@ -421,7 +570,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_phys_figure1",
@@ -446,7 +597,90 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
+    },
+    {
+      "id": "cp_phys_intro",
+      "type": "MCQ",
+      "textAr": "جسم كتلته 10 كيلوجرام تؤثر عليه قوة محصلة مقدارها 50 نيوتن. ما مقدار تسارعه؟",
+      "textEn": null,
+      "correctAnswer": "5 م/ث²",
+      "options": "[\"2 م/ث²\", \"5 م/ث²\", \"10 م/ث²\", \"500 م/ث²\"]",
+      "explanation": "من قانون نيوتن الثاني: a = F/m = 50/10 = 5 م/ث². تأكد دائماً من قسمة القوة على الكتلة وليس العكس.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 2,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 45,
+      "cognitiveLevel": "APPLY",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false,
+      "sectionId": "sec_phys_intro",
+      "isCheckpoint": true
+    },
+    {
+      "id": "cp_phys_tatbeeq",
+      "type": "MCQ",
+      "textAr": "أي من الوحدات التالية يعبّر عن قياس النيوتن (وحدة القوة) بالوحدات الأساسية؟",
+      "textEn": null,
+      "correctAnswer": "kg·m/s²",
+      "options": "[\"kg·m/s\", \"kg·m/s²\", \"kg/m·s²\", \"m/s²\"]",
+      "explanation": "من تعريف قانون نيوتن الثاني: F = ma، إذن وحدة القوة = وحدة الكتلة × وحدة التسارع = kg × m/s² = kg·m/s². هذا هو تعريف النيوتن.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 2,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "UNDERSTAND",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false,
+      "sectionId": "sec_phys_tatbeeq",
+      "isCheckpoint": true
+    },
+    {
+      "id": "cp_phys_masail",
+      "type": "MCQ",
+      "textAr": "سيارة كتلتها 800 كغ تسير بسرعة 20 م/ث ثم توقفت خلال 4 ثوانٍ. ما مقدار قوة الكبح؟",
+      "textEn": null,
+      "correctAnswer": "4000 نيوتن",
+      "options": "[\"800 نيوتن\", \"2000 نيوتن\", \"4000 نيوتن\", \"16000 نيوتن\"]",
+      "explanation": "أولاً: a = (v_f - v_i)/t = (0 - 20)/4 = −5 م/ث² (تباطؤ)\nثانياً: F = ma = 800 × 5 = 4000 نيوتن\nالإشارة السالبة للتسارع تعني أن القوة معاكسة للحركة (كبح).",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 3,
+      "points": 3,
+      "conceptIds": [
+        "concept_phys_newton2"
+      ],
+      "estimatedSeconds": 60,
+      "cognitiveLevel": "APPLY",
+      "unitId": "unit_phys_mechanics",
+      "lessonId": "lesson_phys_newton",
+      "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false,
+      "sectionId": "sec_phys_masail",
+      "isCheckpoint": true
     }
   ],
   "exams": [
