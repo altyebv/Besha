@@ -17,6 +17,19 @@ interface LessonDao {
     @Query("SELECT * FROM lessons WHERE unitId = :unitId ORDER BY `order`")
     fun getLessonsByUnit(unitId: String): Flow<List<LessonEntity>>
 
+    /**
+     * Returns the next lesson in the same unit by order, or null if this is the last one.
+     * Used by LessonReaderViewModel to populate the forward-pull strip on the exit card.
+     */
+    @Query("""
+        SELECT * FROM lessons
+        WHERE unitId = (SELECT unitId FROM lessons WHERE id = :lessonId)
+        AND `order` > (SELECT `order` FROM lessons WHERE id = :lessonId)
+        ORDER BY `order`
+        LIMIT 1
+    """)
+    suspend fun getNextLesson(lessonId: String): LessonEntity?
+
     @Query("SELECT * FROM lessons WHERE id = :lessonId")
     suspend fun getLessonById(lessonId: String): LessonEntity?
 
