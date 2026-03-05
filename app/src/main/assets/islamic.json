@@ -10,8 +10,16 @@
     "colorHex": "#009688"
   },
   "tags": [
-    { "id": "tag_isl_aqeeda", "nameAr": "العقيدة", "nameEn": "Creed" },
-    { "id": "tag_isl_fiqh", "nameAr": "الفقه", "nameEn": "Jurisprudence" }
+    {
+      "id": "tag_isl_aqeeda",
+      "nameAr": "العقيدة",
+      "nameEn": "Creed"
+    },
+    {
+      "id": "tag_isl_fiqh",
+      "nameAr": "الفقه",
+      "nameEn": "Jurisprudence"
+    }
   ],
   "concepts": [
     {
@@ -25,7 +33,9 @@
       "imageUrl": null,
       "difficulty": 1,
       "extraData": null,
-      "tagIds": ["tag_isl_aqeeda"]
+      "tagIds": [
+        "tag_isl_aqeeda"
+      ]
     },
     {
       "id": "concept_isl_salah",
@@ -38,7 +48,9 @@
       "imageUrl": null,
       "difficulty": 1,
       "extraData": null,
-      "tagIds": ["tag_isl_fiqh"]
+      "tagIds": [
+        "tag_isl_fiqh"
+      ]
     },
     {
       "id": "concept_isl_arkaan",
@@ -51,7 +63,9 @@
       "imageUrl": null,
       "difficulty": 1,
       "extraData": null,
-      "tagIds": ["tag_isl_aqeeda"]
+      "tagIds": [
+        "tag_isl_aqeeda"
+      ]
     }
   ],
   "units": [
@@ -72,7 +86,10 @@
               "id": "sec_isl_intro",
               "title": "التوحيد وأركان الإسلام",
               "order": 1,
-              "conceptIds": ["concept_isl_tawhid", "concept_isl_arkaan"],
+              "conceptIds": [
+                "concept_isl_tawhid",
+                "concept_isl_arkaan"
+              ],
               "blocks": [
                 {
                   "id": "blk_isl_text1",
@@ -182,7 +199,8 @@
                   "caption": "نصاب زكاة المال",
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 0
             }
           ]
         }
@@ -202,7 +220,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 1,
-      "conceptIds": ["concept_isl_arkaan"],
+      "conceptIds": [
+        "concept_isl_arkaan"
+      ],
       "estimatedSeconds": 20,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -211,7 +231,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_tf2",
@@ -225,7 +247,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 1,
-      "conceptIds": ["concept_isl_salah"],
+      "conceptIds": [
+        "concept_isl_salah"
+      ],
       "estimatedSeconds": 15,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -234,7 +258,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_mcq1",
@@ -248,7 +274,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 1,
-      "conceptIds": ["concept_isl_arkaan"],
+      "conceptIds": [
+        "concept_isl_arkaan"
+      ],
       "estimatedSeconds": 25,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -257,7 +285,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_mcq2",
@@ -271,7 +301,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 1,
-      "conceptIds": ["concept_isl_salah"],
+      "conceptIds": [
+        "concept_isl_salah"
+      ],
       "estimatedSeconds": 20,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -280,7 +312,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_fill1",
@@ -294,7 +328,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 2,
-      "conceptIds": ["concept_isl_tawhid"],
+      "conceptIds": [
+        "concept_isl_tawhid"
+      ],
       "estimatedSeconds": 35,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -303,7 +339,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_fill2",
@@ -317,7 +355,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 2,
-      "conceptIds": ["concept_isl_salah"],
+      "conceptIds": [
+        "concept_isl_salah"
+      ],
       "estimatedSeconds": 30,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -326,7 +366,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_short1",
@@ -340,7 +382,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 5,
-      "conceptIds": ["concept_isl_arkaan"],
+      "conceptIds": [
+        "concept_isl_arkaan"
+      ],
       "estimatedSeconds": 60,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -349,7 +393,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_short2",
@@ -363,7 +409,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 3,
-      "conceptIds": ["concept_isl_salah"],
+      "conceptIds": [
+        "concept_isl_salah"
+      ],
       "estimatedSeconds": 60,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
@@ -372,7 +420,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_explain1",
@@ -386,7 +436,9 @@
       "tableData": null,
       "difficulty": 3,
       "points": 4,
-      "conceptIds": ["concept_isl_tawhid"],
+      "conceptIds": [
+        "concept_isl_tawhid"
+      ],
       "estimatedSeconds": 120,
       "cognitiveLevel": "UNDERSTAND",
       "unitId": "unit_isl_aqeeda",
@@ -395,7 +447,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_isl_list1",
@@ -409,12 +463,41 @@
       "tableData": null,
       "difficulty": 1,
       "points": 5,
-      "conceptIds": ["concept_isl_salah"],
+      "conceptIds": [
+        "concept_isl_salah"
+      ],
       "estimatedSeconds": 75,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_isl_aqeeda",
       "lessonId": "lesson_isl_arkaan",
       "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
+    },
+    {
+      "id": "isl_cp_mcq_arkaan",
+      "type": "MCQ",
+      "textAr": "كم عدد أركان الإسلام؟",
+      "textEn": null,
+      "correctAnswer": "خمسة",
+      "options": "[\"ثلاثة\", \"أربعة\", \"خمسة\", \"ستة\"]",
+      "explanation": "أركان الإسلام خمسة: الشهادتان والصلاة والزكاة والصوم والحج. راجع القسم الأول.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 1,
+      "conceptIds": [],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_isl_aqeeda",
+      "lessonId": "lesson_isl_arkaan",
+      "sectionId": "sec_isl_intro",
+      "isCheckpoint": true,
+      "source": "CUSTOM",
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,

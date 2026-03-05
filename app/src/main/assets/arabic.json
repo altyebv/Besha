@@ -10,8 +10,16 @@
     "colorHex": "#FF9800"
   },
   "tags": [
-    { "id": "tag_ar_nahw", "nameAr": "النحو", "nameEn": "Grammar" },
-    { "id": "tag_ar_balagha", "nameAr": "البلاغة", "nameEn": "Rhetoric" }
+    {
+      "id": "tag_ar_nahw",
+      "nameAr": "النحو",
+      "nameEn": "Grammar"
+    },
+    {
+      "id": "tag_ar_balagha",
+      "nameAr": "البلاغة",
+      "nameEn": "Rhetoric"
+    }
   ],
   "concepts": [
     {
@@ -25,7 +33,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_ar_nahw"]
+      "tagIds": [
+        "tag_ar_nahw"
+      ]
     },
     {
       "id": "concept_ar_tashabih",
@@ -38,7 +48,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_ar_balagha"]
+      "tagIds": [
+        "tag_ar_balagha"
+      ]
     },
     {
       "id": "concept_ar_ithbat",
@@ -51,7 +63,9 @@
       "imageUrl": null,
       "difficulty": 1,
       "extraData": null,
-      "tagIds": ["tag_ar_nahw"]
+      "tagIds": [
+        "tag_ar_nahw"
+      ]
     }
   ],
   "units": [
@@ -72,7 +86,11 @@
               "id": "sec_ar_mubtada",
               "title": "المبتدأ والخبر",
               "order": 1,
-              "conceptIds": ["concept_ar_mubtada", "concept_ar_ithbat"],
+              "partIndex": 0,
+              "conceptIds": [
+                "concept_ar_mubtada",
+                "concept_ar_ithbat"
+              ],
               "blocks": [
                 {
                   "id": "blk_ar_text1",
@@ -127,12 +145,23 @@
                   "conceptRef": null,
                   "caption": null,
                   "metadata": null
-                },
+                }
+              ]
+            },
+            {
+              "id": "sec_ar_tashabih",
+              "title": "التشبيه البلاغي",
+              "order": 2,
+              "partIndex": 1,
+              "conceptIds": [
+                "concept_ar_tashabih"
+              ],
+              "blocks": [
                 {
                   "id": "blk_ar_heading2",
                   "type": "HEADING",
                   "content": "التشبيه في البلاغة",
-                  "order": 7,
+                  "order": 1,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": "{\"level\": 2}"
@@ -141,7 +170,7 @@
                   "id": "blk_ar_text2",
                   "type": "TEXT",
                   "content": "التشبيه من أقدم الصور البلاغية وأكثرها شيوعاً في الشعر والنثر العربي. يتكون التشبيه من أربعة أركان: المشبَّه، وأداة التشبيه، ووجه الشبه، والمشبَّه به.",
-                  "order": 8,
+                  "order": 2,
                   "conceptRef": "concept_ar_tashabih",
                   "caption": null,
                   "metadata": null
@@ -150,7 +179,7 @@
                   "id": "blk_ar_table1",
                   "type": "TABLE",
                   "content": "{\"headers\":[\"الركن\",\"المعنى\",\"في المثال: العلم كالنور\"],\"rows\":[{\"cells\":[\"المشبَّه\",\"ما نُريد توضيحه\",\"العلم\"]},{\"cells\":[\"أداة التشبيه\",\"ما يدل على المشاركة\",\"كـ\"]},{\"cells\":[\"المشبَّه به\",\"ما قِيس عليه\",\"النور\"]},{\"cells\":[\"وجه الشبه\",\"الصفة المشتركة\",\"الهداية والإضاءة\"]}]}",
-                  "order": 9,
+                  "order": 3,
                   "conceptRef": "concept_ar_tashabih",
                   "caption": "أركان التشبيه",
                   "metadata": null
@@ -159,7 +188,7 @@
                   "id": "blk_ar_quote1",
                   "type": "QUOTE",
                   "content": "أنا البحرُ في أحشائه الدرُّ كامنٌ — فهل سألوا الغوّاصَ عن صَدَفاتي",
-                  "order": 10,
+                  "order": 4,
                   "conceptRef": "concept_ar_tashabih",
                   "caption": "المتنبي — مثال على التشبيه البليغ",
                   "metadata": null
@@ -168,14 +197,24 @@
                   "id": "blk_ar_tip1",
                   "type": "TIP",
                   "content": "لتمييز المبتدأ من الخبر: المبتدأ هو ما نتحدث عنه، والخبر هو ما نقوله عنه. ابحث عن الاسم الأول في الجملة وهو غالباً المبتدأ.",
-                  "order": 11,
+                  "order": 5,
                   "conceptRef": null,
                   "caption": null,
                   "metadata": null
                 }
               ]
             }
-          ]
+          ],
+          "metadata": {
+            "hook": "لماذا يقول العرب «العِلمُ نورٌ» ولا يقولون «نورٌ العِلمُ»؟ الترتيب في الجملة العربية ليس عشوائياً — وراءه قانون دقيق.",
+            "orientation": [
+              "تمييز المبتدأ والخبر في أي جملة اسمية",
+              "تطبيق قواعد الرفع على أركان الجملة",
+              "التعرف على أركان التشبيه البلاغي الأربعة",
+              "الفرق بين التشبيه التام والبليغ"
+            ],
+            "forwardPull": "في الدرس القادم: الفعل وفاعله — كيف تتحول الجملة من اسمية إلى فعلية"
+          }
         }
       ]
     }
@@ -193,7 +232,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 2,
-      "conceptIds": ["concept_ar_mubtada"],
+      "conceptIds": [
+        "concept_ar_mubtada"
+      ],
       "estimatedSeconds": 40,
       "cognitiveLevel": "APPLY",
       "unitId": "unit_ar_nahw",
@@ -202,7 +243,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": "sec_ar_mubtada",
+      "isCheckpoint": true
     },
     {
       "id": "q_ar_mcq2",
@@ -216,7 +259,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 1,
-      "conceptIds": ["concept_ar_ithbat"],
+      "conceptIds": [
+        "concept_ar_ithbat"
+      ],
       "estimatedSeconds": 30,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_ar_nahw",
@@ -225,7 +270,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_ar_fill1",
@@ -239,7 +286,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 2,
-      "conceptIds": ["concept_ar_tashabih"],
+      "conceptIds": [
+        "concept_ar_tashabih"
+      ],
       "estimatedSeconds": 35,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_ar_nahw",
@@ -248,7 +297,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_ar_fill2",
@@ -262,7 +313,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 2,
-      "conceptIds": ["concept_ar_tashabih"],
+      "conceptIds": [
+        "concept_ar_tashabih"
+      ],
       "estimatedSeconds": 35,
       "cognitiveLevel": "APPLY",
       "unitId": "unit_ar_nahw",
@@ -271,7 +324,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_ar_order1",
@@ -285,7 +340,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 3,
-      "conceptIds": ["concept_ar_tashabih"],
+      "conceptIds": [
+        "concept_ar_tashabih"
+      ],
       "estimatedSeconds": 60,
       "cognitiveLevel": "UNDERSTAND",
       "unitId": "unit_ar_nahw",
@@ -294,7 +351,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": "sec_ar_tashabih",
+      "isCheckpoint": true
     },
     {
       "id": "q_ar_order2",
@@ -308,7 +367,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 3,
-      "conceptIds": ["concept_ar_mubtada"],
+      "conceptIds": [
+        "concept_ar_mubtada"
+      ],
       "estimatedSeconds": 60,
       "cognitiveLevel": "APPLY",
       "unitId": "unit_ar_nahw",
@@ -317,7 +378,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_ar_match1",
@@ -331,7 +394,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 4,
-      "conceptIds": ["concept_ar_mubtada"],
+      "conceptIds": [
+        "concept_ar_mubtada"
+      ],
       "estimatedSeconds": 90,
       "cognitiveLevel": "RECALL",
       "unitId": "unit_ar_nahw",
@@ -340,7 +405,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_ar_match2",
@@ -354,7 +421,9 @@
       "tableData": null,
       "difficulty": 1,
       "points": 4,
-      "conceptIds": ["concept_ar_ithbat"],
+      "conceptIds": [
+        "concept_ar_ithbat"
+      ],
       "estimatedSeconds": 75,
       "cognitiveLevel": "APPLY",
       "unitId": "unit_ar_nahw",
@@ -363,7 +432,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_ar_short1",
@@ -377,7 +448,9 @@
       "tableData": null,
       "difficulty": 2,
       "points": 3,
-      "conceptIds": ["concept_ar_mubtada"],
+      "conceptIds": [
+        "concept_ar_mubtada"
+      ],
       "estimatedSeconds": 75,
       "cognitiveLevel": "APPLY",
       "unitId": "unit_ar_nahw",
@@ -386,7 +459,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_ar_explain1",
@@ -400,7 +475,9 @@
       "tableData": null,
       "difficulty": 3,
       "points": 4,
-      "conceptIds": ["concept_ar_tashabih"],
+      "conceptIds": [
+        "concept_ar_tashabih"
+      ],
       "estimatedSeconds": 120,
       "cognitiveLevel": "UNDERSTAND",
       "unitId": "unit_ar_nahw",
@@ -409,7 +486,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     }
   ],
   "exams": [],

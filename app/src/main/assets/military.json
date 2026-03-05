@@ -33,7 +33,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_mil_001"]
+      "tagIds": [
+        "tag_mil_001"
+      ]
     },
     {
       "id": "concept_national_strategy",
@@ -46,7 +48,10 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_mil_001", "tag_mil_002"]
+      "tagIds": [
+        "tag_mil_001",
+        "tag_mil_002"
+      ]
     },
     {
       "id": "concept_grand_strategy",
@@ -59,7 +64,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_mil_001"]
+      "tagIds": [
+        "tag_mil_001"
+      ]
     },
     {
       "id": "concept_strategic_thinking",
@@ -72,7 +79,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_mil_001"]
+      "tagIds": [
+        "tag_mil_001"
+      ]
     },
     {
       "id": "concept_national_security",
@@ -85,7 +94,9 @@
       "imageUrl": null,
       "difficulty": 2,
       "extraData": null,
-      "tagIds": ["tag_mil_002"]
+      "tagIds": [
+        "tag_mil_002"
+      ]
     }
   ],
   "units": [
@@ -106,7 +117,9 @@
               "id": "sec_intro",
               "title": "تقديم",
               "order": 1,
-              "conceptIds": ["concept_strategy"],
+              "conceptIds": [
+                "concept_strategy"
+              ],
               "blocks": [
                 {
                   "id": "block_001",
@@ -144,7 +157,8 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 0
             },
             {
               "id": "sec_uses",
@@ -188,13 +202,17 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 0
             },
             {
               "id": "sec_definition",
               "title": "تعريف الاستراتيجية",
               "order": 3,
-              "conceptIds": ["concept_strategy", "concept_national_strategy"],
+              "conceptIds": [
+                "concept_strategy",
+                "concept_national_strategy"
+              ],
               "blocks": [
                 {
                   "id": "block_009",
@@ -241,13 +259,16 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 1
             },
             {
               "id": "sec_levels",
               "title": "مستويات الاستراتيجية",
               "order": 4,
-              "conceptIds": ["concept_grand_strategy"],
+              "conceptIds": [
+                "concept_grand_strategy"
+              ],
               "blocks": [
                 {
                   "id": "block_014",
@@ -285,7 +306,8 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 1
             }
           ]
         },
@@ -300,7 +322,9 @@
               "id": "sec_importance",
               "title": "أهمية الاستراتيجية",
               "order": 1,
-              "conceptIds": ["concept_strategic_thinking"],
+              "conceptIds": [
+                "concept_strategic_thinking"
+              ],
               "blocks": [
                 {
                   "id": "block_018",
@@ -356,13 +380,16 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 0
             },
             {
               "id": "sec_principles",
               "title": "مبادئ الاستراتيجية الوطنية",
               "order": 2,
-              "conceptIds": ["concept_national_security"],
+              "conceptIds": [
+                "concept_national_security"
+              ],
               "blocks": [
                 {
                   "id": "block_024",
@@ -400,7 +427,8 @@
                   "caption": null,
                   "metadata": "{\"style\": \"definition\"}"
                 }
-              ]
+              ],
+              "partIndex": 1
             },
             {
               "id": "sec_factors",
@@ -444,14 +472,91 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 1
             }
           ]
         }
       ]
     }
   ],
-  "questions": [],
+  "questions": [
+    {
+      "id": "mil_cp_mcq_strategy_def",
+      "type": "MCQ",
+      "textAr": "من أي لغة أصيلة اشتُقّ مصطلح الاستراتيجية؟",
+      "textEn": null,
+      "correctAnswer": "اليونانية",
+      "options": "[\"اللاتينية\", \"اليونانية\", \"الفارسية\", \"الفرنسية\"]",
+      "explanation": "الاستراتيجية مشتقة من الكلمة اليونانية Strategia. راجع قسم تعريف الاستراتيجية.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 1,
+      "conceptIds": [],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_national_strategy",
+      "lessonId": "lesson_strategy_concept",
+      "sectionId": "sec_intro",
+      "isCheckpoint": true,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "mil_cp_order_strategy_levels",
+      "type": "ORDER",
+      "textAr": "رتّب مستويات الاستراتيجية من الأعلى إلى الأدنى",
+      "textEn": null,
+      "correctAnswer": "الاستراتيجية الكبرى,الاستراتيجية الوطنية,الاستراتيجية العسكرية,الاستراتيجية التشغيلية",
+      "options": "[\"الاستراتيجية الكبرى\", \"الاستراتيجية الوطنية\", \"الاستراتيجية العسكرية\", \"الاستراتيجية التشغيلية\"]",
+      "explanation": "المستويات تتدرج من الأشمل إلى الأكثر تخصصاً. راجع قسم مستويات الاستراتيجية.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 1,
+      "conceptIds": [],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_national_strategy",
+      "lessonId": "lesson_strategy_concept",
+      "sectionId": "sec_uses",
+      "isCheckpoint": true,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "mil_cp_mcq_importance",
+      "type": "MCQ",
+      "textAr": "لماذا تُعدّ الاستراتيجية الوطنية ضرورة لا غنى عنها للدولة؟",
+      "textEn": null,
+      "correctAnswer": "لأنها تُوجّه الموارد الوطنية نحو تحقيق الأهداف القومية",
+      "options": "[\"لأنها تُحدد ميزانية الدولة فقط\", \"لأنها تُوجّه الموارد الوطنية نحو تحقيق الأهداف القومية\", \"لأنها إلزامية دولياً\", \"لأنها تحل محل القانون\"]",
+      "explanation": "الاستراتيجية أداة تنسيق الموارد لخدمة الأهداف. راجع قسم أهمية الاستراتيجية.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 1,
+      "conceptIds": [],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_national_strategy",
+      "lessonId": "lesson_strategy_importance",
+      "sectionId": "sec_importance",
+      "isCheckpoint": true,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    }
+  ],
   "exams": [],
   "feedItems": [
     {

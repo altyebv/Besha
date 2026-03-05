@@ -208,7 +208,8 @@
                   "caption": "قانون حفظ المادة - لافوازييه",
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 0
             }
           ]
         }
@@ -239,7 +240,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_mcq1",
@@ -264,7 +267,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_mcq2",
@@ -289,7 +294,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_explain1",
@@ -314,7 +321,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_explain2",
@@ -339,7 +348,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_list1",
@@ -364,7 +375,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_list2",
@@ -389,7 +402,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_compare1",
@@ -414,7 +429,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_compare2",
@@ -439,7 +456,9 @@
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "q_chem_short1",
@@ -461,6 +480,33 @@
       "unitId": "unit_chem_structure",
       "lessonId": "lesson_chem_bonds",
       "source": "ORIGINAL",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
+    },
+    {
+      "id": "chem_cp_mcq_atom",
+      "type": "MCQ",
+      "textAr": "ما الجسيمات الأساسية المكوِّنة لنواة الذرة؟",
+      "textEn": null,
+      "correctAnswer": "البروتونات والنيوترونات",
+      "options": "[\"الإلكترونات والبروتونات\", \"البروتونات والنيوترونات\", \"الإلكترونات فقط\", \"النيوترونات فقط\"]",
+      "explanation": "نواة الذرة تحتوي على بروتونات وموجبة وعدلية نيوترونات. راجع قسم تركيب الذرة.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 1,
+      "conceptIds": [],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "RECALL",
+      "unitId": "unit_chem_structure",
+      "lessonId": "lesson_chem_bonds",
+      "sectionId": "sec_chem_atom",
+      "isCheckpoint": true,
+      "source": "CUSTOM",
       "sourceExamId": null,
       "sourceDetails": null,
       "sourceYear": null,

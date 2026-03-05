@@ -156,7 +156,8 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 0
             },
             {
               "id": "sec_tools",
@@ -194,7 +195,8 @@
                   "caption": null,
                   "metadata": "{\"style\": \"definition\"}"
                 }
-              ]
+              ],
+              "partIndex": 0
             }
           ]
         },
@@ -240,7 +242,8 @@
                   "caption": null,
                   "metadata": "{\"style\": \"important\"}"
                 }
-              ]
+              ],
+              "partIndex": 0
             },
             {
               "id": "sec_aerial_features",
@@ -275,7 +278,8 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 0
             },
             {
               "id": "sec_aerial_types",
@@ -358,7 +362,8 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 1
             },
             {
               "id": "sec_aerial_oblique_features",
@@ -395,14 +400,66 @@
                   "caption": null,
                   "metadata": null
                 }
-              ]
+              ],
+              "partIndex": 1
             }
           ]
         }
       ]
     }
   ],
-  "questions": [],
+  "questions": [
+    {
+      "id": "geo_cp_mcq_remote_sensing",
+      "type": "MCQ",
+      "textAr": "ما التعريف الصحيح للاستشعار عن بعد؟",
+      "textEn": null,
+      "correctAnswer": "جمع المعلومات عن الأجسام دون ملامستها مباشرة",
+      "options": "[\"قياس درجة حرارة الأجسام\", \"جمع المعلومات عن الأجسام دون ملامستها مباشرة\", \"تصوير سطح الأرض بالطائرات فقط\", \"رسم الخرائط الطبوغرافية\"]",
+      "explanation": "الاستشعار عن بعد هو تقنية جمع البيانات دون تلامس مباشر. راجع قسم التمهيد.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 1,
+      "conceptIds": [],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "RECALL",
+      "unitId": "geo_unit_1",
+      "lessonId": "lesson_1770160513497_93fsm3",
+      "sectionId": "sec_1770160552933_ul7uk6",
+      "isCheckpoint": true,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    },
+    {
+      "id": "geo_cp_mcq_aerial",
+      "type": "MCQ",
+      "textAr": "ما أبرز ميزة تتفوق بها الصور الجوية على الخرائط؟",
+      "textEn": null,
+      "correctAnswer": "تُظهر التفاصيل الدقيقة للسطح كما هي في الواقع",
+      "options": "[\"أسهل في القراءة\", \"تُظهر التفاصيل الدقيقة للسطح كما هي في الواقع\", \"أرخص تكلفةً\", \"تشمل مساحات أوسع دائماً\"]",
+      "explanation": "الصور الجوية تعكس الواقع بدقة عالية. راجع قسم مميزات الصور الجوية.",
+      "imageUrl": null,
+      "tableData": null,
+      "difficulty": 2,
+      "points": 1,
+      "conceptIds": [],
+      "estimatedSeconds": 40,
+      "cognitiveLevel": "RECALL",
+      "unitId": "geo_unit_1",
+      "lessonId": "lesson_aerial_photos",
+      "sectionId": "sec_aerial_intro",
+      "isCheckpoint": true,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "feedEligible": false
+    }
+  ],
   "exams": [],
   "feedItems": [
     {

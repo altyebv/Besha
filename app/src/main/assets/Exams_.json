@@ -97,7 +97,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 30,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_002",
@@ -120,7 +122,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 45,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_003",
@@ -143,7 +147,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 30,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_004",
@@ -166,7 +172,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 40,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_005",
@@ -189,7 +197,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 35,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_006",
@@ -212,7 +222,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 40,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_007",
@@ -235,7 +247,9 @@
       "cognitiveLevel": "RECALL",
       "points": 3,
       "estimatedSeconds": 60,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_008",
@@ -258,7 +272,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 5,
       "estimatedSeconds": 120,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_009",
@@ -281,7 +297,9 @@
       "cognitiveLevel": "RECALL",
       "points": 5,
       "estimatedSeconds": 90,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_010",
@@ -304,7 +322,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 4,
       "estimatedSeconds": 90,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_011",
@@ -327,7 +347,9 @@
       "cognitiveLevel": "RECALL",
       "points": 4,
       "estimatedSeconds": 100,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_012",
@@ -350,7 +372,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 3,
       "estimatedSeconds": 80,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_013",
@@ -373,7 +397,9 @@
       "cognitiveLevel": "ANALYZE",
       "points": 8,
       "estimatedSeconds": 180,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_014",
@@ -396,7 +422,9 @@
       "cognitiveLevel": "ANALYZE",
       "points": 8,
       "estimatedSeconds": 200,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_015",
@@ -419,7 +447,9 @@
       "cognitiveLevel": "ANALYZE",
       "points": 8,
       "estimatedSeconds": 180,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_016",
@@ -442,7 +472,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 5,
       "estimatedSeconds": 80,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_017",
@@ -465,7 +497,9 @@
       "cognitiveLevel": "RECALL",
       "points": 7,
       "estimatedSeconds": 120,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_018",
@@ -488,7 +522,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 5,
       "estimatedSeconds": 90,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_019",
@@ -511,7 +547,9 @@
       "cognitiveLevel": "RECALL",
       "points": 4,
       "estimatedSeconds": 100,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_020",
@@ -534,7 +572,9 @@
       "cognitiveLevel": "APPLY",
       "points": 5,
       "estimatedSeconds": 120,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_021",
@@ -557,7 +597,9 @@
       "cognitiveLevel": "APPLY",
       "points": 5,
       "estimatedSeconds": 120,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_022",
@@ -580,7 +622,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 3,
       "estimatedSeconds": 70,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_023",
@@ -603,7 +647,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 50,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_024",
@@ -626,7 +672,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 3,
       "estimatedSeconds": 60,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_025",
@@ -649,7 +697,9 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 3,
       "estimatedSeconds": 55,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_026",
@@ -672,7 +722,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 30,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_027",
@@ -695,7 +747,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 40,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_028",
@@ -718,7 +772,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 35,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_029",
@@ -741,7 +797,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 30,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_030",
@@ -764,7 +822,9 @@
       "cognitiveLevel": "RECALL",
       "points": 2,
       "estimatedSeconds": 40,
-      "feedEligible": true
+      "feedEligible": true,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_031",
@@ -787,7 +847,9 @@
       "cognitiveLevel": "RECALL",
       "points": 3,
       "estimatedSeconds": 50,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_032",
@@ -810,7 +872,9 @@
       "cognitiveLevel": "RECALL",
       "points": 4,
       "estimatedSeconds": 80,
-      "feedEligible": false
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
     },
     {
       "id": "geo_q_033",
@@ -833,6 +897,83 @@
       "cognitiveLevel": "UNDERSTAND",
       "points": 5,
       "estimatedSeconds": 130,
+      "feedEligible": false,
+      "sectionId": null,
+      "isCheckpoint": false
+    },
+    {
+      "id": "geo_cp_mcq_001",
+      "subjectId": "geography",
+      "unitId": null,
+      "lessonId": "geo_u1_l1",
+      "sectionId": "geo_u1_l1_s1",
+      "isCheckpoint": true,
+      "type": "MCQ",
+      "textAr": "أين يقع السودان جغرافياً؟",
+      "textEn": null,
+      "correctAnswer": "شمال شرق أفريقيا",
+      "options": "[\"شمال غرب أفريقيا\", \"شمال شرق أفريقيا\", \"وسط أفريقيا\", \"جنوب أفريقيا\"]",
+      "explanation": "يقع السودان في شمال شرق القارة الأفريقية. راجع قسم الموقع الجغرافي أعلاه.",
+      "imageUrl": null,
+      "tableData": null,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "difficulty": 1,
+      "cognitiveLevel": "RECALL",
+      "points": 1,
+      "estimatedSeconds": 30,
+      "feedEligible": false
+    },
+    {
+      "id": "geo_cp_order_001",
+      "subjectId": "geography",
+      "unitId": null,
+      "lessonId": "geo_u1_l1",
+      "sectionId": "geo_u1_l1_s2",
+      "isCheckpoint": true,
+      "type": "ORDER",
+      "textAr": "رتّب الأقاليم المناخية التالية من الشمال إلى الجنوب في السودان",
+      "textEn": null,
+      "correctAnswer": "الصحراء,شبه الصحراء,السافانا,المنطقة الاستوائية",
+      "options": "[\"الصحراء\", \"شبه الصحراء\", \"السافانا\", \"المنطقة الاستوائية\"]",
+      "explanation": "تتدرج الأقاليم من الجفاف الشديد شمالاً إلى الرطوبة الاستوائية جنوباً. راجع قسم الأقاليم.",
+      "imageUrl": null,
+      "tableData": null,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "difficulty": 2,
+      "cognitiveLevel": "UNDERSTAND",
+      "points": 1,
+      "estimatedSeconds": 45,
+      "feedEligible": false
+    },
+    {
+      "id": "geo_cp_mcq_002",
+      "subjectId": "geography",
+      "unitId": null,
+      "lessonId": "geo_u1_l2",
+      "sectionId": "geo_u1_l2_s1",
+      "isCheckpoint": true,
+      "type": "MCQ",
+      "textAr": "أيٌّ من الروافد التالية ينبع من هضبة الحبشة ويُشكّل المصدر الرئيس لفيضان النيل؟",
+      "textEn": null,
+      "correctAnswer": "النيل الأزرق",
+      "options": "[\"النيل الأبيض\", \"النيل الأزرق\", \"نهر عطبرة\", \"نهر السوباط\"]",
+      "explanation": "النيل الأزرق ينبع من بحيرة تانا في إثيوبيا ويُسهم بنحو 85٪ من مياه فيضان النيل. راجع قسم الأنهار.",
+      "imageUrl": null,
+      "tableData": null,
+      "source": "CUSTOM",
+      "sourceExamId": null,
+      "sourceDetails": null,
+      "sourceYear": null,
+      "difficulty": 2,
+      "cognitiveLevel": "RECALL",
+      "points": 1,
+      "estimatedSeconds": 30,
       "feedEligible": false
     }
   ],
