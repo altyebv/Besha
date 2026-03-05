@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -22,34 +21,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-/**
- * Represents the context in which the user is trying to leave.
- * Controls the tone — a lesson is low-stakes; an exam is high-stakes.
- */
 enum class ExitContext {
-    LESSON,     // Progress is saved, low stakes
-    PRACTICE,   // Session can be resumed or abandoned
-    EXAM,       // High stakes — time keeps running / can't return
+    LESSON,
+    PRACTICE,
+    EXAM,
 }
 
 /**
- * A reusable, context-aware exit confirmation dialog.
+ * Exit confirmation dialog.
  *
- * Usage:
- * ```
- * ExitConfirmationDialog(
- *     context = ExitContext.LESSON,
- *     onConfirm = { viewModel.pauseTimeTracking(); onBackClick() },
- *     onDismiss = { /* no-op */ }
- * )
- * ```
+ * @param forwardPull Optional teaser shown above the buttons — e.g. "الدرس القادم: الجاذبية العالمية".
+ *                    Only shown in LESSON context. Nudges the user to stay.
  */
 @Composable
 fun ExitConfirmationDialog(
     context: ExitContext,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    // Override defaults when needed (e.g., mid-exam with time remaining)
+    forwardPull: String? = null,
     titleOverride: String? = null,
     bodyOverride: String? = null,
     confirmLabelOverride: String? = null,
@@ -73,15 +62,12 @@ fun ExitConfirmationDialog(
             confirmLabel = confirmLabelOverride ?: strings.confirmLabel,
             dismissLabel = strings.dismissLabel,
             confirmIsDestructive = strings.confirmIsDestructive,
+            forwardPull = if (context == ExitContext.LESSON) forwardPull else null,
             onConfirm = onConfirm,
             onDismiss = onDismiss
         )
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Internal composables
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun ExitDialogContent(
@@ -93,9 +79,13 @@ private fun ExitDialogContent(
     confirmLabel: String,
     dismissLabel: String,
     confirmIsDestructive: Boolean,
+    forwardPull: String?,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val Amber = Color(0xFFF59E0B)
+    val AmberDeep = Color(0xFF78350F)
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -112,8 +102,7 @@ private fun ExitDialogContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-
-            // ── Icon bubble ───────────────────────────────────────────────
+            // Icon bubble
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -129,9 +118,8 @@ private fun ExitDialogContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // ── Title ─────────────────────────────────────────────────────
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
@@ -140,9 +128,8 @@ private fun ExitDialogContent(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(Modifier.height(10.dp))
 
-            // ── Body ──────────────────────────────────────────────────────
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
@@ -151,50 +138,69 @@ private fun ExitDialogContent(
                 lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.4f
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            // ── Forward pull nudge ────────────────────────────────────────────
+            if (forwardPull != null) {
+                Spacer(Modifier.height(14.dp))
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Amber.copy(alpha = 0.1f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "🎯",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = forwardPull,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = AmberDeep,
+                            fontWeight = FontWeight.Medium,
+                            lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.3f
+                        )
+                    }
+                }
+            }
 
-            // ── Buttons ───────────────────────────────────────────────────
+            Spacer(Modifier.height(28.dp))
+
+            // Buttons — dismiss (stay) is primary action in LESSON context
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Primary action — confirm exit (potentially destructive)
+                // Stay = primary
                 Button(
-                    onClick = onConfirm,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (confirmIsDestructive)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.primary
-                    )
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Text(
-                        text = confirmLabel,
+                        text = dismissLabel,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
 
-                // Secondary action — stay / keep going
+                // Exit = secondary / outlined
                 OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
+                    onClick = onConfirm,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(14.dp),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        width = 1.5.dp
-                    ),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
+                        contentColor = if (confirmIsDestructive)
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text(
-                        text = dismissLabel,
+                        text = confirmLabel,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -203,10 +209,6 @@ private fun ExitDialogContent(
         }
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// String & style configuration per context
-// ─────────────────────────────────────────────────────────────────────────────
 
 private data class ExitDialogStrings(
     val icon: ImageVector,
@@ -222,7 +224,6 @@ private data class ExitDialogStrings(
 @Composable
 private fun exitStrings(context: ExitContext): ExitDialogStrings {
     return when (context) {
-
         ExitContext.LESSON -> ExitDialogStrings(
             icon = Icons.Default.ExitToApp,
             iconTint = MaterialTheme.colorScheme.primary,
@@ -233,7 +234,6 @@ private fun exitStrings(context: ExitContext): ExitDialogStrings {
             dismissLabel = "متابعة القراءة",
             confirmIsDestructive = false
         )
-
         ExitContext.PRACTICE -> ExitDialogStrings(
             icon = Icons.Default.ExitToApp,
             iconTint = MaterialTheme.colorScheme.secondary,
@@ -244,7 +244,6 @@ private fun exitStrings(context: ExitContext): ExitDialogStrings {
             dismissLabel = "مواصلة التدريب",
             confirmIsDestructive = false
         )
-
         ExitContext.EXAM -> ExitDialogStrings(
             icon = Icons.Default.ExitToApp,
             iconTint = MaterialTheme.colorScheme.error,
