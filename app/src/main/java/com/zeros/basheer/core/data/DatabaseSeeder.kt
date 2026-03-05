@@ -37,6 +37,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -74,13 +76,33 @@ class DatabaseSeeder @Inject constructor(
     }
 
     /**
-     * Returns true if the lesson table is empty — used by MainActivity
-     * as a guard so seeding only runs on first install, not every launch.
+     * Returns true if the DB has never been seeded, OR the stored seed version
+     * differs from [version] — so content updates (new partIndex, new sections)
+     * are picked up on the next launch without requiring a full uninstall.
+     *
+     * Stored in the lessons table via a sentinel row count check + a lightweight
+     * SharedPreferences version stamp written by [seedFromAssets].
      */
     suspend fun isDatabaseEmpty(): Boolean = lessonDao.getLessonCount() == 0
 
+    fun getSeedVersion(context: Context): String =
+        context.getSharedPreferences("basheer_seed", Context.MODE_PRIVATE)
+            .getString("seed_version", "") ?: ""
+
+    fun saveSeedVersion(context: Context, version: String) =
+        context.getSharedPreferences("basheer_seed", Context.MODE_PRIVATE)
+            .edit().putString("seed_version", version).apply()
+
+    /** Combined guard: empty DB OR version changed. */
+    fun needsReseeding(context: Context, newVersion: String): Boolean {
+        val stored = getSeedVersion(context)
+        return stored != newVersion
+    }
+
     /**
-     * Seed lesson content from assets file
+     * Seed lesson content from assets file.
+     * Uses [upsert] mode: inserts new rows (IGNORE), then updates structural
+     * fields (partIndex, order, title) on existing rows — safe for section_progress.
      */
     suspend fun seedFromAssets(context: Context, fileName: String) {
         val jsonString = context.assets.open(fileName).bufferedReader().use { it.readText() }
@@ -115,7 +137,18 @@ class DatabaseSeeder @Inject constructor(
                 lessonDao.insertLesson(lesson.toEntity(unit.id))
 
                 lesson.sections.forEach { section ->
-                    sectionDao.insertSection(section.toEntity(lesson.id))
+                    val sectionEntity = section.toEntity(lesson.id)
+                    sectionDao.insertSection(sectionEntity)
+                    // Always update structural fields — safe even on first seed.
+                    // This ensures partIndex / order / title stay in sync when
+                    // content is updated without a full DB wipe.
+                    sectionDao.updateSectionStructure(
+                        id          = sectionEntity.id,
+                        title       = sectionEntity.title,
+                        order       = sectionEntity.order,
+                        partIndex   = sectionEntity.partIndex,
+                        learningType = sectionEntity.learningType.name
+                    )
 
                     // Insert section-concept links
                     section.conceptIds.forEachIndexed { index, conceptId ->
@@ -242,8 +275,13 @@ class DatabaseSeeder @Inject constructor(
                 Question(
                     id = question.id,
                     subjectId = question.subjectId,
-                    unitId = question.unitId,
-                    lessonId = question.lessonId,
+                    // Exam questions in Exams_.json are not tied to specific lesson/unit
+                    // rows — nullify to avoid FK constraint violations if those rows
+                    // haven't been seeded yet (or don't exist for this subject).
+                    unitId = null,
+                    lessonId = null,
+                    sectionId = null,
+                    isCheckpoint = question.isCheckpoint,
                     type = QuestionType.valueOf(question.type),
                     textAr = question.textAr,
                     textEn = question.textEn,
@@ -470,6 +508,8 @@ data class LessonJson(
     val order: Int,
     val estimatedMinutes: Int = 15,
     val summary: String? = null,
+    // Accepts both a plain string and a nested JSON object from the lesson files
+    val metadata: JsonElement? = null,
     val sections: List<SectionJson> = emptyList()
 ) {
     fun toEntity(unitId: String) = LessonEntity(
@@ -478,7 +518,14 @@ data class LessonJson(
         title = title,
         order = order,
         estimatedMinutes = estimatedMinutes,
-        summary = summary
+        summary = summary,
+        metadata = when {
+            metadata == null || metadata is JsonNull -> null
+            // Already a string literal in JSON → unwrap the quotes
+            metadata.toString().startsWith("\"") -> metadata.toString().removeSurrounding("\"")
+            // Nested object → store as-is (the mapper parses it with JSONObject)
+            else -> metadata.toString()
+        }
     )
 }
 
@@ -487,6 +534,7 @@ data class SectionJson(
     val id: String,
     val title: String,
     val order: Int,
+    val partIndex: Int = 0,
     val learningType: String = "UNDERSTANDING",
     val conceptIds: List<String> = emptyList(),
     val blocks: List<BlockJson> = emptyList()
@@ -496,6 +544,7 @@ data class SectionJson(
         lessonId = lessonId,
         title = title,
         order = order,
+        partIndex = partIndex,
         learningType = LearningType.valueOf(learningType)
     )
 }
@@ -540,6 +589,8 @@ data class QuestionJson(
     val cognitiveLevel: CognitiveLevel,
     val unitId: String? = null,
     val lessonId: String? = null,
+    val sectionId: String? = null,
+    val isCheckpoint: Boolean = false,
     val source: String? = null,
     val sourceExamId: String? = null,
     val sourceDetails: String? = null,
@@ -565,6 +616,8 @@ data class QuestionJson(
         difficulty = difficulty,
         points = points,
         lessonId = lessonId,
+        sectionId = sectionId,
+        isCheckpoint = isCheckpoint,
         source = QuestionSource.valueOf(source.toString()),
         sourceExamId = sourceExamId,
         sourceDetails = sourceDetails,
@@ -574,7 +627,6 @@ data class QuestionJson(
         updatedAt = updatedAt,
         estimatedSeconds = estimatedSeconds,
         cognitiveLevel = cognitiveLevel
-
     )
 }
 
@@ -687,6 +739,8 @@ data class QuizBankQuestionJson(
     val subjectId: String,
     val unitId: String?,
     val lessonId: String?,
+    val sectionId: String? = null,
+    val isCheckpoint: Boolean = false,
     val type: String,
     val textAr: String,
     val textEn: String?,

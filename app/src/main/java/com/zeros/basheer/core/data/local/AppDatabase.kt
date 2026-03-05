@@ -3,8 +3,8 @@ package com.zeros.basheer.core.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.zeros.basheer.feature.analytics.data.dao.AnalyticsEventDao          // ADD
-import com.zeros.basheer.feature.analytics.data.entity.AnalyticsEventEntity    // ADD
+import com.zeros.basheer.feature.analytics.data.dao.AnalyticsEventDao
+import com.zeros.basheer.feature.analytics.data.entity.AnalyticsEventEntity
 import com.zeros.basheer.feature.feed.data.dao.ContentVariantDao
 import com.zeros.basheer.feature.lesson.data.dao.BlockDao
 import com.zeros.basheer.feature.streak.data.dao.DailyActivityDao
@@ -70,13 +70,14 @@ import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
 
         // Progress tracking
         UserProgressEntity::class,
+        LessonPartProgressEntity::class,    // ← NEW: per-part completion
         ConceptReviewEntity::class,
         QuizAttemptEntity::class,
         QuestionResponseEntity::class,
         SectionProgressEntity::class,
         DailyActivityEntity::class,
     ],
-    version = 3,
+    version = 4,                            // ← BUMPED from 3
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -117,6 +118,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     // Progress tracking
     abstract fun progressDao(): ProgressDao
+    abstract fun lessonPartProgressDao(): LessonPartProgressDao   // ← NEW
     abstract fun conceptReviewDao(): ConceptReviewDao
     abstract fun quizAttemptDao(): QuizAttemptDao
     abstract fun questionResponseDao(): QuestionResponseDao

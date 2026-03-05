@@ -35,6 +35,9 @@ class LessonRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getNextLesson(lessonId: String): LessonDomain? =
+        lessonDao.getNextLesson(lessonId)?.toDomain()
+
 //    override suspend fun getLessonsByUnit(UnitId: String): Flow<List<LessonDomain>>{
 //        return lessonDao.getLessonsByUnit(UnitId)
 //            .map { entities -> entities.map { it.toDomain() } }
@@ -47,38 +50,12 @@ class LessonRepositoryImpl @Inject constructor(
 
     override suspend fun getLessonContent(lessonId: String): Result<com.zeros.basheer.domain.model.LessonContent> {
         return try {
-            val lesson = lessonDao.getLessonById(lessonId)
+            val full = lessonDao.getLessonFull(lessonId)
                 ?: return Result.Error("Lesson not found")
-
-            val sections = sectionDao.getSectionsByLessonId(lessonId)
-            val sectionIds = sections.map { it.id }
-            val blocks = if (sectionIds.isNotEmpty()) {
-                blockDao.getBlocksBySectionIds(sectionIds)
-            } else {
-                emptyList()
-            }
-
-            // Map to OLD UI model (SectionUiModel, BlockUiModel)
-            val sectionsUi = sections.map { section ->
-                com.zeros.basheer.domain.model.SectionUiModel(
-                    id = section.id,
-                    title = section.title,
-                    order = section.order,
-                    blocks = blocks.filter { it.sectionId == section.id }
-                        .sortedBy { it.order }
-                        .map { it.toBlockUiModel() }
-                )
-            }.sortedBy { it.order }
-
-            Result.Success(
-                com.zeros.basheer.domain.model.LessonContent(
-                    id = lesson.id,
-                    title = lesson.title,
-                    estimatedMinutes = lesson.estimatedMinutes,
-                    summary = lesson.summary,
-                    sections = sectionsUi
-                )
-            )
+            // LessonMapper correctly maps partIndex, learningType, metadata (hook/orientation/forwardPull)
+            // so every section carries its real partIndex — this is the fix for both the
+            // "part 0 = whole lesson complete" bug AND the missing intro card.
+            Result.Success(LessonMapper.toLessonContent(full))
         } catch (e: Exception) {
             Result.Error(e.message ?: "Unknown error", e)
         }
@@ -113,9 +90,14 @@ class LessonRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeLessonProgress(lessonId: String): Flow<Float> {
-        return progressDao.getProgressByLesson(lessonId)
+    override fun observeLessonProgress(lessonId: String): Flow<Float> =
+        progressDao.getProgressByLesson(lessonId)
             .map { it?.progress ?: 0f }
+
+    override suspend fun getPartCountsForLessons(lessonIds: List<String>): Map<String, Int> {
+        if (lessonIds.isEmpty()) return emptyMap()
+        return sectionDao.getPartCountsByLessonIds(lessonIds)
+            .associate { it.lessonId to it.partCount }
     }
 }
 
@@ -126,7 +108,8 @@ private fun LessonEntity.toDomain(): LessonDomain = LessonDomain(
     title = title,
     order = order,
     estimatedMinutes = estimatedMinutes,
-    summary = summary
+    summary = summary,
+    metadata = null   // LessonDomain used for list screens — metadata only needed in reader via LessonMapper
 )
 
 private fun BlockEntity.toDomain(): Block = Block(
