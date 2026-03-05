@@ -35,7 +35,7 @@ import com.zeros.basheer.feature.subject.domain.model.Units
 @Composable
 fun LessonsScreen(
     subjectId: String,
-    onLessonClick: (String) -> Unit,
+    onLessonClick: (String, Int) -> Unit,
     onBack: () -> Unit,
     viewModel: LessonsViewModel = hiltViewModel()
 ) {
@@ -112,6 +112,7 @@ fun LessonsScreen(
             else -> LessonsContent(
                 units = filteredUnits,
                 completedLessonIds = state.completedLessonIds,
+                nextPartByLesson = state.nextPartByLesson,
                 expandedUnits = expandedUnits,
                 onToggleUnit = { unitId ->
                     expandedUnits[unitId] = !(expandedUnits[unitId] ?: false)
@@ -129,9 +130,10 @@ fun LessonsScreen(
 private fun LessonsContent(
     units: List<Pair<Units, List<LessonDomain>>>,
     completedLessonIds: List<String>,
+    nextPartByLesson: Map<String, Int>,
     expandedUnits: Map<String, Boolean>,
     onToggleUnit: (String) -> Unit,
-    onLessonClick: (String) -> Unit,
+    onLessonClick: (String, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val totalLessons = units.sumOf { it.second.size }
@@ -170,6 +172,7 @@ private fun LessonsContent(
                 unitNumber = index + 1,
                 lessons = lessons.sortedBy { it.order },
                 completedLessonIds = completedLessonIds,
+                nextPartByLesson = nextPartByLesson,
                 nextLessonId = nextLessonId,
                 completedInUnit = completedInUnit,
                 isExpanded = isExpanded,
@@ -189,11 +192,12 @@ private fun LazyListScope.unitSection(
     unitNumber: Int,
     lessons: List<LessonDomain>,
     completedLessonIds: List<String>,
+    nextPartByLesson: Map<String, Int>,
     nextLessonId: String?,
     completedInUnit: Int,
     isExpanded: Boolean,
     onToggle: () -> Unit,
-    onLessonClick: (String) -> Unit
+    onLessonClick: (String, Int) -> Unit
 ) {
     item(key = "unit_header_${unit.id}") {
         UnitHeader(
@@ -220,12 +224,26 @@ private fun LazyListScope.unitSection(
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 lessons.forEachIndexed { lessonIndex, lesson ->
+                    val completedPartCount = if (completedLessonIds.contains(lesson.id)) {
+                        lesson.partCount
+                    } else {
+                        nextPartByLesson[lesson.id] ?: 0
+                    }
+
                     LessonRow(
                         lesson = lesson,
                         lessonNumber = lessonIndex + 1,
                         isCompleted = completedLessonIds.contains(lesson.id),
                         isNext = lesson.id == nextLessonId,
-                        onClick = { onLessonClick(lesson.id) }
+                        onClick = {
+                            val targetPart = if (completedLessonIds.contains(lesson.id)) {
+                                0 // re-read
+                            } else {
+                                nextPartByLesson[lesson.id] ?: 0
+                            }
+                            onLessonClick(lesson.id, targetPart)
+                        },
+                        completedPartCount = completedPartCount
                     )
                     // Subtle divider between rows — not after last
                     if (lessonIndex < lessons.lastIndex) {
