@@ -5,7 +5,8 @@ package com.zeros.basheer.feature.user.domain.model
  * Also carries the base XP value for that action.
  */
 enum class XpSource(val baseXp: Int) {
-    LESSON_COMPLETE(20),       // First time completing a lesson
+    LESSON_COMPLETE(20),       // First time completing a lesson (all parts done)
+    LESSON_PART_COMPLETE(5),   // First time completing a single mid-lesson part
     LESSON_REPEAT(5),          // Completing an already-completed lesson
     CARD_REVIEWED(2),          // Reviewing a feed card (any answer)
     CARD_CORRECT(3),           // Answering a feed card correctly (stacks with CARD_REVIEWED)
