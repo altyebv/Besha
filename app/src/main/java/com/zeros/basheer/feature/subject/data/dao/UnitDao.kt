@@ -21,10 +21,10 @@ interface UnitDao {
     @Query("SELECT * FROM units WHERE subjectId = :subjectId ORDER BY `order`")
     fun getUnitsWithLessons(subjectId: String): Flow<List<UnitWithLessons>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertUnit(unit: UnitEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertUnits(units: List<UnitEntity>)
 
     @Delete

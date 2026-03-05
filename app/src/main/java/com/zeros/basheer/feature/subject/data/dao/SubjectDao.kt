@@ -20,19 +20,21 @@ interface SubjectDao {
     @Query("SELECT * FROM subjects WHERE id = :subjectId")
     suspend fun getSubjectById(subjectId: String): SubjectEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(subject: SubjectEntity)
 
     @Transaction
     @Query("SELECT * FROM subjects WHERE id = :subjectId")
     suspend fun getSubjectWithUnits(subjectId: String): SubjectWithUnits?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSubject(subject: SubjectEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSubjects(subjects: List<SubjectEntity>)
 
+    @Query("SELECT COUNT(*) FROM subjects")
+    suspend fun getSubjectCount(): Int
     @Delete
     suspend fun deleteSubject(subject: SubjectEntity)
 

@@ -43,6 +43,11 @@ class SubjectRepositoryImpl @Inject constructor(
         subjectDao.insertSubject(subjectDomainToEntity(subject))
     }
 
+    override suspend fun getSubjectCount(): Int {
+        return subjectDao.getSubjectCount()
+    }
+
+
     override suspend fun insertSubjects(subjects: List<Subject>) {
         subjectDao.insertSubjects(subjects.map { subjectDomainToEntity(it) })
     }
