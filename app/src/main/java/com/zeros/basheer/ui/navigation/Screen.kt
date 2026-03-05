@@ -13,8 +13,13 @@ sealed class Screen(val route: String) {
     object QuizBank : Screen("quizbank")
     object Profile : Screen("profile")
 
-    object LessonReader : Screen("lesson/{lessonId}") {
-        fun createRoute(lessonId: String) = "lesson/$lessonId"
+    /**
+     * partIndex defaults to 0. LessonsScreen passes the next incomplete part index
+     * so the user always lands on the right part when tapping a lesson.
+     */
+    object LessonReader : Screen("lesson/{lessonId}?part={partIndex}") {
+        fun createRoute(lessonId: String, partIndex: Int = 0) =
+            "lesson/$lessonId?part=$partIndex"
     }
 
     object ExamEntry : Screen("exam_entry/{examId}") {

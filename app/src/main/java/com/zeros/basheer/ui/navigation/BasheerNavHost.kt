@@ -88,8 +88,9 @@ fun BasheerNavHost(
                 lastSubjectId = subjectId
                 LessonsScreen(
                     subjectId = subjectId,
-                    onLessonClick = { lessonId ->
-                        navController.navigate(Screen.LessonReader.createRoute(lessonId))
+                    // Now receives lessonId + nextIncompletePart from the ViewModel
+                    onLessonClick = { lessonId, partIndex ->
+                        navController.navigate(Screen.LessonReader.createRoute(lessonId, partIndex))
                     },
                     onBack = { navController.popBackStack() }
                 )
@@ -100,21 +101,31 @@ fun BasheerNavHost(
         composable(
             route = Screen.LessonReader.route,
             arguments = listOf(
-                navArgument("lessonId") { type = NavType.StringType }
+                navArgument("lessonId") { type = NavType.StringType },
+                navArgument("partIndex") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
             )
         ) { backStackEntry ->
             val lessonId = backStackEntry.arguments?.getString("lessonId") ?: return@composable
+            val partIndex = backStackEntry.arguments?.getInt("partIndex") ?: 0
             LessonReaderScreen(
                 lessonId = lessonId,
-                onBackClick = { navController.popBackStack() }
+                initialPartIndex = partIndex,
+                onBackClick = { navController.popBackStack() },
+                onNavigateToNextPart = { nextPartIndex ->
+                    // Pop current part, push next part — clean back stack
+                    navController.navigate(Screen.LessonReader.createRoute(lessonId, nextPartIndex)) {
+                        popUpTo(Screen.LessonReader.route) { inclusive = true }
+                    }
+                }
             )
         }
 
         // ── Feed ──────────────────────────────────────────────────────────────
         composable(Screen.Feeds.route) {
-            FeedsScreen(
-                onClose = { navController.popBackStack() }
-            )
+            FeedsScreen(onClose = { navController.popBackStack() })
         }
 
         // ── Quiz Bank ─────────────────────────────────────────────────────────
@@ -132,27 +143,21 @@ fun BasheerNavHost(
 
         // ── Edit Profile ──────────────────────────────────────────────────────
         composable(Screen.EditProfile.route) {
-            EditProfileScreen(
-                onBack = { navController.popBackStack() }
-            )
+            EditProfileScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Settings ──────────────────────────────────────────────────────────
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onEditProfile = {
-                    navController.navigate(Screen.EditProfile.route)
-                }
+                onEditProfile = { navController.navigate(Screen.EditProfile.route) }
             )
         }
 
         // ── Practice ──────────────────────────────────────────────────────────
         composable(
             route = "practice/{sessionId}",
-            arguments = listOf(
-                navArgument("sessionId") { type = NavType.LongType }
-            )
+            arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
         ) {
             PracticeSessionScreen(
                 onNavigateBack = { navController.popBackStack() },
@@ -168,11 +173,8 @@ fun BasheerNavHost(
         // ── Exam Entry ────────────────────────────────────────────────────────
         composable(
             route = Screen.ExamEntry.route,
-            arguments = listOf(
-                navArgument("examId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val examId = backStackEntry.arguments?.getString("examId") ?: return@composable
+            arguments = listOf(navArgument("examId") { type = NavType.StringType })
+        ) {
             ExamEntryScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onStartExam = { id ->
@@ -188,13 +190,9 @@ fun BasheerNavHost(
             route = Screen.ExamSession.route,
             arguments = listOf(
                 navArgument("examId") { type = NavType.StringType },
-                navArgument("strictMode") {
-                    type = NavType.BoolType
-                    defaultValue = false
-                }
+                navArgument("strictMode") { type = NavType.BoolType; defaultValue = false }
             )
-        ) { backStackEntry ->
-            val examId = backStackEntry.arguments?.getString("examId") ?: return@composable
+        ) {
             ExamSessionScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onExamComplete = { attemptId ->
@@ -208,16 +206,12 @@ fun BasheerNavHost(
         // ── Exam Result ───────────────────────────────────────────────────────
         composable(
             route = Screen.ExamResult.route,
-            arguments = listOf(
-                navArgument("attemptId") { type = NavType.LongType }
-            )
+            arguments = listOf(navArgument("attemptId") { type = NavType.LongType })
         ) { backStackEntry ->
             val attemptId = backStackEntry.arguments?.getLong("attemptId") ?: return@composable
             ExamResultScreen(
                 attemptId = attemptId,
-                onExit = {
-                    navController.popBackStack(Screen.QuizBank.route, inclusive = false)
-                },
+                onExit = { navController.popBackStack(Screen.QuizBank.route, inclusive = false) },
                 onRetry = { navController.popBackStack() }
             )
         }
