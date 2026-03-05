@@ -50,9 +50,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ── Seed database (first launch only) ────────────────────────────────
+        // ── Seed database ─────────────────────────────────────────────────────
+        // Guard: runs on first install (empty DB) OR when SEED_VERSION changes.
+        // Bump SEED_VERSION in the string below whenever JSON content is updated
+        // so structural changes (partIndex, new sections, etc.) propagate to
+        // existing installs without a manual app-data clear.
+        val SEED_VERSION = "1.1"
         lifecycleScope.launch {
-            if (seeder.isDatabaseEmpty()) {
+            if (seeder.isDatabaseEmpty() || seeder.needsReseeding(this@MainActivity, SEED_VERSION)) {
                 try {
                     seeder.seedFromAssets(this@MainActivity, "geographyy.json")
                     seeder.seedFromAssets(this@MainActivity, "military.json")
@@ -61,7 +66,8 @@ class MainActivity : ComponentActivity() {
                     seeder.seedFromAssets(this@MainActivity, "arabic.json")
                     seeder.seedFromAssets(this@MainActivity, "islamic.json")
                     seeder.seedQuizBankFromAssets(this@MainActivity)
-                    Log.d("Seeder", "Database seeded successfully!")
+                    seeder.saveSeedVersion(this@MainActivity, SEED_VERSION)
+                    Log.d("Seeder", "Database seeded successfully! (v$SEED_VERSION)")
                 } catch (e: Exception) {
                     Log.e("Seeder", "Seeding failed", e)
                 }
