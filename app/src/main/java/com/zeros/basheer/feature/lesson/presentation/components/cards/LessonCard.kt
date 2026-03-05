@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
@@ -45,9 +46,10 @@ fun LessonRow(
     lessonNumber: Int,
     isCompleted: Boolean,
     isNext: Boolean,
+    completedPartCount: Int = 0,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
-) {
+){
     val isDone = isCompleted
     val rowBg = when {
         isDone -> Success.copy(alpha = 0.05f)
@@ -84,7 +86,7 @@ fun LessonRow(
             isNext = isNext
         )
 
-        // ── Title + optional partial progress ─────────────────────────────
+        // ── Title + optional partial progress / part indicator ────────────
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -103,28 +105,59 @@ fun LessonRow(
                 overflow = TextOverflow.Ellipsis
             )
 
-            // Partial read progress bar — only when started but not done
+            // Partial read progress indicator — shown when started but not done
             if (!isDone && lesson.progress > 0f) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    LinearProgressIndicator(
-                        progress = { lesson.progress },
-                        modifier = Modifier
-                            .width(64.dp)
-                            .height(2.dp)
-                            .clip(MaterialTheme.shapes.small),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    Text(
-                        text = "تابع",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                if (lesson.partCount > 1 && completedPartCount > 0) {
+                    // Multi-part: show which part to resume instead of a generic bar
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                        Text(
+                            text       = "استمر من الجزء ${completedPartCount + 1}",
+                            style      = MaterialTheme.typography.labelSmall,
+                            color      = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                } else {
+                    // Single-part or not yet started any part: simple progress bar
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        LinearProgressIndicator(
+                            progress    = { lesson.progress },
+                            modifier    = Modifier
+                                .width(64.dp)
+                                .height(2.dp)
+                                .clip(MaterialTheme.shapes.small),
+                            color       = MaterialTheme.colorScheme.primary,
+                            trackColor  = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        Text(
+                            text       = "تابع",
+                            style      = MaterialTheme.typography.labelSmall,
+                            color      = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
+            }
+
+            // Part pills — shown when lesson has more than one part
+            if (lesson.partCount > 1) {
+                LessonPartProgress(
+                    completedParts = completedPartCount,
+                    totalParts = lesson.partCount,
+                    isLessonComplete = isCompleted
+                )
             }
         }
 
@@ -180,5 +213,66 @@ private fun LessonStatusCircle(
                 color = contentColor
             )
         }
+    }
+}
+
+// ── Part pills ─────────────────────────────────────────────────────────────────
+
+/**
+ * Segmented part-progress track shown below the lesson title when [totalParts] > 1.
+ *
+ * Visual states:
+ * - All done (isLessonComplete) → all segments amber, "مكتمل ✓" label
+ * - In progress                 → filled segments amber, empty segments faded
+ * - Not started                 → all segments faded amber, "X أجزاء" label
+ *
+ * Segments are connected (no gap at start/end) to read as a single track,
+ * with 3dp gaps between each segment.
+ */
+@Composable
+private fun LessonPartProgress(
+    completedParts: Int,
+    totalParts: Int,
+    isLessonComplete: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val Amber = Color(0xFFF59E0B)
+    val inProgress = completedParts > 0 && !isLessonComplete
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Segment track
+        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            repeat(totalParts) { index ->
+                val filled = isLessonComplete || index < completedParts
+                Box(
+                    modifier = Modifier
+                        .width(14.dp)
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(1.5.dp))
+                        .background(if (filled) Amber else Amber.copy(alpha = 0.18f))
+                )
+            }
+        }
+
+        // Label
+        Text(
+            text = when {
+                isLessonComplete -> "$totalParts / $totalParts ✓"
+                inProgress       -> "$completedParts / $totalParts"
+                else             -> "$totalParts أجزاء"
+            },
+            style      = MaterialTheme.typography.labelSmall,
+            fontSize   = 10.sp,
+            color      = when {
+                isLessonComplete -> Success.copy(alpha = 0.75f)
+                inProgress       -> Amber
+                else             -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+            },
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
