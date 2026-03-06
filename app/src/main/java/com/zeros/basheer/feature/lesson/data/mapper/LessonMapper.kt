@@ -26,6 +26,7 @@ object LessonMapper {
             title = lessonFull.lessonEntity.title,
             estimatedMinutes = lessonFull.lessonEntity.estimatedMinutes,
             summary = lessonFull.lessonEntity.summary,
+            unitId = lessonFull.lessonEntity.unitId,
             metadata = parseLessonMetadata(lessonFull.lessonEntity.metadata),
             sections = lessonFull.sections
                 .sortedBy { it.sectionEntity.order }

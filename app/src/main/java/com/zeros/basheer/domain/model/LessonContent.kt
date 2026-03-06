@@ -16,6 +16,8 @@ data class LessonContent(
     val estimatedMinutes: Int,
     val summary: String?,
     val sections: List<SectionUiModel>,
+    /** The unit this lesson belongs to — mirrors [LessonEntity.unitId]. */
+    val unitId: String = "",
     /** Parsed lesson metadata (hook, orientation, forwardPull). Null if not authored. */
     val metadata: LessonMetadata? = null
 )
