@@ -140,6 +140,28 @@ class PracticeRepositoryImpl @Inject constructor(
         )
     }
 
+
+    override suspend fun createSessionFromQuestionIds(
+        subjectId: String,
+        questionIds: List<String>,
+        generationType: PracticeGenerationType,
+        shuffled: Boolean
+    ): Long {
+        val orderedIds = if (shuffled) questionIds.shuffled() else questionIds
+
+        val session = PracticeSessionEntity(
+            subjectId = subjectId,
+            generationType = generationType.name,
+            questionCount = orderedIds.size,
+            shuffled = shuffled
+        )
+
+        return practiceSessionDao.createSessionWithQuestions(
+            session = session,
+            questionIds = orderedIds
+        )
+    }
+
     override suspend fun recordAnswer(
         sessionId: Long,
         questionId: String,

@@ -37,6 +37,22 @@ interface PracticeRepository {
         filterSource: String? = null
     ): Long
 
+
+    /**
+     * Create a practice session from an explicit, pre-ranked list of question IDs.
+     *
+     * Use this instead of [createPracticeSession] when the caller has already done
+     * the selection logic (e.g. [GetWeakAreaQuestionsUseCase]) and just needs a
+     * session container. The question order is preserved — pass them ranked by
+     * priority if ordering matters (weak areas: worst first).
+     */
+    suspend fun createSessionFromQuestionIds(
+        subjectId: String,
+        questionIds: List<String>,
+        generationType: PracticeGenerationType = PracticeGenerationType.WEAK_AREAS,
+        shuffled: Boolean = true
+    ): Long
+
     suspend fun recordAnswer(
         sessionId: Long,
         questionId: String,

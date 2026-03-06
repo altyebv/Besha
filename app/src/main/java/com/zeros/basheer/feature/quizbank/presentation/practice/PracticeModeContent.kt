@@ -11,7 +11,10 @@ import com.zeros.basheer.feature.quizbank.domain.model.QuestionCounts
 internal fun PracticeModeContent(
     questionCounts: QuestionCounts?,
     averageScore: Float?,
-    onStartPractice: (PracticeGenerationType) -> Unit
+    weakAreaCount: Int,
+    isWeakAreaLoading: Boolean,
+    onStartPractice: (PracticeGenerationType) -> Unit,
+    onStartWeakAreaSession: () -> Unit
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -19,7 +22,9 @@ internal fun PracticeModeContent(
     ) {
         SmartRecommendationCard(
             averageScore = averageScore,
-            onStart = { onStartPractice(PracticeGenerationType.WEAK_AREAS) }
+            weakAreaCount = weakAreaCount,
+            isLoading = isWeakAreaLoading,
+            onStart = onStartWeakAreaSession
         )
 
         QuickModeStrip(onStartPractice = onStartPractice)
