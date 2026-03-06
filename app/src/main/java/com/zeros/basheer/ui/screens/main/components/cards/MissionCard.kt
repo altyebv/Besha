@@ -1,13 +1,16 @@
 package com.zeros.basheer.ui.screens.main.components.cards
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,13 +30,15 @@ import com.zeros.basheer.ui.screens.main.components.foundation.MainColors
 /**
  * Mission card — the primary call-to-action on the home screen.
  *
+ * Only rendered after [isRecommendationLoaded] is true (gated in MainDashboardContent),
+ * so [recommendation] == null here means the engine genuinely found nothing to suggest
+ * (all caught up), never a loading race condition.
+ *
  * Design intent:
  * Each mission is visually branded with the subject's own accent color.
  * The badge (URGENT / HOT_STREAK / QUICK_WIN etc.) anchors context.
  * The `reason` from the recommendation engine is used as the subtitle —
  * it tells the student *why* this is recommended, not just what it is.
- *
- * Empty state (no recommendation): warm "all caught up" encouragement.
  */
 @Composable
 fun MissionCard(
@@ -42,14 +47,38 @@ fun MissionCard(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (recommendation == null) {
-        AllCaughtUpCard(modifier = modifier)
-        return
-    }
+    // Animate in on first composition — gives the card a satisfying entrance
+    // after the engine resolves rather than just popping in.
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
 
-    val subjectColor = MainColors.subjectColorByName(
-        recommendation.subject.nameAr, 0
-    )
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(300)) + slideInVertically(tween(350)) { it / 4 }
+    ) {
+        if (recommendation == null) {
+            AllCaughtUpCard(modifier = modifier)
+        } else {
+            RecommendationCard(
+                recommendation = recommendation,
+                onActionClick = onActionClick,
+                onDismiss = onDismiss,
+                modifier = modifier
+            )
+        }
+    }
+}
+
+// ── Active recommendation ──────────────────────────────────────────────────────
+
+@Composable
+private fun RecommendationCard(
+    recommendation: ScoredRecommendation,
+    onActionClick: (ScoredRecommendation) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val subjectColor = MainColors.subjectColorByName(recommendation.subject.nameAr, 0)
     val subjectEmoji = MainColors.subjectEmoji(recommendation.subject.nameAr)
     val rec = recommendation.recommendation
 
@@ -57,12 +86,8 @@ fun MissionCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = subjectColor.copy(alpha = 0.08f)
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.5.dp, subjectColor.copy(alpha = 0.2f)
-        )
+        colors = CardDefaults.cardColors(containerColor = subjectColor.copy(alpha = 0.08f)),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, subjectColor.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
@@ -76,14 +101,8 @@ fun MissionCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                MissionBadgeChip(
-                    badge = recommendation.badge,
-                    color = subjectColor
-                )
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.size(32.dp)
-                ) {
+                MissionBadgeChip(badge = recommendation.badge, color = subjectColor)
+                IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "تجاهل",
@@ -98,7 +117,6 @@ fun MissionCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Top
             ) {
-                // Subject emoji in a tinted circle
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -113,21 +131,18 @@ fun MissionCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Subject name — small label above title
                     Text(
                         text = recommendation.subject.nameAr,
                         style = MaterialTheme.typography.labelMedium,
                         color = subjectColor,
                         fontWeight = FontWeight.SemiBold
                     )
-                    // Mission title — the main action
                     Text(
                         text = missionTitle(rec),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    // Reason — why this is recommended (from engine)
                     Text(
                         text = recommendation.reason,
                         style = MaterialTheme.typography.bodySmall,
@@ -136,21 +151,15 @@ fun MissionCard(
                 }
             }
 
-            // ── Progress indicator for continue-type missions ─────────────
-            if (rec is Recommendation.ContinueLesson) {
-                LinearProgressIndicator(
-                    progress = { rec.progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(5.dp)
-                        .clip(MaterialTheme.shapes.small),
-                    color = subjectColor,
-                    trackColor = subjectColor.copy(alpha = 0.15f)
-                )
+            // ── Progress bar for continue/complete missions ───────────────
+            val progress: Float? = when (rec) {
+                is Recommendation.ContinueLesson -> rec.progress
+                is Recommendation.CompleteUnit   -> rec.percentComplete
+                else                             -> null
             }
-            if (rec is Recommendation.CompleteUnit) {
+            if (progress != null) {
                 LinearProgressIndicator(
-                    progress = { rec.percentComplete },
+                    progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(5.dp)
@@ -179,11 +188,7 @@ fun MissionCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(8.dp))
-                Text(
-                    text = missionCta(rec),
-                    style = MaterialTheme.typography.labelLarge
-                )
-                // Time estimate on the right when available
+                Text(text = missionCta(rec), style = MaterialTheme.typography.labelLarge)
                 missionTimeLabel(rec)?.let { time ->
                     Spacer(Modifier.weight(1f))
                     Text(
@@ -198,6 +203,8 @@ fun MissionCard(
 }
 
 // ── All caught up empty state ──────────────────────────────────────────────────
+// Only shown when the recommendation engine genuinely has nothing to suggest —
+// never as a loading placeholder (that case is gated at the parent level).
 
 @Composable
 private fun AllCaughtUpCard(modifier: Modifier = Modifier) {
@@ -206,9 +213,7 @@ private fun AllCaughtUpCard(modifier: Modifier = Modifier) {
         shape = MaterialTheme.shapes.extraLarge,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = SuccessContainer),
-        border = androidx.compose.foundation.BorderStroke(
-            1.5.dp, Success.copy(alpha = 0.3f)
-        )
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, Success.copy(alpha = 0.3f))
     ) {
         Row(
             modifier = Modifier
@@ -270,34 +275,34 @@ private fun MissionBadgeChip(badge: RecommendationBadge, color: Color) {
 // ── Copy helpers ───────────────────────────────────────────────────────────────
 
 private fun missionTitle(rec: Recommendation): String = when (rec) {
-    is Recommendation.ContinueLesson   -> rec.lessonTitle
-    is Recommendation.CompleteUnit     -> "أكمل: ${rec.unitTitle}"
-    is Recommendation.StartNewUnit     -> "ابدأ: ${rec.unitTitle}"
-    is Recommendation.QuickReview      -> "مراجعة سريعة — ${rec.questionCount} سؤال"
+    is Recommendation.ContinueLesson    -> rec.lessonTitle
+    is Recommendation.CompleteUnit      -> "أكمل: ${rec.unitTitle}"
+    is Recommendation.StartNewUnit      -> "ابدأ: ${rec.unitTitle}"
+    is Recommendation.QuickReview       -> "مراجعة سريعة — ${rec.questionCount} سؤال"
     is Recommendation.ReviewWeakConcept -> rec.conceptName
-    is Recommendation.StreakAtRisk     -> "سلسلتك في خطر! ${rec.hoursUntilLoss} ساعات متبقية"
+    is Recommendation.StreakAtRisk      -> "سلسلتك في خطر! ${rec.hoursUntilLoss} ساعات متبقية"
 }
 
 private fun missionCta(rec: Recommendation): String = when (rec) {
-    is Recommendation.ContinueLesson   -> "متابعة الدرس"
-    is Recommendation.StartNewUnit     -> "ابدأ الآن"
-    is Recommendation.CompleteUnit     -> "أكمل الوحدة"
-    is Recommendation.QuickReview      -> "ابدأ المراجعة"
+    is Recommendation.ContinueLesson    -> "متابعة الدرس"
+    is Recommendation.StartNewUnit      -> "ابدأ الآن"
+    is Recommendation.CompleteUnit      -> "أكمل الوحدة"
+    is Recommendation.QuickReview       -> "ابدأ المراجعة"
     is Recommendation.ReviewWeakConcept -> "راجع المفهوم"
-    is Recommendation.StreakAtRisk     -> "حافظ على السلسلة"
+    is Recommendation.StreakAtRisk      -> "حافظ على السلسلة"
 }
 
 private fun missionIcon(rec: Recommendation): ImageVector = when (rec) {
-    is Recommendation.ContinueLesson   -> Icons.Default.PlayArrow
-    is Recommendation.StartNewUnit     -> Icons.Default.PlayCircle
-    is Recommendation.CompleteUnit     -> Icons.Default.CheckCircle
-    is Recommendation.QuickReview      -> Icons.Default.Refresh
+    is Recommendation.ContinueLesson    -> Icons.Default.PlayArrow
+    is Recommendation.StartNewUnit      -> Icons.Default.PlayCircle
+    is Recommendation.CompleteUnit      -> Icons.Default.CheckCircle
+    is Recommendation.QuickReview       -> Icons.Default.Refresh
     is Recommendation.ReviewWeakConcept -> Icons.Default.Quiz
-    is Recommendation.StreakAtRisk     -> Icons.Default.LocalFireDepartment
+    is Recommendation.StreakAtRisk      -> Icons.Default.LocalFireDepartment
 }
 
 private fun missionTimeLabel(rec: Recommendation): String? = when (rec) {
-    is Recommendation.ContinueLesson   -> "${rec.estimatedMinutes} د"
-    is Recommendation.QuickReview      -> "${rec.estimatedMinutes} د"
-    else -> null
+    is Recommendation.ContinueLesson -> "${rec.estimatedMinutes} د"
+    is Recommendation.QuickReview    -> "${rec.estimatedMinutes} د"
+    else                             -> null
 }
