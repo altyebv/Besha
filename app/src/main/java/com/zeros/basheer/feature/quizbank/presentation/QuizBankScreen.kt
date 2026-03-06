@@ -32,6 +32,10 @@ fun QuizBankScreen(
                     navController.navigate(Screen.Practice.createRoute(event.sessionId))
                 is QuizBankViewModel.NavigationEvent.NavigateToExam ->
                     navController.navigate(Screen.ExamEntry.createRoute(event.examId))
+                is QuizBankViewModel.NavigationEvent.NavigateToPracticeBuilder ->
+                    navController.navigate(
+                        Screen.PracticeBuilder.createRoute(event.subjectId, event.mode)
+                    )
             }
         }
     }
@@ -113,6 +117,9 @@ fun QuizBankScreen(
                     },
                     onStartWeakAreaSession = {
                         viewModel.onEvent(QuizBankEvent.StartWeakAreaSession)
+                    },
+                    onOpenBuilder = { mode ->
+                        viewModel.onEvent(QuizBankEvent.OpenPracticeBuilder(mode))
                     }
                 )
             }
