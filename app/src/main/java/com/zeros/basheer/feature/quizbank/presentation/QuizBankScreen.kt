@@ -29,7 +29,7 @@ fun QuizBankScreen(
         viewModel.navigationEvent.collect { event ->
             when (event) {
                 is QuizBankViewModel.NavigationEvent.NavigateToPractice ->
-                    navController.navigate("practice/${event.sessionId}")
+                    navController.navigate(Screen.Practice.createRoute(event.sessionId))
                 is QuizBankViewModel.NavigationEvent.NavigateToExam ->
                     navController.navigate(Screen.ExamEntry.createRoute(event.examId))
             }
@@ -106,8 +106,13 @@ fun QuizBankScreen(
                 QuizMode.PRACTICE -> PracticeModeContent(
                     questionCounts = state.questionCounts,
                     averageScore = state.averageScore,
+                    weakAreaCount = state.weakAreaCount,
+                    isWeakAreaLoading = state.isWeakAreaLoading,
                     onStartPractice = { type ->
                         viewModel.onEvent(QuizBankEvent.StartPracticeSession(generationType = type))
+                    },
+                    onStartWeakAreaSession = {
+                        viewModel.onEvent(QuizBankEvent.StartWeakAreaSession)
                     }
                 )
             }
