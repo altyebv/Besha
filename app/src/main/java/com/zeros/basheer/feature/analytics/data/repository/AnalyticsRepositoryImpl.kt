@@ -7,6 +7,7 @@ import com.google.firebase.firestore.SetOptions
 import com.zeros.basheer.feature.analytics.data.dao.AnalyticsEventDao
 import com.zeros.basheer.feature.analytics.data.entity.AnalyticsEventEntity
 import com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
+import com.zeros.basheer.feature.analytics.domain.model.BasheerError
 import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
@@ -65,6 +66,16 @@ class AnalyticsRepositoryImpl @Inject constructor(
         val entity = AnalyticsEventEntity(
             eventType = event::class.simpleName ?: "Unknown",
             payload = event.toJson(),
+            dateBucket = todayBucket(),
+            sessionId = _currentSessionId,
+        )
+        dao.insert(entity)
+    }
+
+    override suspend fun enqueueError(error: BasheerError) {
+        val entity = AnalyticsEventEntity(
+            eventType = error::class.simpleName ?: "Unknown",
+            payload = error.toJson(),
             dateBucket = todayBucket(),
             sessionId = _currentSessionId,
         )
@@ -279,6 +290,86 @@ private fun BasheerEvent.toJson(): String = when (this) {
         put("streakDays", streakDays)
         put("streakLevel", streakLevel)
     }
+}.toString()
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BasheerError → JSON serialization
+// Mirrors BasheerEvent.toJson() directly below. Same rules: manual mapping,
+// no reflection, no extra deps. Nullable fields use ?.let { put(...) }.
+// ─────────────────────────────────────────────────────────────────────────────
+
+private fun BasheerError.toJson(): String = when (this) {
+
+    is BasheerError.CheckpointAttempted -> JSONObject().apply {
+        put("questionId", questionId)
+        put("lessonId", lessonId)
+        put("sectionId", sectionId)
+        put("subjectId", subjectId)
+        put("unitId", unitId)
+        put("partIndex", partIndex)
+        put("questionType", questionType)
+        put("userAnswer", userAnswer)
+        put("correctAnswer", correctAnswer)
+        put("isCorrect", isCorrect)
+        put("timeSpentSeconds", timeSpentSeconds)
+    }
+
+    is BasheerError.FeedQuestionAnswered -> JSONObject().apply {
+        put("questionId", questionId)
+        put("feedCardId", feedCardId)
+        put("subjectId", subjectId)
+        conceptId?.let { put("conceptId", it) }
+        put("questionType", questionType)
+        put("userAnswer", userAnswer)
+        put("correctAnswer", correctAnswer)
+        put("isCorrect", isCorrect)
+        put("timeSpentSeconds", timeSpentSeconds)
+        put("cardPositionInSession", cardPositionInSession)
+        put("srIntervalDaysBefore", srIntervalDaysBefore)
+    }
+
+    is BasheerError.PracticeQuestionAnswered -> JSONObject().apply {
+        put("questionId", questionId)
+        put("sessionId", sessionId)
+        put("subjectId", subjectId)
+        unitId?.let { put("unitId", it) }
+        lessonId?.let { put("lessonId", it) }
+        put("questionType", questionType)
+        put("generationType", generationType)
+        put("userAnswer", userAnswer)
+        put("correctAnswer", correctAnswer)
+        put("isCorrect", isCorrect)
+        put("wasSkipped", wasSkipped)
+        put("timeSpentSeconds", timeSpentSeconds)
+        put("positionInSession", positionInSession)
+        put("attemptNumber", attemptNumber)
+        put("difficulty", difficulty)
+        put("cognitiveLevel", cognitiveLevel)
+    }
+
+    is BasheerError.ExamQuestionEvaluated -> JSONObject().apply {
+        put("questionId", questionId)
+        put("attemptId", attemptId)
+        put("examId", examId)
+        put("subjectId", subjectId)
+        put("examType", examType)
+        sectionTitle?.let { put("sectionTitle", it) }
+        put("questionType", questionType)
+        put("userAnswer", userAnswer)
+        put("correctAnswer", correctAnswer)
+        put("isCorrect", isCorrect)
+        put("wasUnanswered", wasUnanswered)
+        put("wasFlagged", wasFlagged)
+        put("positionInExam", positionInExam)
+        put("pointsAwarded", pointsAwarded)
+        put("pointsAvailable", pointsAvailable)
+        put("difficulty", difficulty)
+        put("cognitiveLevel", cognitiveLevel)
+        put("source", source)
+        sourceYear?.let { put("sourceYear", it) }
+    }
+
 }.toString()
 
 /** JSONObject → Map<String, Any> for Firestore. */

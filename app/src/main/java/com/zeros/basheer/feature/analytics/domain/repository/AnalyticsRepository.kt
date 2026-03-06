@@ -1,5 +1,6 @@
 package com.zeros.basheer.feature.analytics.domain.repository
 
+import com.zeros.basheer.feature.analytics.domain.model.BasheerError
 import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
 
 interface AnalyticsRepository {
@@ -12,10 +13,20 @@ interface AnalyticsRepository {
     val installId: String
 
     /**
-     * Enqueue a single event to the local Room queue.
+     * Enqueue a single behavioural event to the local Room queue.
      * This is fire-and-forget — the caller does not wait for Firestore.
      */
     suspend fun enqueue(event: BasheerEvent)
+
+    /**
+     * Enqueue a single learning-quality error record to the local Room queue.
+     * Errors (wrong answers, skips, unanswered exam questions) share the same
+     * Room table and Firestore sync path as events — only the [eventType]
+     * discriminator differs (e.g. "CheckpointAttempted", "PracticeQuestionAnswered").
+     *
+     * Fire-and-forget — same contract as [enqueue].
+     */
+    suspend fun enqueueError(error: BasheerError)
 
     /**
      * Upload all unsynced events to Firestore, grouped into one document per day.
