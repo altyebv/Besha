@@ -9,7 +9,6 @@ import com.zeros.basheer.feature.streak.data.entity.StreakLevel
 import com.zeros.basheer.feature.streak.domain.model.StreakStatus
 import com.zeros.basheer.domain.recommendation.RecommendationEngine
 import com.zeros.basheer.feature.analytics.AnalyticsManager
-import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
 import com.zeros.basheer.feature.progress.domain.repository.ProgressRepository
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
@@ -25,7 +24,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -60,9 +58,18 @@ data class MainScreenState(
     // Smart recommendations
     val topRecommendation: ScoredRecommendation? = null,
     val secondaryRecommendations: List<ScoredRecommendation> = emptyList(),
+    // Guards MissionCard from flashing AllCaughtUpCard on launch before the
+    // recommendation engine has had a chance to run. loadRecommendations() runs
+    // on its own coroutine and completes after isLoading flips to false.
+    val isRecommendationLoaded: Boolean = false,
     val focusCardDismissed: Boolean = false,
     val userName: String = "",
-    val xpSummary: XpSummary? = null
+    val xpSummary: XpSummary? = null,
+    // Guards DailyGoalBar from rendering before the first todayActivity emission.
+    // todayActivity loads on a separate coroutine — without this flag, there's a
+    // brief window where isLoading=false but todayActivity=null, causing the bar
+    // to flash "ابدأ درسك الأول اليوم" even on return visits with prior activity.
+    val isDailyActivityLoaded: Boolean = false
 )
 
 @HiltViewModel
@@ -77,10 +84,7 @@ class MainViewModel @Inject constructor(
     private val userProfileRepository: UserProfileRepository,
     private val getUserXpUseCase: GetUserXpUseCase,
     private val analyticsManager: AnalyticsManager,
-    private val analyticsRepository: AnalyticsRepository,
-
-
-    ) : ViewModel() {
+) : ViewModel() {
 
     companion object {
         private const val PREF_FOCUS_DISMISSED_DATE = "focus_card_dismissed_date"
@@ -98,19 +102,6 @@ class MainViewModel @Inject constructor(
         if (dismissedDate == todayDate) {
             _state.update { it.copy(focusCardDismissed = true) }
         }
-        viewModelScope.launch {
-            // Fire a test event
-            analyticsManager.lessonViewed(
-                lessonId = "test_lesson",
-                subjectId = "test_subject",
-                unitId = "test_unit",
-            )
-
-            // Force immediate upload (remove this after confirming)
-            delay(1000) // give the queue time to write to Room
-            analyticsRepository.uploadPendingBatches()
-        }
-
         loadData()
         observeStreakStatus()
         observeTodayActivity()
@@ -206,7 +197,7 @@ class MainViewModel @Inject constructor(
     private fun observeTodayActivity() {
         viewModelScope.launch {
             streakRepository.getTodayActivityFlow().collect { activity ->
-                _state.update { it.copy(todayActivity = activity) }
+                _state.update { it.copy(todayActivity = activity, isDailyActivityLoaded = true) }
             }
         }
     }
@@ -222,7 +213,8 @@ class MainViewModel @Inject constructor(
                 _state.update { current ->
                     current.copy(
                         topRecommendation = recommendations.firstOrNull(),
-                        secondaryRecommendations = recommendations.drop(1)
+                        secondaryRecommendations = recommendations.drop(1),
+                        isRecommendationLoaded = true
                     )
                 }
 
@@ -231,6 +223,7 @@ class MainViewModel @Inject constructor(
             } catch (e: Exception) {
                 // If recommendations fail, don't crash - just continue without them
                 e.printStackTrace()
+                _state.update { it.copy(isRecommendationLoaded = true) }
             }
         }
     }
