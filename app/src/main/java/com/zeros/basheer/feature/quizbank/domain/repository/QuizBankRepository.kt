@@ -89,6 +89,19 @@ interface QuizBankRepository {
     suspend fun insertStats(stats: QuestionStats)
     suspend fun updateStats(stats: QuestionStats)
 
+
+    /**
+     * Returns [QuestionStats] for weak questions in a subject, ranked by weakness severity.
+     * Excludes checkpoints and questions with fewer than [minAttempts] attempts.
+     * Intended as input for [GetWeakAreaQuestionsUseCase].
+     */
+    suspend fun getWeakQuestionsForSubject(
+        subjectId: String,
+        minAttempts: Int = 3,
+        threshold: Float = 0.6f,
+        limit: Int = 50
+    ): List<QuestionStats>
+
     // ==================== Convenience Methods ====================
 
     suspend fun startQuizAttempt(examId: String): Long

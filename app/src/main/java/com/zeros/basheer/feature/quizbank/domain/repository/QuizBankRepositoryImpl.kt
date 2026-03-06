@@ -222,6 +222,20 @@ class QuizBankRepositoryImpl @Inject constructor(
     override fun getEasiestQuestions(limit: Int): Flow<List<QuestionStats>> =
         questionStatsDao.getEasiestQuestions(limit).map { it.map { e -> e.toDomain() } }
 
+
+    override suspend fun getWeakQuestionsForSubject(
+        subjectId: String,
+        minAttempts: Int,
+        threshold: Float,
+        limit: Int
+    ): List<QuestionStats> =
+        questionStatsDao.getWeakQuestionsForSubject(
+            subjectId = subjectId,
+            minAttempts = minAttempts,
+            threshold = threshold,
+            limit = limit
+        ).map { it.toDomain() }
+
     override suspend fun insertStats(stats: QuestionStats) =
         questionStatsDao.insertStats(stats.toEntity())
 
