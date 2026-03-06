@@ -43,6 +43,17 @@ sealed class Screen(val route: String) {
     }
 
     /**
+     * Practice session builder — full screen filter selector.
+     * [subjectId] scopes available units/concepts to the right subject.
+     * [initialMode] pre-selects the mode chip (e.g. BY_UNIT from quick strip).
+     */
+    object PracticeBuilder : Screen("practice_builder?subjectId={subjectId}&mode={mode}") {
+        const val baseRoute = "practice_builder"
+        fun createRoute(subjectId: String, mode: String = "CUSTOM") =
+            "practice_builder?subjectId=$subjectId&mode=$mode"
+    }
+
+    /**
      * Quiz bank screen. [subjectId] is optional.
      * - Bottom nav: navigate to [route] directly — no subject context.
      * - From a recommendation: use [createRoute] with a subjectId — scopes the screen
