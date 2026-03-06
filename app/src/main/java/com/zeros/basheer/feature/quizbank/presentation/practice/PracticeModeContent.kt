@@ -14,7 +14,8 @@ internal fun PracticeModeContent(
     weakAreaCount: Int,
     isWeakAreaLoading: Boolean,
     onStartPractice: (PracticeGenerationType) -> Unit,
-    onStartWeakAreaSession: () -> Unit
+    onStartWeakAreaSession: () -> Unit,
+    onOpenBuilder: (PracticeGenerationType) -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -27,10 +28,15 @@ internal fun PracticeModeContent(
             onStart = onStartWeakAreaSession
         )
 
-        QuickModeStrip(onStartPractice = onStartPractice)
+        QuickModeStrip(
+            onStartPractice = onStartPractice,
+            onOpenBuilder = onOpenBuilder,
+            onStartWeakArea = onStartWeakAreaSession,
+        )
 
+        // "Build custom session" entry — opens builder in full screen
         CustomSessionEntry(
-            onClick = { onStartPractice(PracticeGenerationType.CUSTOM) }
+            onClick = { onOpenBuilder(PracticeGenerationType.CUSTOM) }
         )
 
         if (questionCounts != null) {
