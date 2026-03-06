@@ -91,7 +91,10 @@ private fun handleRecommendationAction(
             navController?.navigate(Screen.QuizBank.route)
         }
         is Recommendation.ReviewWeakConcept -> {
-            navController?.navigate("practice/${rec.subject.id}/${r.conceptId}")
+            // Navigate to QuizBank scoped to this subject.
+            // QuizBankViewModel will auto-launch a WEAK_AREAS session
+            // via StartWeakAreaSession event (triggered from SmartRecommendationCard).
+            navController?.navigate(Screen.QuizBank.createRoute(rec.subject.id))
         }
         is Recommendation.CompleteUnit -> {
             onSubjectClick(rec.subject.id)
