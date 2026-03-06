@@ -1,5 +1,6 @@
 package com.zeros.basheer.feature.quizbank.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
@@ -9,6 +10,7 @@ import com.zeros.basheer.feature.quizbank.domain.model.Exam
 import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionCounts
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
+import com.zeros.basheer.feature.practice.domain.usecase.GetWeakAreaQuestionsUseCase
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -26,6 +28,8 @@ data class QuizBankState(
     val completedSessionCount: Int = 0,
     val selectedTab: QuizBankTab = QuizBankTab.MINISTRY_EXAMS,
     val isLoading: Boolean = true,
+    val weakAreaCount: Int = 0,      // Weak questions in the current subject
+    val isWeakAreaLoading: Boolean = false,
     val error: String? = null
 )
 
@@ -48,13 +52,21 @@ sealed class QuizBankEvent {
         val filterDifficulty: IntRange? = null
     ) : QuizBankEvent()
     data class ResumeSession(val sessionId: Long) : QuizBankEvent()
+    /**
+     * Launch a WEAK_AREAS session for the current subject.
+     * Handled by [GetWeakAreaQuestionsUseCase] — bypasses the filter path.
+     * Emits [NavigateToPractice] or sets [QuizBankState.error] if no weak questions found.
+     */
+    object StartWeakAreaSession : QuizBankEvent()
     object Refresh : QuizBankEvent()
 }
 
 @HiltViewModel
 class QuizBankViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val quizBankRepository: QuizBankRepository,
-    private val practiceRepository: PracticeRepository  // ADD THIS
+    private val practiceRepository: PracticeRepository,
+    private val getWeakAreaQuestions: GetWeakAreaQuestionsUseCase,
 ) : ViewModel() {
 
     sealed class NavigationEvent {
@@ -68,7 +80,14 @@ class QuizBankViewModel @Inject constructor(
     private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
-    private val currentSubjectId = "geography"
+    /**
+     * Subject context for this screen instance.
+     * Passed as nav arg when launched from a recommendation (subject-specific).
+     * Falls back to the first subject in the user's path when opened from bottom nav.
+     * TODO: replace fallback with user's most-recently-studied subject once that's tracked.
+     */
+    private val currentSubjectId: String
+        get() = savedStateHandle.get<String>("subjectId") ?: "geography"
 
     init {
         loadData()
@@ -94,6 +113,9 @@ class QuizBankViewModel @Inject constructor(
             }
             is QuizBankEvent.ResumeSession -> {
                 resumeSession(event.sessionId)
+            }
+            QuizBankEvent.StartWeakAreaSession -> {
+                startWeakAreaSession()
             }
             QuizBankEvent.Refresh -> {
                 loadData()
@@ -156,6 +178,12 @@ class QuizBankViewModel @Inject constructor(
                 .catch { e -> _state.update { it.copy(error = e.message) } }
                 .collect { count -> _state.update { it.copy(completedSessionCount = count) } }
         }
+
+        // Weak area count — drives the badge on the SmartRecommendationCard
+        viewModelScope.launch {
+            val weakStats = getWeakAreaQuestions.getWeakStats(currentSubjectId)
+            _state.update { it.copy(weakAreaCount = weakStats.size) }
+        }
     }
 
     private fun startExam(examId: String) {
@@ -194,6 +222,29 @@ class QuizBankViewModel @Inject constructor(
                 _state.update { it.copy(activeSession = activeSession) }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private fun startWeakAreaSession() {
+        viewModelScope.launch {
+            try {
+                _state.update { it.copy(isWeakAreaLoading = true) }
+                val sessionId = getWeakAreaQuestions(
+                    subjectId = currentSubjectId,
+                    maxQuestions = 20,
+                    shuffled = true,
+                )
+                if (sessionId != null) {
+                    _navigationEvent.emit(NavigationEvent.NavigateToPractice(sessionId))
+                } else {
+                    // No qualifying weak questions yet — student hasn't answered enough
+                    _state.update { it.copy(error = "لا توجد أسئلة ضعيفة كافية بعد — أجب على المزيد من الأسئلة أولاً") }
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            } finally {
+                _state.update { it.copy(isWeakAreaLoading = false) }
             }
         }
     }

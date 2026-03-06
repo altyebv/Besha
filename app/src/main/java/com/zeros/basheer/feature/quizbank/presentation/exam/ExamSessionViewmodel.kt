@@ -3,6 +3,7 @@ package com.zeros.basheer.feature.quizbank.presentation.exam
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.ErrorTracker
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.quizbank.domain.model.*
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
@@ -36,7 +37,7 @@ data class ExamSessionState(
     val timeRemainingSeconds: Int = 0,
     val isTimerRunning: Boolean = false,
     val showTimeWarning: Boolean = false,
-    val timeWarningMinutes: Int = 0,  // Which warning threshold was hit
+    val timeWarningMinutes: Int = 0,
 
     // Answers
     val answers: Map<String, String> = emptyMap(),  // questionId -> userAnswer
@@ -104,6 +105,7 @@ class ExamSessionViewModel @Inject constructor(
     private val awardXpUseCase: AwardXpUseCase,
     private val recordQuestionResponseUseCase: RecordQuestionResponseUseCase,
     private val streakRepository: StreakRepository,
+    private val errorTracker: ErrorTracker,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -150,8 +152,7 @@ class ExamSessionViewModel @Inject constructor(
                 android.util.Log.d("ExamSession", "Exam loaded: ${exam.id}, sectionsJson=${exam.sectionsJson?.take(100)}")
                 android.util.Log.d("ExamSession", "Sections parsed: ${sections.size} sections, IDs: ${sections.map { it.questionIds }}")
 
-                // Load questions - prefer direct ID lookup from sections (more reliable
-                // than the exam_questions junction table which may not be fully populated)
+                // Load questions - prefer direct ID lookup from sections
                 val questions = if (sections.isNotEmpty()) {
                     val questionIds = sections.flatMap { it.questionIds }
                     android.util.Log.d("ExamSession", "Loading ${questionIds.size} question IDs from sections: $questionIds")
@@ -194,7 +195,6 @@ class ExamSessionViewModel @Inject constructor(
                     )
                 }
 
-                // Start timer
                 startTimer()
 
             } catch (e: Exception) {
@@ -302,7 +302,6 @@ class ExamSessionViewModel @Inject constructor(
         val nextIndex = _state.value.currentQuestionIndex + 1
 
         if (nextIndex < _state.value.questions.size) {
-            // Update section index if needed
             val newSectionIndex = findSectionForQuestionIndex(nextIndex)
 
             _state.update {
@@ -383,12 +382,14 @@ class ExamSessionViewModel @Inject constructor(
     private fun submitExam() {
         viewModelScope.launch {
             try {
-                val attemptId = _state.value.attemptId ?: return@launch
-                val totalTime = (_state.value.exam?.duration ?: 180) * 60 - _state.value.timeRemainingSeconds
+                val state = _state.value
+                val attemptId = state.attemptId ?: return@launch
+                val exam = state.exam ?: return@launch
+                val totalTime = (exam.duration ?: 180) * 60 - state.timeRemainingSeconds
 
                 // Calculate score
                 val score = calculateScore()
-                val totalPoints = _state.value.exam?.totalPoints ?: 100
+                val totalPoints = exam.totalPoints ?: 100
 
                 // Complete attempt
                 completeQuizAttemptUseCase(
@@ -401,6 +402,12 @@ class ExamSessionViewModel @Inject constructor(
                 // Record exam completion for streak
                 streakRepository.recordExamCompleted()
                 awardXpUseCase(XpSource.EXAM_COMPLETE, attemptId.toString())
+
+                // ── Error tracking — record every question outcome ─────────────
+                // We do this after completeQuizAttemptUseCase so the attempt is
+                // already persisted before the error records reference it.
+                recordExamQuestionOutcomes(state, attemptId, exam)
+                // ──────────────────────────────────────────────────────────────
 
                 // Stop timer
                 timerJob?.cancel()
@@ -421,11 +428,12 @@ class ExamSessionViewModel @Inject constructor(
 
     private fun autoSubmitExam(status: ExamAttemptStatus) {
         viewModelScope.launch {
+            val state = _state.value
             val score = calculateScore()
-            val totalPoints = _state.value.exam?.totalPoints ?: 100
-            val totalTime = (_state.value.exam?.duration ?: 180) * 60
+            val totalPoints = state.exam?.totalPoints ?: 100
+            val totalTime = (state.exam?.duration ?: 180) * 60
 
-            _state.value.attemptId?.let { attemptId ->
+            state.attemptId?.let { attemptId ->
                 try {
                     completeQuizAttemptUseCase(
                         attemptId = attemptId,
@@ -434,6 +442,11 @@ class ExamSessionViewModel @Inject constructor(
                         timeSpentSeconds = totalTime,
                         status = status.name
                     )
+
+                    // Error tracking fires for auto-submit too (TIME_EXPIRED, DISQUALIFIED)
+                    state.exam?.let { exam ->
+                        recordExamQuestionOutcomes(state, attemptId, exam)
+                    }
                 } catch (e: Exception) {
                     println("Failed to auto-submit: ${e.message}")
                 }
@@ -442,6 +455,52 @@ class ExamSessionViewModel @Inject constructor(
             timerJob?.cancel()
             gracePeriodJob?.cancel()
             _state.update { it.copy(isComplete = true, isTimerRunning = false) }
+        }
+    }
+
+    /**
+     * Iterates every question in the exam and records its outcome to [ErrorTracker].
+     * Called from both [submitExam] and [autoSubmitExam] so no surface is missed.
+     *
+     * Questions with no answer in [state.answers] are recorded as [wasUnanswered]=true.
+     * The section title is resolved by looking up which [ExamSection] owns each question id.
+     */
+    private fun recordExamQuestionOutcomes(
+        state: ExamSessionState,
+        attemptId: Long,
+        exam: Exam,
+    ) {
+        state.questions.forEachIndexed { index, question ->
+            val userAnswer   = state.answers[question.id] ?: ""
+            val wasUnanswered = userAnswer.isBlank()
+            val isCorrect    = !wasUnanswered && userAnswer.trim() == question.correctAnswer.trim()
+
+            // Resolve the section title this question belongs to
+            val sectionTitle = state.sections
+                .firstOrNull { it.questionIds.contains(question.id) }
+                ?.title
+
+            errorTracker.examQuestionEvaluated(
+                questionId      = question.id,
+                attemptId       = attemptId,
+                examId          = exam.id,
+                subjectId       = question.subjectId,
+                examType        = exam.examType!!.name,
+                sectionTitle    = sectionTitle,
+                questionType    = question.type.name,
+                userAnswer      = userAnswer,
+                correctAnswer   = question.correctAnswer,
+                isCorrect       = isCorrect,
+                wasUnanswered   = wasUnanswered,
+                wasFlagged      = state.flaggedQuestions.contains(question.id),
+                positionInExam  = index,
+                pointsAwarded   = if (isCorrect) question.points else 0,
+                pointsAvailable = question.points,
+                difficulty      = question.difficulty,
+                cognitiveLevel  = question.cognitiveLevel.name,
+                source          = question.source.name,
+                sourceYear      = question.sourceYear,
+            )
         }
     }
 
@@ -490,7 +549,7 @@ class ExamSessionViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     isInGracePeriod = false,
-                    showViolationWarningDialog = true  // Show warning on first offense
+                    showViolationWarningDialog = true
                 )
             }
         }

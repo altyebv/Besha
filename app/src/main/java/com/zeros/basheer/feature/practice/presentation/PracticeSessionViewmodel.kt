@@ -3,6 +3,7 @@ package com.zeros.basheer.feature.practice.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.ErrorTracker
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.practice.domain.model.PracticeSession
 import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
@@ -69,6 +70,7 @@ class PracticeSessionViewModel @Inject constructor(
     private val practiceRepository: PracticeRepository,
     private val streakRepository: StreakRepository,
     private val awardXpUseCase: AwardXpUseCase,
+    private val errorTracker: ErrorTracker,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -173,7 +175,7 @@ class PracticeSessionViewModel @Inject constructor(
                 )
 
                 // 2. Update question stats (global performance tracking)
-                updateQuestionStats(
+                val stats = updateQuestionStats(
                     questionId = currentQuestion.id,
                     isCorrect = isCorrect,
                     timeSeconds = timeSpent
@@ -182,6 +184,26 @@ class PracticeSessionViewModel @Inject constructor(
                 // 3. Update streak (questions answered + time spent)
                 streakRepository.recordQuestionsAnswered(1)
                 streakRepository.recordTimeSpent(timeSpent.toLong())
+
+                // 4. Error tracking — record outcome for weak-spot analysis
+                errorTracker.practiceQuestionAnswered(
+                    questionId        = currentQuestion.id,
+                    sessionId         = sessionId,
+                    subjectId         = currentQuestion.subjectId,
+                    unitId            = currentQuestion.unitId,
+                    lessonId          = currentQuestion.lessonId,
+                    questionType      = currentQuestion.type.name,
+                    generationType    = _state.value.session?.generationType?.name ?: "UNKNOWN",
+                    userAnswer        = answer,
+                    correctAnswer     = currentQuestion.correctAnswer,
+                    isCorrect         = isCorrect,
+                    wasSkipped        = false,
+                    timeSpentSeconds  = timeSpent,
+                    positionInSession = _state.value.currentQuestionIndex,
+                    attemptNumber     = (stats?.timesAsked ?: 1),
+                    difficulty        = currentQuestion.difficulty,
+                    cognitiveLevel    = currentQuestion.cognitiveLevel.name,
+                )
 
                 // Update local stats
                 _state.update {
@@ -223,10 +245,32 @@ class PracticeSessionViewModel @Inject constructor(
      */
     private fun skipQuestion() {
         val currentQuestion = _state.value.currentQuestion ?: return
+        val timeSpent = ((System.currentTimeMillis() - _state.value.questionStartTime) / 1000).toInt()
 
         viewModelScope.launch {
             try {
                 practiceRepository.skipQuestion(sessionId, currentQuestion.id)
+
+                // Error tracking — skips are a meaningful weak-signal
+                val stats = quizBankRepository.getStatsForQuestion(currentQuestion.id)
+                errorTracker.practiceQuestionAnswered(
+                    questionId        = currentQuestion.id,
+                    sessionId         = sessionId,
+                    subjectId         = currentQuestion.subjectId,
+                    unitId            = currentQuestion.unitId,
+                    lessonId          = currentQuestion.lessonId,
+                    questionType      = currentQuestion.type.name,
+                    generationType    = _state.value.session?.generationType?.name ?: "UNKNOWN",
+                    userAnswer        = "",
+                    correctAnswer     = currentQuestion.correctAnswer,
+                    isCorrect         = false,
+                    wasSkipped        = true,
+                    timeSpentSeconds  = timeSpent,
+                    positionInSession = _state.value.currentQuestionIndex,
+                    attemptNumber     = (stats?.timesAsked ?: 0) + 1,
+                    difficulty        = currentQuestion.difficulty,
+                    cognitiveLevel    = currentQuestion.cognitiveLevel.name,
+                )
 
                 _state.update {
                     it.copy(skippedCount = it.skippedCount + 1)
@@ -310,29 +354,22 @@ class PracticeSessionViewModel @Inject constructor(
 
     /**
      * Update global question stats for performance tracking.
-     * This data powers:
-     * - Success rate per question
-     * - Average time per question
-     * - Weak areas detection
-     * - Adaptive question selection
+     * Returns the updated stats so callers can read [timesAsked] for error tracking.
      */
     private suspend fun updateQuestionStats(
         questionId: String,
         isCorrect: Boolean,
         timeSeconds: Int
-    ) {
-        try {
-            // Get existing stats or create new
+    ): QuestionStats? {
+        return try {
             val stats = quizBankRepository.getStatsForQuestion(questionId)
                 ?: QuestionStats.forNewQuestion(questionId)
-
-            // Update with new response
             val updatedStats = stats.withNewResponse(isCorrect, timeSeconds)
-
-            // Save back to database
             quizBankRepository.updateStats(updatedStats)
+            updatedStats
         } catch (e: Exception) {
             println("Failed to update question stats: ${e.message}")
+            null
         }
     }
 }

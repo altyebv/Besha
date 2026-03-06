@@ -2,6 +2,7 @@ package com.zeros.basheer.feature.feed.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.ErrorTracker
 import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.feature.feed.domain.model.FeedItemType
@@ -35,7 +36,10 @@ data class FeedsState(
     val cardsViewed: Int = 0,
     val correctAnswers: Int = 0,
     val wrongAnswers: Int = 0,
-    val sessionComplete: Boolean = false
+    val sessionComplete: Boolean = false,
+
+    // Tracks when the current card became visible — used for per-card time measurement
+    val cardShownAtMs: Long = System.currentTimeMillis(),
 )
 
 @HiltViewModel
@@ -45,6 +49,7 @@ class FeedsViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
     private val recordCardsReviewedUseCase: RecordCardsReviewedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
+    private val errorTracker: ErrorTracker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedsState())
@@ -59,7 +64,7 @@ class FeedsViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, emptyReason = null) }
             when (val result = buildFeedSession()) {
                 is FeedSessionResult.Success    ->
-                    _state.update { it.copy(feedCards = result.cards, isLoading = false) }
+                    _state.update { it.copy(feedCards = result.cards, isLoading = false, cardShownAtMs = System.currentTimeMillis()) }
                 is FeedSessionResult.NoSubjects ->
                     _state.update { it.copy(feedCards = emptyList(), isLoading = false, emptyReason = FeedEmptyReason.NO_SUBJECTS) }
                 is FeedSessionResult.NoContent  ->
@@ -72,7 +77,8 @@ class FeedsViewModel @Inject constructor(
         _state.update {
             it.copy(
                 currentIndex = index,
-                cardInteractionState = CardInteractionState.Idle
+                cardInteractionState = CardInteractionState.Idle,
+                cardShownAtMs = System.currentTimeMillis()
             )
         }
     }
@@ -80,6 +86,7 @@ class FeedsViewModel @Inject constructor(
     fun onAnswer(answer: String) {
         val currentCard = _state.value.feedCards.getOrNull(_state.value.currentIndex) ?: return
         val isCorrect   = answer.equals(currentCard.correctAnswer, ignoreCase = true)
+        val timeSpent   = ((System.currentTimeMillis() - _state.value.cardShownAtMs) / 1000).toInt()
 
         _state.update {
             it.copy(
@@ -103,6 +110,30 @@ class FeedsViewModel @Inject constructor(
             }
 
             if (isCorrect) awardXpUseCase(XpSource.CARD_CORRECT)
+
+            // ── Error tracking ────────────────────────────────────────────────
+            // Only record quiz-type cards — definition/formula cards don't have
+            // a correct/wrong answer so they're not meaningful error signals.
+            if (currentCard.type == FeedItemType.MINI_QUIZ && currentCard.correctAnswer != null) {
+                val questionId = currentCard.id.removePrefix("quiz_")
+                val srInterval = conceptRepository.getReviewByConcept(currentCard.conceptId)
+                    ?.intervalDays ?: 1
+
+                errorTracker.feedQuestionAnswered(
+                    questionId            = questionId,
+                    feedCardId            = currentCard.id,
+                    subjectId             = currentCard.subjectId,
+                    conceptId             = currentCard.conceptId,
+                    questionType          = currentCard.interactionType?.name ?: "MCQ",
+                    userAnswer            = answer,
+                    correctAnswer         = currentCard.correctAnswer,
+                    isCorrect             = isCorrect,
+                    timeSpentSeconds      = timeSpent,
+                    cardPositionInSession = _state.value.currentIndex,
+                    srIntervalDaysBefore  = srInterval,
+                )
+            }
+            // ─────────────────────────────────────────────────────────────────
         }
     }
 
@@ -112,6 +143,7 @@ class FeedsViewModel @Inject constructor(
 
     fun onSelfRate(knew: Boolean) {
         val currentCard = _state.value.feedCards.getOrNull(_state.value.currentIndex) ?: return
+        val timeSpent   = ((System.currentTimeMillis() - _state.value.cardShownAtMs) / 1000).toInt()
 
         _state.update {
             it.copy(
@@ -129,6 +161,31 @@ class FeedsViewModel @Inject constructor(
             val rating = if (knew) Rating.GOOD else Rating.HARD
             conceptRepository.recordReview(currentCard.conceptId, rating)
             if (knew) awardXpUseCase(XpSource.CARD_CORRECT)
+
+            // ── Error tracking — flash card self-rate ─────────────────────────
+            // FLASH_CARD self-rating is a valid learning signal: "didn't know"
+            // on a flash card is conceptually equivalent to a wrong answer.
+            // We use the conceptId as the questionId since flash cards don't
+            // originate from the quiz bank.
+            if (currentCard.type == FeedItemType.FLASH_CARD) {
+                val srInterval = conceptRepository.getReviewByConcept(currentCard.conceptId)
+                    ?.intervalDays ?: 1
+
+                errorTracker.feedQuestionAnswered(
+                    questionId            = currentCard.conceptId,  // concept as surrogate id
+                    feedCardId            = currentCard.id,
+                    subjectId             = currentCard.subjectId,
+                    conceptId             = currentCard.conceptId,
+                    questionType          = "FLASH_CARD_SELF_RATE",
+                    userAnswer            = if (knew) "knew" else "didnt_know",
+                    correctAnswer         = "knew",                 // "knew" is always the target
+                    isCorrect             = knew,
+                    timeSpentSeconds      = timeSpent,
+                    cardPositionInSession = _state.value.currentIndex,
+                    srIntervalDaysBefore  = srInterval,
+                )
+            }
+            // ─────────────────────────────────────────────────────────────────
         }
     }
 
@@ -171,7 +228,8 @@ class FeedsViewModel @Inject constructor(
                 wrongAnswers         = 0,
                 sessionComplete      = false,
                 emptyReason          = null,
-                cardInteractionState = CardInteractionState.Idle
+                cardInteractionState = CardInteractionState.Idle,
+                cardShownAtMs        = System.currentTimeMillis()
             )
         }
         loadFeedSession()

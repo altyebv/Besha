@@ -7,6 +7,7 @@ import com.zeros.basheer.core.domain.model.Result
 import com.zeros.basheer.core.math.KatexRenderer
 import com.zeros.basheer.domain.model.LessonContent
 import com.zeros.basheer.domain.model.SectionUiModel
+import com.zeros.basheer.feature.analytics.ErrorTracker
 import com.zeros.basheer.feature.concept.domain.model.Concept
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
@@ -37,16 +38,19 @@ import javax.inject.Inject
 /**
  * Inline state for a single checkpoint gate within the lesson reader.
  *
- * @param question  The checkpoint question (MCQ or ORDER).
- * @param selected  The answer the user has tapped/arranged but not yet confirmed.
- * @param submitted True once the user hits "تحقق" — reveals correct/wrong feedback.
- * @param isCorrect Null until submitted.
+ * @param question       The checkpoint question (MCQ or ORDER).
+ * @param selected       The answer the user has tapped/arranged but not yet confirmed.
+ * @param submitted      True once the user hits "تحقق" — reveals correct/wrong feedback.
+ * @param isCorrect      Null until submitted.
+ * @param renderTimeMs   Epoch millis when this checkpoint card became visible.
+ *                       Used to compute [timeSpentSeconds] for error tracking.
  */
 data class CheckpointUiState(
     val question: Question,
     val selected: String? = null,
     val submitted: Boolean = false,
-    val isCorrect: Boolean? = null
+    val isCorrect: Boolean? = null,
+    val renderTimeMs: Long = System.currentTimeMillis(),  // ← NEW: for time tracking
 )
 
 data class LessonReaderState(
@@ -115,6 +119,7 @@ class LessonReaderViewModel @Inject constructor(
     private val recordLessonCompletedUseCase: RecordLessonCompletedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
     private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
+    private val errorTracker: ErrorTracker,           // ← NEW
     val katexRenderer: KatexRenderer,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -147,7 +152,6 @@ class LessonReaderViewModel @Inject constructor(
                         .sorted()
                     val totalParts = allParts.size.coerceAtLeast(1)
 
-                    // Filter sections to the current part only
                     val partSections = content.sections
                         .filter { it.partIndex == initialPartIndex }
                         .sortedBy { it.order }
@@ -158,8 +162,6 @@ class LessonReaderViewModel @Inject constructor(
                             currentPartSections = partSections,
                             totalParts = totalParts,
                             forwardPull = content.metadata?.forwardPull,
-                            // Show the full-screen intro gate only for part 0 when
-                            // the lesson has a hook or orientation list authored.
                             showIntroCard = initialPartIndex == 0 &&
                                     (content.metadata?.hook != null ||
                                             content.metadata?.orientation?.isNotEmpty() == true),
@@ -212,7 +214,9 @@ class LessonReaderViewModel @Inject constructor(
         viewModelScope.launch {
             val checkpointMap = quizBankRepository.getCheckpointsForPart(lessonId, initialPartIndex)
             _state.update {
-                it.copy(checkpoints = checkpointMap.mapValues { (_, q) -> CheckpointUiState(question = q) })
+                it.copy(checkpoints = checkpointMap.mapValues { (_, q) ->
+                    CheckpointUiState(question = q, renderTimeMs = System.currentTimeMillis())
+                })
             }
         }
     }
@@ -263,22 +267,12 @@ class LessonReaderViewModel @Inject constructor(
 
     // ── Scroll tracking ───────────────────────────────────────────────────────
 
-    /**
-     * Called by the LazyColumn's scroll state observer.
-     * We detect "end" by checking if the last item in the list is visible —
-     * more reliable than 95% heuristic in variable-height content.
-     */
     fun onReachedEnd() {
         if (!_state.value.hasScrolledToEnd) {
             _state.update { it.copy(hasScrolledToEnd = true) }
         }
     }
 
-    /**
-     * Called when the user scrolls back up and the last item is no longer visible.
-     * Hides the sticky finish bar so it only shows when the user is truly at the bottom.
-     * Has no effect once the completion modal is already showing.
-     */
     fun onScrolledAwayFromEnd() {
         if (!_state.value.showCompletionModal) {
             _state.update { it.copy(hasScrolledToEnd = false) }
@@ -287,7 +281,6 @@ class LessonReaderViewModel @Inject constructor(
 
     // ── Intro gate ────────────────────────────────────────────────────────────
 
-    /** Called when user taps "ابدأ الدرس" on the full-screen hook/orientation intro card. */
     fun dismissIntro() {
         _state.update { it.copy(showIntroCard = false) }
     }
@@ -325,6 +318,28 @@ class LessonReaderViewModel @Inject constructor(
             else               -> false
         }
 
+        // ── Error tracking ────────────────────────────────────────────────────
+        // Compute time from when the card rendered to when the student submitted.
+        val timeSpentSeconds = ((System.currentTimeMillis() - cpState.renderTimeMs) / 1000)
+            .toInt()
+            .coerceAtLeast(0)
+
+        val content = _state.value.lessonContent
+        errorTracker.checkpointAttempted(
+            questionId       = cpState.question.id,
+            lessonId         = lessonId,
+            sectionId        = sectionId,
+            subjectId        = cpState.question.subjectId,
+            unitId           = cpState.question.unitId ?: content?.unitId ?: "",
+            partIndex        = initialPartIndex,
+            questionType     = cpState.question.type.name,
+            userAnswer       = selected,
+            correctAnswer    = cpState.question.correctAnswer,
+            isCorrect        = isCorrect,
+            timeSpentSeconds = timeSpentSeconds,
+        )
+        // ─────────────────────────────────────────────────────────────────────
+
         _state.update { state ->
             val updated = state.checkpoints.toMutableMap()
             updated[sectionId] = cpState.copy(submitted = true, isCorrect = isCorrect)
@@ -339,15 +354,6 @@ class LessonReaderViewModel @Inject constructor(
 
     // ── Part / Lesson completion ───────────────────────────────────────────────
 
-    /**
-     * Called when user taps "إنهاء الجزء" or "إنهاء الدرس".
-     *
-     * XP flow:
-     * - Mid-lesson part (not last):  award LESSON_PART_COMPLETE with partId as reference.
-     * - Final part, first time:      award LESSON_COMPLETE; mark lesson complete.
-     * - Final part, repeat:          award LESSON_REPEAT.
-     * - Any already-completed part:  dedup handles it → xpAwarded = 0 (silent).
-     */
     fun markPartComplete() {
         pauseTimeTracking(saveTime = false)
 
@@ -368,19 +374,16 @@ class LessonReaderViewModel @Inject constructor(
             var xpAwarded = 0
 
             when {
-                // All parts done for the first time → full lesson XP
                 allPartsComplete && !isRepeat -> {
                     markLessonCompleteUseCase(lessonId)
                     recordLessonCompletedUseCase()
                     val tx = awardXpUseCase(XpSource.LESSON_COMPLETE, lessonId)
                     xpAwarded = tx?.amount ?: 0
                 }
-                // All parts done again → repeat XP
                 allPartsComplete && isRepeat -> {
                     val tx = awardXpUseCase(XpSource.LESSON_REPEAT, lessonId)
                     xpAwarded = tx?.amount ?: 0
                 }
-                // Mid-lesson part completed for the first time → partial XP
                 !isLastPart -> {
                     val partRef = "${lessonId}_part_$initialPartIndex"
                     val tx = awardXpUseCase(XpSource.LESSON_PART_COMPLETE, partRef)
