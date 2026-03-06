@@ -21,6 +21,7 @@ import com.zeros.basheer.feature.user.presentation.settings.SettingsScreen
 import com.zeros.basheer.ui.components.common.LessonsSubjectPicker
 import com.zeros.basheer.ui.screens.main.MainScreen
 import com.zeros.basheer.feature.practice.presentation.PracticeSessionScreen
+import com.zeros.basheer.feature.quizbank.presentation.builder.PracticeBuilderScreen
 import com.zeros.basheer.ui.screens.profile.ProfileScreen
 import com.zeros.basheer.feature.lesson.presentation.LessonReaderScreen
 import com.zeros.basheer.feature.user.presentation.edit.EditProfileScreen
@@ -177,6 +178,32 @@ fun BasheerNavHost(
                 onRetryNavigate = { newSessionId ->
                     navController.navigate(Screen.Practice.createRoute(newSessionId)) {
                         popUpTo(Screen.Practice.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ── Practice Builder ──────────────────────────────────────────────────
+        composable(
+            route = Screen.PracticeBuilder.route,
+            arguments = listOf(
+                navArgument("subjectId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("mode") {
+                    type = NavType.StringType
+                    defaultValue = "CUSTOM"
+                }
+            )
+        ) {
+            PracticeBuilderScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onSessionCreated = { sessionId ->
+                    navController.navigate(Screen.Practice.createRoute(sessionId)) {
+                        // Pop the builder off the back stack so back from Practice goes to QuizBank
+                        popUpTo(Screen.PracticeBuilder.baseRoute) { inclusive = true }
                     }
                 }
             )
