@@ -3,6 +3,7 @@ package com.zeros.basheer.feature.practice.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.AnalyticsManager
 import com.zeros.basheer.feature.analytics.ErrorTracker
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.practice.domain.model.PracticeSession
@@ -71,6 +72,7 @@ class PracticeSessionViewModel @Inject constructor(
     private val streakRepository: StreakRepository,
     private val awardXpUseCase: AwardXpUseCase,
     private val errorTracker: ErrorTracker,
+    private val analyticsManager: AnalyticsManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -133,6 +135,21 @@ class PracticeSessionViewModel @Inject constructor(
                         isComplete = session.status == PracticeSessionStatus.COMPLETED
                     )
                 }
+
+                // ── BasheerEvent: PracticeSessionStarted ─────────────────────
+                // Only fire when session is genuinely starting (not resuming completed)
+                if (session.status == PracticeSessionStatus.IN_PROGRESS &&
+                    session.currentQuestionIndex == 0
+                ) {
+                    analyticsManager.practiceSessionStarted(
+                        sessionId     = sessionId,
+                        subjectId     = session.subjectId,
+                        generationType = session.generationType.name,
+                        questionCount = questions.size,
+                        hasTimeLimit  = session.timeLimitSeconds != null,
+                    )
+                }
+                // ─────────────────────────────────────────────────────────────
             } catch (e: Exception) {
                 _state.update {
                     it.copy(error = e.message ?: "Failed to load session", isLoading = false)
@@ -291,6 +308,27 @@ class PracticeSessionViewModel @Inject constructor(
             try {
                 practiceRepository.completeSession(sessionId)
                 awardXpUseCase(XpSource.PRACTICE_COMPLETE, sessionId.toString())
+
+                val s = _state.value
+                val totalAnswered = s.correctCount + s.wrongCount
+                val scoreFloat = if (totalAnswered > 0) s.correctCount.toFloat() / totalAnswered else 0f
+                val durationSec = ((System.currentTimeMillis() - (s.session?.startedAt ?: System.currentTimeMillis())) / 1000).toInt()
+
+                // ── BasheerEvent: PracticeSessionCompleted ────────────────────
+                s.session?.let { session ->
+                    analyticsManager.practiceSessionCompleted(
+                        sessionId      = sessionId,
+                        subjectId      = session.subjectId,
+                        generationType = session.generationType.name,
+                        questionCount  = s.questions.size,
+                        correctCount   = s.correctCount,
+                        wrongCount     = s.wrongCount,
+                        skippedCount   = s.skippedCount,
+                        score          = scoreFloat,
+                        durationSeconds = durationSec,
+                    )
+                }
+                // ─────────────────────────────────────────────────────────────
 
                 _state.update {
                     it.copy(isComplete = true)
