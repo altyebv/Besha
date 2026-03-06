@@ -3,6 +3,7 @@ package com.zeros.basheer.feature.quizbank.presentation.exam
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.AnalyticsManager
 import com.zeros.basheer.feature.analytics.ErrorTracker
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.quizbank.domain.model.*
@@ -106,6 +107,7 @@ class ExamSessionViewModel @Inject constructor(
     private val recordQuestionResponseUseCase: RecordQuestionResponseUseCase,
     private val streakRepository: StreakRepository,
     private val errorTracker: ErrorTracker,
+    private val analyticsManager: AnalyticsManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -402,6 +404,17 @@ class ExamSessionViewModel @Inject constructor(
                 // Record exam completion for streak
                 streakRepository.recordExamCompleted()
                 awardXpUseCase(XpSource.EXAM_COMPLETE, attemptId.toString())
+
+                // ── BasheerEvent: ExamCompleted ───────────────────────────────
+                analyticsManager.examCompleted(
+                    examId          = exam.id,
+                    subjectId       = exam.subjectId,
+                    examType        = exam.examType?.name ?: "UNKNOWN",
+                    totalQuestions  = state.questions.size,
+                    score           = if (totalPoints > 0) score.toFloat() / totalPoints else 0f,
+                    durationSeconds = totalTime,
+                )
+                // ─────────────────────────────────────────────────────────────
 
                 // ── Error tracking — record every question outcome ─────────────
                 // We do this after completeQuizAttemptUseCase so the attempt is
