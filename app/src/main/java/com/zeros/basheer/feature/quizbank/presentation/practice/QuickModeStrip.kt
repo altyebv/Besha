@@ -25,9 +25,20 @@ import com.zeros.basheer.core.ui.theme.SubjectGeography
 import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
 import com.zeros.basheer.feature.quizbank.presentation.foundation.*
 
+/**
+ * Quick-mode chips row.
+ *
+ * - QUICK_REVIEW fires directly (no filter params needed — picks random questions).
+ * - WEAK_AREAS fires directly (GetWeakAreaQuestionsUseCase handles it via [onStartWeakArea]).
+ * - BY_UNIT / BY_CONCEPT / BY_TYPE open the Practice Builder screen so the student
+ *   can select which unit/concept/type before starting. Firing these without filters
+ *   would produce an unscoped session identical to QUICK_REVIEW.
+ */
 @Composable
 internal fun QuickModeStrip(
-    onStartPractice: (PracticeGenerationType) -> Unit
+    onStartPractice: (PracticeGenerationType) -> Unit,
+    onOpenBuilder: (PracticeGenerationType) -> Unit,
+    onStartWeakArea: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -41,11 +52,14 @@ internal fun QuickModeStrip(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            QuickModeChip("⚡", "مراجعة سريعة", AccentPractice,   PracticeGenerationType.QUICK_REVIEW, onStartPractice)
-            QuickModeChip("📉", "نقاط الضعف",  ScoreLow,         PracticeGenerationType.WEAK_AREAS,   onStartPractice)
-            QuickModeChip("🗂", "حسب الوحدة",  SubjectGeography, PracticeGenerationType.BY_UNIT,      onStartPractice)
-            QuickModeChip("💡", "حسب المفهوم", SubjectChemistry, PracticeGenerationType.BY_CONCEPT,   onStartPractice)
-            QuickModeChip("🔤", "حسب النوع",   SubjectArabic,    PracticeGenerationType.BY_TYPE,      onStartPractice)
+            // Direct-start chips (no filters needed)
+            QuickModeChip("⚡", "مراجعة سريعة",  AccentPractice,   onClick = { onStartPractice(PracticeGenerationType.QUICK_REVIEW) })
+            QuickModeChip("📉", "نقاط الضعف",    ScoreLow,          onClick = onStartWeakArea)
+
+            // Builder chips — need filter selection before starting
+            QuickModeChip("🗂", "حسب الوحدة",    SubjectGeography,  onClick = { onOpenBuilder(PracticeGenerationType.BY_UNIT) })
+            QuickModeChip("💡", "حسب المفهوم",   SubjectChemistry,  onClick = { onOpenBuilder(PracticeGenerationType.BY_CONCEPT) })
+            QuickModeChip("🔤", "حسب النوع",     SubjectArabic,     onClick = { onOpenBuilder(PracticeGenerationType.BY_TYPE) })
         }
     }
 }
@@ -55,8 +69,7 @@ private fun QuickModeChip(
     emoji: String,
     label: String,
     color: Color,
-    type: PracticeGenerationType,
-    onClick: (PracticeGenerationType) -> Unit
+    onClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -66,7 +79,7 @@ private fun QuickModeChip(
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
-            ) { onClick(type) }
+            ) { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp)
