@@ -58,6 +58,11 @@ sealed class QuizBankEvent {
      * Emits [NavigateToPractice] or sets [QuizBankState.error] if no weak questions found.
      */
     object StartWeakAreaSession : QuizBankEvent()
+    /**
+     * Navigate to the Practice Builder screen, pre-selecting a mode.
+     * Used by QuickModeStrip chips that need filter context before creating a session.
+     */
+    data class OpenPracticeBuilder(val mode: PracticeGenerationType) : QuizBankEvent()
     object Refresh : QuizBankEvent()
 }
 
@@ -72,6 +77,7 @@ class QuizBankViewModel @Inject constructor(
     sealed class NavigationEvent {
         data class NavigateToPractice(val sessionId: Long) : NavigationEvent()
         data class NavigateToExam(val examId: String) : NavigationEvent()
+        data class NavigateToPracticeBuilder(val subjectId: String, val mode: String) : NavigationEvent()
     }
 
     private val _state = MutableStateFlow(QuizBankState())
@@ -116,6 +122,16 @@ class QuizBankViewModel @Inject constructor(
             }
             QuizBankEvent.StartWeakAreaSession -> {
                 startWeakAreaSession()
+            }
+            is QuizBankEvent.OpenPracticeBuilder -> {
+                viewModelScope.launch {
+                    _navigationEvent.emit(
+                        NavigationEvent.NavigateToPracticeBuilder(
+                            subjectId = currentSubjectId,
+                            mode = event.mode.name
+                        )
+                    )
+                }
             }
             QuizBankEvent.Refresh -> {
                 loadData()
