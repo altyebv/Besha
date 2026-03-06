@@ -129,9 +129,21 @@ fun BasheerNavHost(
         }
 
         // ── Quiz Bank ─────────────────────────────────────────────────────────
-        composable(Screen.QuizBank.route) {
+        // One route, optional subjectId. Bottom nav omits it; recommendations supply it.
+        // QuizBankViewModel reads it from SavedStateHandle — null means use fallback subject.
+        composable(
+            route = Screen.QuizBank.route,
+            arguments = listOf(
+                navArgument("subjectId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
             QuizBankScreen(navController = navController)
         }
+
 
         // ── Profile ───────────────────────────────────────────────────────────
         composable(Screen.Profile.route) {
@@ -156,15 +168,15 @@ fun BasheerNavHost(
 
         // ── Practice ──────────────────────────────────────────────────────────
         composable(
-            route = "practice/{sessionId}",
+            route = Screen.Practice.route,
             arguments = listOf(navArgument("sessionId") { type = NavType.LongType })
         ) {
             PracticeSessionScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onSessionComplete = { },
                 onRetryNavigate = { newSessionId ->
-                    navController.navigate("practice/$newSessionId") {
-                        popUpTo("practice/{sessionId}") { inclusive = true }
+                    navController.navigate(Screen.Practice.createRoute(newSessionId)) {
+                        popUpTo(Screen.Practice.route) { inclusive = true }
                     }
                 }
             )
