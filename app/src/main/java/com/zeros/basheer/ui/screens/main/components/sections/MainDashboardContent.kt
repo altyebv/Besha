@@ -58,15 +58,19 @@ fun MainDashboardContent(
         }
 
         // ── Zone 2: Daily goal bar ────────────────────────────────────────
-        item(key = "daily_goal") {
-            DailyGoalBar(
-                todayActivity = state.todayActivity,
-                dailyGoal = 3
-            )
+        // Only rendered after the first todayActivity emission — prevents a flash
+        // of the "no activity" state on launch before the DB query completes.
+        if (state.isDailyActivityLoaded) {
+            item(key = "daily_goal") {
+                DailyGoalBar(
+                    todayActivity = state.todayActivity,
+                    dailyGoal = 3
+                )
+            }
         }
 
-        // ── Zone 3: Mission card (always shown — empty state if no rec) ───
-        if (!state.focusCardDismissed) {
+        // ── Zone 3: Mission card (only after recommendation engine has resolved) ─
+        if (state.isRecommendationLoaded && !state.focusCardDismissed) {
             item(key = "mission_card") {
                 MissionCard(
                     recommendation = state.topRecommendation,
