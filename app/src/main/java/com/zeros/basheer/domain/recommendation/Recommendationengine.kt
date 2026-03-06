@@ -3,6 +3,7 @@ package com.zeros.basheer.domain.recommendation
 import com.zeros.basheer.domain.repository.ContentRepository
 import com.zeros.basheer.domain.model.*
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
+import com.zeros.basheer.feature.practice.domain.usecase.GetWeakAreaQuestionsUseCase
 import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
@@ -31,7 +32,8 @@ data class RecommendationConfig(
     // Behavior
     val maxRecommendationsPerSubject: Int = 2,
     val maxTotalRecommendations: Int = 3,
-    val enableTimeBasedFiltering: Boolean = true
+    val enableTimeBasedFiltering: Boolean = true,
+    val candidateLimit: Int = 30,    // Max weak questions fetched for scoring
 )
 
 /**
@@ -46,6 +48,7 @@ class RecommendationEngine @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
     private val practiceRepository: com.zeros.basheer.feature.practice.domain.repository.PracticeRepository,
     private val userProfileRepository: UserProfileRepository,
+    private val getWeakAreaQuestions: GetWeakAreaQuestionsUseCase,
     private val config: RecommendationConfig = RecommendationConfig()
 ) {
 
@@ -152,7 +155,28 @@ class RecommendationEngine @Inject constructor(
         )
     }
 
-    private suspend fun getWeakConcepts(subjectId: String): List<String> = emptyList()
+    /**
+     * Returns lesson IDs where the student has weak questions.
+     * Powered by [GetWeakAreaQuestionsUseCase] which queries [QuestionStats] directly.
+     *
+     * Returns distinct lessonIds so the count reflects affected lessons, not
+     * individual questions — a lesson with 3 weak questions counts as 1 weak area.
+     * Falls back to unit-level if a question has no lessonId.
+     */
+    private suspend fun getWeakConcepts(subjectId: String): List<String> {
+        val weakQuestions = getWeakAreaQuestions.getWeakQuestions(
+            subjectId    = subjectId,
+            maxQuestions = config.candidateLimit,
+            config       = GetWeakAreaQuestionsUseCase.Config(
+                minAttempts   = config.minQuestionsForStats,
+                weakThreshold = config.weakAreaThreshold,
+            )
+        )
+        // Return distinct lesson IDs — each is one "weak area" for scoring purposes
+        return weakQuestions
+            .mapNotNull { it.lessonId ?: it.unitId }
+            .distinct()
+    }
 
     // ==================== RECOMMENDATION GENERATORS ====================
 
