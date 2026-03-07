@@ -2,7 +2,9 @@ package com.zeros.basheer.feature.feed.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zeros.basheer.feature.analytics.AnalyticsManager
 import com.zeros.basheer.feature.analytics.ErrorTracker
+import com.zeros.basheer.feature.analytics.domain.model.FeedInteraction
 import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
 import com.zeros.basheer.feature.feed.domain.model.FeedItemType
@@ -49,6 +51,7 @@ class FeedsViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
     private val recordCardsReviewedUseCase: RecordCardsReviewedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
+    private val analyticsManager: AnalyticsManager,
     private val errorTracker: ErrorTracker,
 ) : ViewModel() {
 
@@ -185,6 +188,14 @@ class FeedsViewModel @Inject constructor(
                     srIntervalDaysBefore  = srInterval,
                 )
             }
+            analyticsManager.feedCardInteracted(
+                cardId      = currentCard.id,
+                subjectId   = currentCard.subjectId,
+                cardType    = currentCard.type.name,
+                interaction = if (knew) FeedInteraction.ANSWERED_CORRECT
+                else      FeedInteraction.ANSWERED_WRONG,
+                wasCorrect  = knew,
+            )
             // ─────────────────────────────────────────────────────────────────
         }
     }
@@ -192,12 +203,23 @@ class FeedsViewModel @Inject constructor(
     fun onContinue(): Boolean {
         val currentIndex = _state.value.currentIndex
         val totalCards   = _state.value.feedCards.size
+        val currentCard  = _state.value.feedCards.getOrNull(currentIndex)
 
         _state.update { it.copy(cardsViewed = it.cardsViewed + 1) }
 
         viewModelScope.launch {
             recordCardsReviewedUseCase(1)
             awardXpUseCase(XpSource.CARD_REVIEWED)
+        }
+        if (currentCard != null &&
+            _state.value.cardInteractionState is CardInteractionState.Idle) {
+            analyticsManager.feedCardInteracted(
+                cardId      = currentCard.id,
+                subjectId   = currentCard.subjectId,
+                cardType    = currentCard.type.name,
+                interaction = FeedInteraction.REVIEWED,
+                wasCorrect  = null,
+            )
         }
 
         if (currentIndex >= totalCards - 1) {
