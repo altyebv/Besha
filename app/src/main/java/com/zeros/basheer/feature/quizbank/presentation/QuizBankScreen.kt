@@ -105,6 +105,7 @@ fun QuizBankScreen(
                     ministryExams = state.ministryExams,
                     schoolExams = state.schoolExams,
                     isLoading = state.isLoading,
+                    examScores = state.examScores,
                     onExamClick = { viewModel.onEvent(QuizBankEvent.StartExam(it)) }
                 )
                 QuizMode.PRACTICE -> PracticeModeContent(
