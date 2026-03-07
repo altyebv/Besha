@@ -130,8 +130,9 @@ fun BasheerNavHost(
         }
 
         // ── Quiz Bank ─────────────────────────────────────────────────────────
-        // One route, optional subjectId. Bottom nav omits it; recommendations supply it.
-        // QuizBankViewModel reads it from SavedStateHandle — null means use fallback subject.
+        // One route, optional subjectId.
+        // - Bottom nav → no subjectId → show subject picker first.
+        // - Recommendation card / direct link → subjectId supplied → go straight to QuizBank.
         composable(
             route = Screen.QuizBank.route,
             arguments = listOf(
@@ -141,8 +142,22 @@ fun BasheerNavHost(
                     defaultValue = null
                 }
             )
-        ) {
-            QuizBankScreen(navController = navController)
+        ) { backStackEntry ->
+            val subjectId = backStackEntry.arguments?.getString("subjectId")
+                ?.takeIf { it.isNotBlank() && it != "{subjectId}" }
+
+            if (subjectId == null) {
+                LessonsSubjectPicker(
+                    onSubjectSelected = { selectedId ->
+                        navController.navigate(Screen.QuizBank.createRoute(selectedId)) {
+                            popUpTo(Screen.QuizBank.baseRoute) { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            } else {
+                QuizBankScreen(navController = navController)
+            }
         }
 
 
