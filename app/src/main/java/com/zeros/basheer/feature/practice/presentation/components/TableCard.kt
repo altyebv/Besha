@@ -296,7 +296,7 @@ data class TableAnswer(
 
 // Parsing helpers
 private fun parseTableData(json: String): TableData {
-    return try {
+    val parsed = try {
         Json.decodeFromString<TableData>(json)
     } catch (e: Exception) {
         // Fallback: simple 2x2 table
@@ -309,6 +309,22 @@ private fun parseTableData(json: String): TableData {
             editableCells = setOf(0 to 0, 0 to 1, 1 to 0, 1 to 1)
         )
     }
+
+    // If the JSON parsed correctly but editableCells is empty, auto-detect
+    // cells containing "؟" as the blank-marker convention from the manifesto.
+    if (parsed.editableCells.isEmpty()) {
+        val detected = mutableSetOf<Pair<Int, Int>>()
+        parsed.rows.forEachIndexed { rowIndex, row ->
+            row.cells.forEachIndexed { colIndex, cell ->
+                if (cell.trim() == "؟") detected.add(rowIndex to colIndex)
+            }
+        }
+        if (detected.isNotEmpty()) {
+            return parsed.copy(editableCells = detected)
+        }
+    }
+
+    return parsed
 }
 
 private fun parseTableAnswer(json: String): List<List<String>> {
