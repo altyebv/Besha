@@ -109,16 +109,28 @@ class PracticeRepositoryImpl @Inject constructor(
         filterDifficulty: IntRange?,
         filterSource: String?
     ): Long {
-        // Get questions based on filters
-        val questions = quizBankRepository.getFilteredQuestions(
-            subjectId = subjectId,
-            unitId = filterUnitIds?.firstOrNull(),
-            type = filterQuestionTypes?.firstOrNull(),
-            conceptId = filterConceptIds?.firstOrNull(),
-            minDifficulty = filterDifficulty?.first,
-            maxDifficulty = filterDifficulty?.last,
-            limit = questionCount
-        )
+        // Get questions based on filters.
+        // When multiple units are selected, use the multi-unit query so all selections are honoured.
+        val questions = if (!filterUnitIds.isNullOrEmpty() && filterUnitIds.size > 1) {
+            quizBankRepository.getFilteredQuestionsMultiUnit(
+                subjectId     = subjectId,
+                unitIds       = filterUnitIds,
+                type          = filterQuestionTypes?.firstOrNull(),
+                minDifficulty = filterDifficulty?.first,
+                maxDifficulty = filterDifficulty?.last,
+                limit         = questionCount
+            )
+        } else {
+            quizBankRepository.getFilteredQuestions(
+                subjectId     = subjectId,
+                unitId        = filterUnitIds?.firstOrNull(),
+                type          = filterQuestionTypes?.firstOrNull(),
+                conceptId     = filterConceptIds?.firstOrNull(),
+                minDifficulty = filterDifficulty?.first,
+                maxDifficulty = filterDifficulty?.last,
+                limit         = questionCount
+            )
+        }
 
         // Create session entity
         val session = PracticeSessionEntity(
