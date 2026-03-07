@@ -6,6 +6,7 @@ import com.zeros.basheer.feature.analytics.domain.model.FeedInteraction
 import com.zeros.basheer.feature.analytics.domain.model.LessonSource
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
+import com.zeros.basheer.feature.user.notification.AchievementNotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,18 +16,6 @@ import javax.inject.Singleton
 
 /**
  * The single analytics call-site for all app code.
- *
- * Usage pattern (from a ViewModel):
- * ```kotlin
- * analytics.lessonCompleted(
- *     lessonId = lesson.id,
- *     subjectId = lesson.subjectId,
- *     unitId = lesson.unitId,
- *     timeSpentSeconds = timer.elapsed,
- *     isFirstCompletion = !previouslyCompleted,
- *     sectionsCount = lesson.sections.size,
- * )
- * ```
  *
  * All calls are non-blocking — events are fire-and-forget into the Room queue.
  * The caller never waits for Firestore.
@@ -44,8 +33,10 @@ import javax.inject.Singleton
 @Singleton
 class AnalyticsManager @Inject constructor(
     private val repository: AnalyticsRepository,
-    private val preferencesRepository: UserPreferencesRepository
-) {
+    private val preferencesRepository: UserPreferencesRepository,
+    private val achievementNotificationManager: AchievementNotificationManager,
+
+    ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Track session start time for AppSessionEnded duration calculation
@@ -246,13 +237,17 @@ class AnalyticsManager @Inject constructor(
     // Gamification
     // ─────────────────────────────────────────────────────────────────────────
 
-    fun xpLevelUp(newLevel: Int, totalXp: Int, xpSource: String) =
+    fun xpLevelUp(newLevel: Int, totalXp: Int, xpSource: String) {
         track(BasheerEvent.XpLevelUp(newLevel = newLevel, totalXp = totalXp, xpSource = xpSource))
+        // Notify immediately — the user is in-app when this fires so it should celebrate
+        // as an in-moment reward, not as a background notification.
+        achievementNotificationManager.showLevelUp(newLevel, totalXp)
+    }
 
     fun streakMilestone(streakDays: Int, streakLevel: String) {
-        // Only fire at meaningful milestones — not every day
         if (streakDays in STREAK_MILESTONES) {
             track(BasheerEvent.StreakMilestone(streakDays = streakDays, streakLevel = streakLevel))
+            achievementNotificationManager.showStreakMilestone(streakDays, streakLevel)
         }
     }
 
