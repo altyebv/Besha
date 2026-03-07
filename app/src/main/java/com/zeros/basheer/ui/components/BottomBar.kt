@@ -50,7 +50,11 @@ val bottomNavItems = listOf(
         isFeatured = true                    // ← This tab gets the spotlight
     ),
     BottomNavItem(
-        route = Screen.QuizBank.route,
+        // Must use baseRoute ("quizbank"), NOT Screen.QuizBank.route which is the
+        // template string "quizbank?subjectId={subjectId}". Navigating to the
+        // template literal causes SavedStateHandle to receive "{subjectId}" as
+        // the subjectId value, making every DB query return zero rows.
+        route = Screen.QuizBank.baseRoute,
         label = "الامتحانات",
         selectedIcon = Icons.Filled.Quiz,
         unselectedIcon = Icons.Outlined.Quiz
