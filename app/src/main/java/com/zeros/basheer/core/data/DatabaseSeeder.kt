@@ -243,8 +243,28 @@ class DatabaseSeeder @Inject constructor(
      */
     private suspend fun seedQuizBankData(mockData: QuizBankMockData) {
         println("🌱 Starting quiz bank data seeding...")
-        // Note: subjects and units are seeded by seedFromAssets() per-subject lesson files.
-        // Exams_.json must NOT contain subjects/units to avoid duplicate rows.
+
+        // Subjects — insert with IGNORE so already-seeded subjects (from lesson JSON files)
+        // are left untouched, while subjects that have no lesson file yet (e.g. a new subject
+        // that only has exam questions so far) are created here.
+        // This MUST run before exams/questions because both tables FK → subjects(id).
+        if (mockData.subjects.isNotEmpty()) {
+            println("   Upserting ${mockData.subjects.size} subjects (IGNORE on conflict)...")
+            mockData.subjects.forEach { s ->
+                subjectRepository.insertSubject(
+                    Subject(
+                        id        = s.id,
+                        nameAr    = s.nameAr,
+                        nameEn    = s.nameEn,
+                        path      = StudentPath.valueOf(s.path),
+                        isMajor   = s.isMajor,
+                        order     = s.order,
+                        iconRes   = null,        // icon resources are set by the lesson files
+                        colorHex  = s.colorHex
+                    )
+                )
+            }
+        }
 
         // Exams
         println("   Inserting ${mockData.exams.size} exams...")
@@ -708,7 +728,12 @@ data class QuizBankSubjectJson(
     val id: String,
     val nameAr: String,
     val nameEn: String?,
-    val iconUrl: String?
+    val iconUrl: String?,
+    // Required to satisfy subjects(path) NOT NULL — must match StudentPath enum
+    val path: String = "COMMON",
+    val isMajor: Boolean = false,
+    val order: Int = 0,
+    val colorHex: String? = null
 )
 
 data class QuizBankUnitJson(
