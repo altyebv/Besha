@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.serialization.json.Json
 
 @Composable
 fun McqCard(
@@ -248,6 +249,7 @@ private fun McqOption(
 }
 
 private fun parseOptions(optionsJson: String): List<String> = try {
-    optionsJson.trim().removeSurrounding("[", "]")
-        .split(",").map { it.trim().removeSurrounding("\"") }
-} catch (e: Exception) { emptyList() }
+    Json.decodeFromString<List<String>>(optionsJson.trim())
+} catch (e: Exception) {
+    emptyList()
+}
