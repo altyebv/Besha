@@ -170,14 +170,15 @@ fun MatchCard(
                 }
 
                 is QuestionInteractionState.Answered -> {
-                    // Show correct matches
+                    // Parse both user's answer and the correct answer
+                    val userMatches   = parseMatchAnswer(interactionState.userAnswer).toSet()
                     val correctMatches = parseMatchAnswer(question.correctAnswer)
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Left column with correct matches
+                        // Left column
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -190,12 +191,13 @@ fun MatchCard(
                             }
                         }
 
-                        // Connection indicator
+                        // Connection column — green ⟷ if pair matches, red ✗ if not
                         Column(
                             modifier = Modifier.width(40.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            correctMatches.forEach { _ ->
+                            correctMatches.forEach { pair ->
+                                val pairCorrect = userMatches.contains(pair)
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -203,15 +205,15 @@ fun MatchCard(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "⟷",
+                                        text = if (pairCorrect) "⟷" else "✗",
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = Color(0xFF4CAF50)
+                                        color = if (pairCorrect) Color(0xFF4CAF50) else Color(0xFFF44336)
                                     )
                                 }
                             }
                         }
 
-                        // Right column with correct matches
+                        // Right column
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
