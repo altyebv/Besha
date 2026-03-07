@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.domain.repository.ContentRepository
 import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
 import com.zeros.basheer.feature.practice.domain.repository.PracticeRepository
+import com.zeros.basheer.feature.practice.domain.usecase.GetWeakAreaQuestionsUseCase
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import com.zeros.basheer.feature.subject.domain.model.Units
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +32,8 @@ data class PracticeBuilderState(
     val isLoadingOptions: Boolean = true,
     val isCreatingSession: Boolean = false,
     val error: String? = null,
+    // True when WEAK_AREAS was selected but there are no qualifying questions yet
+    val noWeakQuestionsFound: Boolean = false,
 
     // Subject context (passed in from QuizBank)
     val subjectId: String = "",
@@ -44,12 +47,14 @@ sealed class PracticeBuilderEvent {
     data class SetQuestionCount(val count: Int) : PracticeBuilderEvent()
     object StartSession : PracticeBuilderEvent()
     object ClearError : PracticeBuilderEvent()
+    object ClearNoWeakQuestionsFound : PracticeBuilderEvent()
 }
 
 @HiltViewModel
 class PracticeBuilderViewModel @Inject constructor(
     private val practiceRepository: PracticeRepository,
     private val contentRepository: ContentRepository,
+    private val getWeakAreaQuestionsUseCase: GetWeakAreaQuestionsUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -110,6 +115,7 @@ class PracticeBuilderViewModel @Inject constructor(
             }
             PracticeBuilderEvent.StartSession -> startSession()
             PracticeBuilderEvent.ClearError -> _state.update { it.copy(error = null) }
+            PracticeBuilderEvent.ClearNoWeakQuestionsFound -> _state.update { it.copy(noWeakQuestionsFound = false) }
         }
     }
 
@@ -126,22 +132,37 @@ class PracticeBuilderViewModel @Inject constructor(
     private fun startSession() {
         viewModelScope.launch {
             val s = _state.value
-            _state.update { it.copy(isCreatingSession = true, error = null) }
+            _state.update { it.copy(isCreatingSession = true, error = null, noWeakQuestionsFound = false) }
 
             try {
-                val unitIds = s.selectedUnitIds.takeIf { it.isNotEmpty() }?.toList()
-                val types = s.selectedQuestionTypes.takeIf { it.isNotEmpty() }?.toList()
-                val diffRange = s.selectedDifficultyRange.takeIf { it != 1..5 }
+                if (s.selectedMode == PracticeGenerationType.WEAK_AREAS) {
+                    // Delegate entirely to the use case — it owns the weak-area ranking logic.
+                    val sessionId = getWeakAreaQuestionsUseCase(
+                        subjectId    = s.subjectId,
+                        maxQuestions = s.questionCount,
+                    )
+                    if (sessionId == null) {
+                        // Not enough attempt history yet to identify weak areas.
+                        // Surface a friendly empty state instead of crashing.
+                        _state.update { it.copy(noWeakQuestionsFound = true) }
+                    } else {
+                        _navigateToSession.emit(sessionId)
+                    }
+                } else {
+                    val unitIds   = s.selectedUnitIds.takeIf { it.isNotEmpty() }?.toList()
+                    val types     = s.selectedQuestionTypes.takeIf { it.isNotEmpty() }?.toList()
+                    val diffRange = s.selectedDifficultyRange.takeIf { it != 1..5 }
 
-                val sessionId = practiceRepository.createPracticeSession(
-                    subjectId = s.subjectId,
-                    generationType = s.selectedMode,
-                    questionCount = s.questionCount,
-                    filterUnitIds = unitIds,
-                    filterQuestionTypes = types,
-                    filterDifficulty = diffRange,
-                )
-                _navigateToSession.emit(sessionId)
+                    val sessionId = practiceRepository.createPracticeSession(
+                        subjectId          = s.subjectId,
+                        generationType     = s.selectedMode,
+                        questionCount      = s.questionCount,
+                        filterUnitIds      = unitIds,
+                        filterQuestionTypes = types,
+                        filterDifficulty   = diffRange,
+                    )
+                    _navigateToSession.emit(sessionId)
+                }
             } catch (e: Exception) {
                 _state.update { it.copy(error = "تعذّر إنشاء الجلسة — ${e.message}") }
             } finally {
