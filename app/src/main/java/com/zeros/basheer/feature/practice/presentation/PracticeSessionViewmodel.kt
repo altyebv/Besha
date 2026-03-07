@@ -163,7 +163,18 @@ class PracticeSessionViewModel @Inject constructor(
      */
     private fun answerQuestion(answer: String) {
         val currentQuestion = _state.value.currentQuestion ?: return
-        val isCorrect = answer == currentQuestion.correctAnswer
+
+        // Self-marked types: student sees model answer and judges themselves.
+        // Strict string equality is meaningless for essay/list/comparison answers —
+        // it would always record wrong and corrupt question_stats permanently.
+        val isCorrect = when (currentQuestion.type) {
+            QuestionType.SHORT_ANSWER,
+            QuestionType.EXPLAIN,
+            QuestionType.LIST,
+            QuestionType.COMPARE,
+            QuestionType.FIGURE -> true   // self-marked: always recorded as seen/attempted
+            else -> answer == currentQuestion.correctAnswer
+        }
 
         // Calculate time spent
         val timeSpent = ((System.currentTimeMillis() - _state.value.questionStartTime) / 1000).toInt()

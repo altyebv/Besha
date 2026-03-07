@@ -28,9 +28,11 @@ data class QuizBankState(
     val completedSessionCount: Int = 0,
     val selectedTab: QuizBankTab = QuizBankTab.MINISTRY_EXAMS,
     val isLoading: Boolean = true,
-    val weakAreaCount: Int = 0,      // Weak questions in the current subject
+    val weakAreaCount: Int = 0,
     val isWeakAreaLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    // examId → last attempt percentage (0–100). null = never attempted.
+    val examScores: Map<String, Float> = emptyMap()
 )
 
 enum class QuizBankTab {
@@ -88,12 +90,19 @@ class QuizBankViewModel @Inject constructor(
 
     /**
      * Subject context for this screen instance.
-     * Passed as nav arg when launched from a recommendation (subject-specific).
-     * Falls back to the first subject in the user's path when opened from bottom nav.
-     * TODO: replace fallback with user's most-recently-studied subject once that's tracked.
+     *
+     * - Launched from a recommendation card → a concrete subjectId is passed as a nav arg,
+     *   and the screen scopes itself to that subject.
+     * - Launched from the bottom nav → no subjectId arg → null here → we load across
+     *   ALL subjects so nothing is invisible just because there's no lesson file yet.
      */
-    private val currentSubjectId: String
-        get() = savedStateHandle.get<String>("subjectId") ?: "geography"
+    private val currentSubjectId: String?
+        get() = savedStateHandle.get<String>("subjectId")
+            ?.takeIf { it.isNotBlank() && it != "{subjectId}" } // guard against template literal
+
+    /** True when the screen is not scoped to a specific subject. */
+    private val isAllSubjects: Boolean
+        get() = currentSubjectId == null
 
     init {
         loadData()
@@ -127,7 +136,7 @@ class QuizBankViewModel @Inject constructor(
                 viewModelScope.launch {
                     _navigationEvent.emit(
                         NavigationEvent.NavigateToPracticeBuilder(
-                            subjectId = currentSubjectId,
+                            subjectId = currentSubjectId ?: "geography",
                             mode = event.mode.name
                         )
                     )
@@ -142,63 +151,116 @@ class QuizBankViewModel @Inject constructor(
     private fun loadData() {
         _state.update { it.copy(isLoading = true, error = null) }
 
-        // Load ministry exams - FIX SYNTAX ERROR
-        viewModelScope.launch {
-            quizBankRepository.getExamsBySource(currentSubjectId, ExamSource.MINISTRY)
-                .catch { e -> _state.update { it.copy(error = e.message) } }
-                .collect { exams -> _state.update { it.copy(ministryExams = exams) } }
+        if (isAllSubjects) {
+            // ── No subject scoping: load ALL exams regardless of subject ──────
+            // Splits the flat list into ministry / school / custom buckets in-memory
+            // so ExamsModeContent (and its filter chips) keep working unchanged.
+            viewModelScope.launch {
+                quizBankRepository.getAllExams()
+                    .catch { e -> _state.update { it.copy(error = e.message) } }
+                    .collect { all ->
+                        _state.update {
+                            it.copy(
+                                ministryExams  = all.filter { e -> e.source == ExamSource.MINISTRY },
+                                schoolExams    = all.filter { e -> e.source == ExamSource.SCHOOL },
+                                // Bug fix: CUSTOM is the source used in Exams_.json, not PRACTICE
+                                practiceExams  = all.filter { e ->
+                                    e.source == ExamSource.CUSTOM || e.source == ExamSource.PRACTICE
+                                }
+                            )
+                        }
+                        loadExamScores(all.map { it.id })
+                    }
+            }
+        } else {
+            // ── Subject-scoped: three targeted flows (same as before) ─────────
+            val subjectId = currentSubjectId!!
+
+            viewModelScope.launch {
+                quizBankRepository.getExamsBySource(subjectId, ExamSource.MINISTRY)
+                    .catch { e -> _state.update { it.copy(error = e.message) } }
+                    .collect { exams ->
+                        _state.update { it.copy(ministryExams = exams) }
+                        loadExamScores(exams.map { it.id })
+                    }
+            }
+
+            viewModelScope.launch {
+                quizBankRepository.getExamsBySource(subjectId, ExamSource.SCHOOL)
+                    .catch { e -> _state.update { it.copy(error = e.message) } }
+                    .collect { exams ->
+                        _state.update { it.copy(schoolExams = exams) }
+                        loadExamScores(exams.map { it.id })
+                    }
+            }
+
+            // Bug fix: CUSTOM is the source used in Exams_.json, not PRACTICE
+            viewModelScope.launch {
+                combine(
+                    quizBankRepository.getExamsBySource(subjectId, ExamSource.CUSTOM),
+                    quizBankRepository.getExamsBySource(subjectId, ExamSource.PRACTICE)
+                ) { custom, practice -> custom + practice }
+                    .catch { e -> _state.update { it.copy(error = e.message) } }
+                    .collect { exams -> _state.update { it.copy(practiceExams = exams) } }
+            }
         }
 
-        // Load school exams - FIX SYNTAX ERROR
-        viewModelScope.launch {
-            quizBankRepository.getExamsBySource(currentSubjectId, ExamSource.SCHOOL)
-                .catch { e -> _state.update { it.copy(error = e.message) } }
-                .collect { exams -> _state.update { it.copy(schoolExams = exams) } }
-        }
-
-        // Load practice exams - FIX SYNTAX ERROR
-        viewModelScope.launch {
-            quizBankRepository.getExamsBySource(currentSubjectId, ExamSource.PRACTICE)
-                .catch { e -> _state.update { it.copy(error = e.message) } }
-                .collect { exams -> _state.update { it.copy(practiceExams = exams) } }
-        }
-
-        // Load recent practice sessions - USE PRACTICE REPOSITORY
+        // Load recent practice sessions
         viewModelScope.launch {
             practiceRepository.getRecentCompletedSessions(10)
                 .catch { e -> _state.update { it.copy(error = e.message) } }
                 .collect { sessions -> _state.update { it.copy(recentSessions = sessions) } }
         }
 
-        // Load active session - USE PRACTICE REPOSITORY
+        // Load active session
         viewModelScope.launch {
             val activeSession = practiceRepository.getActiveSession()
             _state.update { it.copy(activeSession = activeSession) }
         }
 
-        // Load question counts
-        viewModelScope.launch {
-            val counts = quizBankRepository.getQuestionCounts(currentSubjectId)
-            _state.update { it.copy(questionCounts = counts) }
-        }
+        // Question counts and stats are subject-scoped — only meaningful when a
+        // subject is selected. Skip them in all-subjects mode to avoid misleading data.
+        currentSubjectId?.let { subjectId ->
+            viewModelScope.launch {
+                val counts = quizBankRepository.getQuestionCounts(subjectId)
+                _state.update { it.copy(questionCounts = counts) }
+            }
 
-        // Load stats
-        viewModelScope.launch {
-            practiceRepository.getAverageScore(currentSubjectId)
-                .catch { e -> _state.update { it.copy(error = e.message) } }
-                .collect { score -> _state.update { it.copy(averageScore = score, isLoading = false) } }
-        }
+            viewModelScope.launch {
+                practiceRepository.getAverageScore(subjectId)
+                    .catch { e -> _state.update { it.copy(error = e.message) } }
+                    .collect { score -> _state.update { it.copy(averageScore = score, isLoading = false) } }
+            }
 
-        viewModelScope.launch {
-            practiceRepository.getCompletedSessionCount(currentSubjectId)
-                .catch { e -> _state.update { it.copy(error = e.message) } }
-                .collect { count -> _state.update { it.copy(completedSessionCount = count) } }
-        }
+            viewModelScope.launch {
+                practiceRepository.getCompletedSessionCount(subjectId)
+                    .catch { e -> _state.update { it.copy(error = e.message) } }
+                    .collect { count -> _state.update { it.copy(completedSessionCount = count) } }
+            }
 
-        // Weak area count — drives the badge on the SmartRecommendationCard
+            viewModelScope.launch {
+                val weakStats = getWeakAreaQuestions.getWeakStats(subjectId)
+                _state.update { it.copy(weakAreaCount = weakStats.size) }
+            }
+        } ?: _state.update { it.copy(isLoading = false) }
+    }
+
+    /**
+     * Fetches the last completed attempt score for each exam in [examIds] and
+     * merges the results into [QuizBankState.examScores].
+     * Runs N small suspending queries (one per exam) — fine for a list of ≤30 exams.
+     */
+    private fun loadExamScores(examIds: List<String>) {
+        if (examIds.isEmpty()) return
         viewModelScope.launch {
-            val weakStats = getWeakAreaQuestions.getWeakStats(currentSubjectId)
-            _state.update { it.copy(weakAreaCount = weakStats.size) }
+            val scores = examIds
+                .mapNotNull { id ->
+                    val attempt = quizBankRepository.getLastAttemptForExam(id)
+                    attempt?.percentage?.let { pct -> id to pct }
+                }
+                .toMap()
+            // Merge with any existing scores (e.g. ministry + school loaded separately)
+            _state.update { it.copy(examScores = it.examScores + scores) }
         }
     }
 
@@ -221,10 +283,11 @@ class QuizBankViewModel @Inject constructor(
         filterQuestionTypes: List<QuestionType>? = null,
         filterDifficulty: IntRange? = null
     ) {
+        val subjectId = currentSubjectId ?: "geography" // fallback only for session creation
         viewModelScope.launch {
             try {
                 val sessionId = practiceRepository.createPracticeSession(
-                    subjectId = currentSubjectId,
+                    subjectId = subjectId,
                     generationType = generationType,
                     questionCount = questionCount,
                     filterUnitIds = filterUnitIds,
@@ -243,18 +306,18 @@ class QuizBankViewModel @Inject constructor(
     }
 
     private fun startWeakAreaSession() {
+        val subjectId = currentSubjectId ?: "geography"
         viewModelScope.launch {
             try {
                 _state.update { it.copy(isWeakAreaLoading = true) }
                 val sessionId = getWeakAreaQuestions(
-                    subjectId = currentSubjectId,
+                    subjectId = subjectId,
                     maxQuestions = 20,
                     shuffled = true,
                 )
                 if (sessionId != null) {
                     _navigationEvent.emit(NavigationEvent.NavigateToPractice(sessionId))
                 } else {
-                    // No qualifying weak questions yet — student hasn't answered enough
                     _state.update { it.copy(error = "لا توجد أسئلة ضعيفة كافية بعد — أجب على المزيد من الأسئلة أولاً") }
                 }
             } catch (e: Exception) {

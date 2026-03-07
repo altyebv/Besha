@@ -240,7 +240,17 @@ class ExamSessionViewModel @Inject constructor(
 
     private fun answerQuestion(answer: String) {
         val currentQuestion = _state.value.currentQuestion ?: return
-        val isCorrect = answer == currentQuestion.correctAnswer
+
+        // Self-marked types: student compares their answer to the model answer visually.
+        // Strict equality would always produce wrong, corrupting stats and point totals.
+        val isCorrect = when (currentQuestion.type) {
+            QuestionType.SHORT_ANSWER,
+            QuestionType.EXPLAIN,
+            QuestionType.LIST,
+            QuestionType.COMPARE,
+            QuestionType.FIGURE -> true   // self-marked: recorded as attempted, not graded
+            else -> answer == currentQuestion.correctAnswer
+        }
 
         // Calculate time spent on this question
         val timeSpent = ((System.currentTimeMillis() - _state.value.questionStartTime) / 1000).toInt()
@@ -486,7 +496,15 @@ class ExamSessionViewModel @Inject constructor(
         state.questions.forEachIndexed { index, question ->
             val userAnswer   = state.answers[question.id] ?: ""
             val wasUnanswered = userAnswer.isBlank()
-            val isCorrect    = !wasUnanswered && userAnswer.trim() == question.correctAnswer.trim()
+            val isCorrect    = when {
+                wasUnanswered -> false
+                question.type == QuestionType.SHORT_ANSWER ||
+                        question.type == QuestionType.EXPLAIN      ||
+                        question.type == QuestionType.LIST         ||
+                        question.type == QuestionType.COMPARE      ||
+                        question.type == QuestionType.FIGURE       -> true  // self-marked
+                else -> userAnswer.trim() == question.correctAnswer.trim()
+            }
 
             // Resolve the section title this question belongs to
             val sectionTitle = state.sections

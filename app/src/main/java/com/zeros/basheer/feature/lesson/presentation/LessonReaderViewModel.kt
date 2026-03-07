@@ -23,6 +23,8 @@ import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import com.zeros.basheer.feature.streak.domain.usecase.RecordLessonCompletedUseCase
 import com.zeros.basheer.feature.streak.domain.usecase.RecordTimeSpentUseCase
 import com.zeros.basheer.feature.user.domain.model.XpSource
+import com.zeros.basheer.feature.analytics.AnalyticsManager
+import com.zeros.basheer.feature.analytics.domain.model.LessonSource
 import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -119,7 +121,8 @@ class LessonReaderViewModel @Inject constructor(
     private val recordLessonCompletedUseCase: RecordLessonCompletedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
     private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
-    private val errorTracker: ErrorTracker,           // ← NEW
+    private val errorTracker: ErrorTracker,
+    private val analyticsManager: AnalyticsManager,
     val katexRenderer: KatexRenderer,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -168,6 +171,17 @@ class LessonReaderViewModel @Inject constructor(
                             isLoading = false
                         )
                     }
+                    // Derive subjectId from unitId using deterministic ID convention
+                    // (e.g. unitId "PHYSICS_U3" → subjectId "PHYSICS").
+                    val subjectId = content.unitId.substringBefore("_U", content.unitId)
+                    analyticsManager.lessonViewed(
+                        lessonId    = lessonId,
+                        subjectId   = subjectId,
+                        unitId      = content.unitId,
+                        source      = LessonSource.MAIN_SCREEN,
+                        wasCompleted = _state.value.isLessonComplete,
+                    )
+
                     loadCheckpoints()
                     loadNextLesson()
                 }
@@ -379,6 +393,19 @@ class LessonReaderViewModel @Inject constructor(
                     recordLessonCompletedUseCase()
                     val tx = awardXpUseCase(XpSource.LESSON_COMPLETE, lessonId)
                     xpAwarded = tx?.amount ?: 0
+                    // Analytics: fire lessonCompleted for the first-time finish
+                    val content = _state.value.lessonContent
+                    if (content != null) {
+                        val subjectId = content.unitId.substringBefore("_U", content.unitId)
+                        analyticsManager.lessonCompleted(
+                            lessonId         = lessonId,
+                            subjectId        = subjectId,
+                            unitId           = content.unitId,
+                            timeSpentSeconds = _state.value.readingTimeSeconds.toInt(),
+                            isFirstCompletion = true,
+                            sectionsCount    = content.sections.size,
+                        )
+                    }
                 }
                 allPartsComplete && isRepeat -> {
                     val tx = awardXpUseCase(XpSource.LESSON_REPEAT, lessonId)
