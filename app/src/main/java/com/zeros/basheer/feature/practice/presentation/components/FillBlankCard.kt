@@ -19,6 +19,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeros.basheer.feature.quizbank.domain.model.Question
+import kotlinx.serialization.json.Json
 
 /**
  * Card for Fill in the Blank questions.
@@ -309,14 +310,8 @@ private fun FillBlankOption(
 /**
  * Parse JSON options string to list
  */
-private fun parseOptions(optionsJson: String): List<String> {
-    return try {
-        optionsJson
-            .trim()
-            .removeSurrounding("[", "]")
-            .split(",")
-            .map { it.trim().removeSurrounding("\"") }
-    } catch (e: Exception) {
-        emptyList()
-    }
+private fun parseOptions(optionsJson: String): List<String> = try {
+    Json.decodeFromString<List<String>>(optionsJson.trim())
+} catch (e: Exception) {
+    emptyList()
 }
