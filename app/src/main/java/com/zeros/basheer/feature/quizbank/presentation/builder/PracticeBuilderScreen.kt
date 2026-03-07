@@ -110,6 +110,24 @@ fun PracticeBuilderScreen(
             ) { Text(state.error!!) }
         }
 
+        if (state.noWeakQuestionsFound) {
+            AlertDialog(
+                onDismissRequest = { viewModel.onEvent(PracticeBuilderEvent.ClearNoWeakQuestionsFound) },
+                title = { Text("لا توجد نقاط ضعف بعد") },
+                text = {
+                    Text(
+                        "لم تُجِب على عدد كافٍ من الأسئلة بعد لتحديد نقاط الضعف. " +
+                                "أكمل بعض جلسات التدريب أو الامتحانات أولاً، ثم حاول مجدداً."
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = { viewModel.onEvent(PracticeBuilderEvent.ClearNoWeakQuestionsFound) }) {
+                        Text("فهمت")
+                    }
+                }
+            )
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
