@@ -127,6 +127,28 @@ interface QuestionDao {
         SELECT DISTINCT q.* FROM questions q
         LEFT JOIN question_concepts qc ON q.id = qc.questionId
         WHERE q.subjectId = :subjectId
+        AND q.isCheckpoint = 0
+        AND q.unitId IN (:unitIds)
+        AND (:type IS NULL OR q.type = :type)
+        AND (:minDifficulty IS NULL OR q.difficulty >= :minDifficulty)
+        AND (:maxDifficulty IS NULL OR q.difficulty <= :maxDifficulty)
+        ORDER BY RANDOM()
+        LIMIT :limit
+    """)
+    suspend fun getFilteredQuestionsMultiUnit(
+        subjectId: String,
+        unitIds: List<String>,
+        type: String? = null,
+        minDifficulty: Int? = null,
+        maxDifficulty: Int? = null,
+        limit: Int = 20
+    ): List<QuestionEntity>
+
+    @Query("""
+        SELECT DISTINCT q.* FROM questions q
+        LEFT JOIN question_concepts qc ON q.id = qc.questionId
+        WHERE q.subjectId = :subjectId
+        AND q.isCheckpoint = 0
         AND (:unitId IS NULL OR q.unitId = :unitId)
         AND (:type IS NULL OR q.type = :type)
         AND (:conceptId IS NULL OR qc.conceptId = :conceptId)

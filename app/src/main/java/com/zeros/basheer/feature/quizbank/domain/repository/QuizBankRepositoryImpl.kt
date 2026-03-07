@@ -94,6 +94,23 @@ class QuizBankRepositoryImpl @Inject constructor(
             limit = limit
         ).map { it.toDomain() }
 
+    override suspend fun getFilteredQuestionsMultiUnit(
+        subjectId: String,
+        unitIds: List<String>,
+        type: QuestionType?,
+        minDifficulty: Int?,
+        maxDifficulty: Int?,
+        limit: Int
+    ): List<Question> =
+        questionDao.getFilteredQuestionsMultiUnit(
+            subjectId = subjectId,
+            unitIds = unitIds,
+            type = type?.name,
+            minDifficulty = minDifficulty,
+            maxDifficulty = maxDifficulty,
+            limit = limit
+        ).map { it.toDomain() }
+
     override suspend fun insertQuestion(question: Question) =
         questionDao.insertQuestion(question.toEntity())
 

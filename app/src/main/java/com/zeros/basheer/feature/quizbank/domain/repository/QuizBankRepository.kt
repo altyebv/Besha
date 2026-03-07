@@ -37,6 +37,15 @@ interface QuizBankRepository {
         maxDifficulty: Int? = null,
         limit: Int = 20
     ): List<Question>
+
+    suspend fun getFilteredQuestionsMultiUnit(
+        subjectId: String,
+        unitIds: List<String>,
+        type: QuestionType? = null,
+        minDifficulty: Int? = null,
+        maxDifficulty: Int? = null,
+        limit: Int = 20
+    ): List<Question>
     suspend fun insertQuestion(question: Question)
     suspend fun insertQuestions(questions: List<Question>)
     suspend fun deleteQuestionById(questionId: String)
