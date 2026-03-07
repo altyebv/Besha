@@ -1,34 +1,33 @@
 package com.zeros.basheer.feature.practice.presentation.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.zeros.basheer.feature.quizbank.domain.model.Question
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
  * Card for Order questions.
- * User drags items to reorder them.
- * options format: JSON array of items to order
+ *
+ * Interaction model: tap an item to select it (it gets a highlighted ring),
+ * then tap another item to swap them. Tap the same item again to deselect.
+ * This avoids scroll-vs-drag gesture conflicts in a scrollable Column.
  */
 @Composable
 fun OrderCard(
@@ -43,7 +42,7 @@ fun OrderCard(
     }
 
     var orderedItems by remember { mutableStateOf(items.shuffled()) }
-    var draggedIndex by remember { mutableIntStateOf(-1) }
+    var selectedIndex by remember { mutableIntStateOf(-1) }
     val scrollState = rememberScrollState()
 
     Box(
@@ -58,7 +57,6 @@ fun OrderCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Question text
             Text(
                 text = question.textAr,
                 style = MaterialTheme.typography.titleLarge.copy(
@@ -70,32 +68,41 @@ fun OrderCard(
             )
 
             Text(
-                text = "اسحب العناصر لترتيبها بالشكل الصحيح",
+                text = if (selectedIndex < 0) "اضغط على عنصر لتحديده، ثم اضغط على موضعه الصحيح"
+                else "الآن اضغط على العنصر الذي تريد المبادلة معه",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (selectedIndex < 0) MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             )
 
             when (interactionState) {
                 is QuestionInteractionState.Idle,
                 is QuestionInteractionState.Interacting -> {
-                    // Draggable items
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         orderedItems.forEachIndexed { index, item ->
-                            DraggableOrderItem(
+                            OrderItem(
                                 item = item,
-                                index = index,
-                                isDragging = draggedIndex == index,
-                                onDragStart = { draggedIndex = index },
-                                onDragEnd = { draggedIndex = -1 },
-                                onSwap = { fromIndex, toIndex ->
-                                    orderedItems = orderedItems.toMutableList().apply {
-                                        val temp = this[fromIndex]
-                                        this[fromIndex] = this[toIndex]
-                                        this[toIndex] = temp
+                                position = index + 1,
+                                isSelected = selectedIndex == index,
+                                onClick = {
+                                    when {
+                                        // Tap selected item → deselect
+                                        selectedIndex == index -> selectedIndex = -1
+                                        // Nothing selected → select this one
+                                        selectedIndex < 0 -> selectedIndex = index
+                                        // Another item was selected → swap
+                                        else -> {
+                                            orderedItems = orderedItems.toMutableList().apply {
+                                                val tmp = this[selectedIndex]
+                                                this[selectedIndex] = this[index]
+                                                this[index] = tmp
+                                            }
+                                            selectedIndex = -1
+                                        }
                                     }
                                 }
                             )
@@ -104,13 +111,8 @@ fun OrderCard(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Submit button
                     Button(
-                        onClick = {
-                            // Format answer as comma-separated list
-                            val answer = orderedItems.joinToString(",")
-                            onAnswer(answer)
-                        },
+                        onClick = { onAnswer(orderedItems.joinToString(",")) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("تحقق من الإجابة")
@@ -118,7 +120,6 @@ fun OrderCard(
                 }
 
                 is QuestionInteractionState.Answered -> {
-                    // Show correct order
                     val correctOrder = parseOrderItems(question.correctAnswer)
 
                     Column(
@@ -126,15 +127,10 @@ fun OrderCard(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         correctOrder.forEachIndexed { index, item ->
-                            OrderItemDisplay(
-                                item = item,
-                                position = index + 1,
-                                isCorrect = true
-                            )
+                            OrderItemDisplay(item = item, position = index + 1, isCorrect = true)
                         }
                     }
 
-                    // Explanation
                     question.explanation?.let { exp ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Surface(
@@ -154,11 +150,7 @@ fun OrderCard(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Continue button
-                    Button(
-                        onClick = onContinue,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
                         Text("متابعة")
                     }
                 }
@@ -168,87 +160,70 @@ fun OrderCard(
 }
 
 @Composable
-private fun DraggableOrderItem(
+private fun OrderItem(
     item: String,
-    index: Int,
-    isDragging: Boolean,
-    onDragStart: () -> Unit,
-    onDragEnd: () -> Unit,
-    onSwap: (Int, Int) -> Unit
+    position: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit,
 ) {
     val elevation by animateDpAsState(
-        targetValue = if (isDragging) 8.dp else 0.dp,
+        targetValue = if (isSelected) 6.dp else 0.dp,
         label = "elevation"
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surface,
+        label = "containerColor"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+        label = "borderColor"
     )
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .zIndex(if (isDragging) 1f else 0f)
-            .pointerInput(Unit) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = { onDragStart() },
-                    onDragEnd = { onDragEnd() },
-                    onDragCancel = { onDragEnd() },
-                    onDrag = { change, _ ->
-                        change.consume()
-                        // Simple swap logic - in production, use more sophisticated drag handling
-                    }
-                )
-            },
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDragging) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        border = BorderStroke(
-            1.dp,
-            if (isDragging) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-            }
-        )
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Position indicator
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.size(32.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = "${index + 1}",
+                        text = "$position",
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
 
-            // Item text
             Text(
                 text = item,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyLarge
             )
 
-            // Drag handle
             Icon(
-                imageVector = Icons.Default.DragHandle,
-                contentDescription = "اسحب لإعادة الترتيب",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                imageVector = Icons.Default.SwapVert,
+                contentDescription = null,
+                tint = if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
             )
         }
     }
@@ -263,16 +238,10 @@ private fun OrderItemDisplay(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCorrect) {
-                Color(0xFF4CAF50).copy(alpha = 0.1f)
-            } else {
-                Color(0xFFF44336).copy(alpha = 0.1f)
-            }
+            containerColor = if (isCorrect) Color(0xFF4CAF50).copy(alpha = 0.1f)
+            else Color(0xFFF44336).copy(alpha = 0.1f)
         ),
-        border = BorderStroke(
-            1.dp,
-            if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336)
-        )
+        border = BorderStroke(1.dp, if (isCorrect) Color(0xFF4CAF50) else Color(0xFFF44336))
     ) {
         Row(
             modifier = Modifier
@@ -283,11 +252,8 @@ private fun OrderItemDisplay(
         ) {
             Surface(
                 shape = CircleShape,
-                color = if (isCorrect) {
-                    Color(0xFF4CAF50).copy(alpha = 0.2f)
-                } else {
-                    Color(0xFFF44336).copy(alpha = 0.2f)
-                },
+                color = if (isCorrect) Color(0xFF4CAF50).copy(alpha = 0.2f)
+                else Color(0xFFF44336).copy(alpha = 0.2f),
                 modifier = Modifier.size(32.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -310,24 +276,16 @@ private fun OrderItemDisplay(
     }
 }
 
-// Data structures
 @Serializable
-data class OrderItems(
-    val items: List<String>
-)
+data class OrderItems(val items: List<String>)
 
-// Parsing helpers
 private fun parseOrderItems(json: String): List<String> {
     return try {
-        // Try parsing as JSON array first
         Json.decodeFromString<List<String>>(json)
     } catch (e: Exception) {
         try {
-            // Try parsing as OrderItems object
-            val orderItems = Json.decodeFromString<OrderItems>(json)
-            orderItems.items
+            Json.decodeFromString<OrderItems>(json).items
         } catch (e2: Exception) {
-            // Fallback: split by comma
             json.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         }
     }
