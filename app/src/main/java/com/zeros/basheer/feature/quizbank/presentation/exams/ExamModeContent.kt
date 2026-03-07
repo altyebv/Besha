@@ -20,6 +20,7 @@ internal fun ExamsModeContent(
     ministryExams: List<Exam>,
     schoolExams: List<Exam>,
     isLoading: Boolean,
+    examScores: Map<String, Float>,
     onExamClick: (String) -> Unit
 ) {
     val allExams = remember(ministryExams, schoolExams) { ministryExams + schoolExams }
@@ -101,7 +102,7 @@ internal fun ExamsModeContent(
                     filtered.forEach { exam ->
                         ExamCard(
                             exam = exam,
-                            score = null, // TODO: wire attempt history
+                            score = examScores[exam.id],
                             onClick = { onExamClick(exam.id) }
                         )
                     }
