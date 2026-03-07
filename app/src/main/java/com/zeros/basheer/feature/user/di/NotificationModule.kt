@@ -1,6 +1,7 @@
 package com.zeros.basheer.feature.user.di
 
 import android.content.Context
+import com.zeros.basheer.feature.user.notification.AchievementNotificationManager
 import com.zeros.basheer.feature.user.notification.ReminderNotificationManager
 import com.zeros.basheer.feature.user.notification.ReminderScheduler
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
@@ -20,6 +21,12 @@ object NotificationModule {
     fun provideReminderNotificationManager(
         @ApplicationContext context: Context
     ): ReminderNotificationManager = ReminderNotificationManager(context)
+
+    @Provides
+    @Singleton
+    fun provideAchievementNotificationManager(
+        @ApplicationContext context: Context
+    ): AchievementNotificationManager = AchievementNotificationManager(context)
 
     @Provides
     @Singleton
