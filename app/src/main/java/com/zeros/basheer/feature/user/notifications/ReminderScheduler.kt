@@ -13,13 +13,20 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Schedules and cancels the daily study reminder alarm.
+ * Schedules and cancels the daily study reminder alarm AND the streak-risk check.
  *
- * Uses [AlarmManager.setRepeating] on older APIs and
- * [AlarmManager.setExactAndAllowWhileIdle] with manual re-schedule on API 23+
- * for battery-friendly but still precise delivery.
+ * ── Daily reminder ────────────────────────────────────────────────────────────
+ * Fires [ReminderReceiver] at the user-configured hour:minute every day.
+ * Uses [AlarmManager.setExactAndAllowWhileIdle] (API 23+) or falls back to
+ * [AlarmManager.setWindow] on API 31+ when exact-alarm permission is missing.
  *
- * The alarm fires [ReminderReceiver] at the user-configured hour:minute every day.
+ * ── Streak-risk check ────────────────────────────────────────────────────────
+ * Fires [ReminderReceiver] with action [ACTION_STREAK_RISK] two hours before
+ * the user's reminder time (minimum 18:00). [ReminderReceiver] checks whether
+ * the user has already studied today and only shows the high-importance alert
+ * if their streak is at risk — no notification is shown otherwise.
+ *
+ * Both alarms are rescheduled together whenever settings change or on device boot.
  */
 @Singleton
 class ReminderScheduler @Inject constructor(
@@ -28,7 +35,14 @@ class ReminderScheduler @Inject constructor(
 ) {
 
     companion object {
-        private const val REQUEST_CODE = 2001
+        private const val REQUEST_CODE_REMINDER     = 2001
+        private const val REQUEST_CODE_STREAK_RISK  = 2002
+
+        /** Action string that distinguishes streak-risk alarm from the daily reminder. */
+        const val ACTION_STREAK_RISK = "com.zeros.basheer.STREAK_RISK_CHECK"
+
+        /** Earliest hour the streak-risk notification fires (6 PM). */
+        private const val MIN_STREAK_RISK_HOUR = 18
     }
 
     private val alarmManager: AlarmManager =
@@ -37,54 +51,30 @@ class ReminderScheduler @Inject constructor(
     // ── Public API ────────────────────────────────────────────────────────────
 
     /**
-     * Schedules the daily reminder at the hour:minute stored in preferences.
-     * If the time has already passed today, schedules for tomorrow.
-     * Cancels any existing alarm first to avoid duplicates.
+     * Schedules both the daily reminder and the streak-risk check.
+     * Cancels any existing alarms first to avoid duplicates.
+     *
+     * @param hour   User-configured reminder hour (0–23).
+     * @param minute User-configured reminder minute (0–59).
      */
     fun schedule(hour: Int, minute: Int) {
-        cancel()  // Always cancel before rescheduling to avoid duplicates
-
-        val triggerAt = nextAlarmTime(hour, minute)
-        val intent = buildPendingIntent()
-
-        when {
-            // Android 12+ requires SCHEDULE_EXACT_ALARM to be granted by the user
-            // in system settings. Check before using exact API — fall back to
-            // setWindow (fires within a ~10 min window) if permission not granted.
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP, triggerAt, intent
-                    )
-                } else {
-                    // Inexact fallback — fires within a 10-minute window of the target time.
-                    // Good enough for a daily study reminder.
-                    alarmManager.setWindow(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAt,
-                        10 * 60 * 1000L, // 10 min window
-                        intent
-                    )
-                }
-            }
-            // Android 6–11 — exact alarm allowed without special permission
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP, triggerAt, intent
-                )
-            }
-            // Android 5 and below — use repeating alarm
-            else -> {
-                alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP, triggerAt, AlarmManager.INTERVAL_DAY, intent
-                )
-            }
-        }
+        cancel()
+        scheduleAlarm(
+            requestCode = REQUEST_CODE_REMINDER,
+            action      = null,                          // default alarm action
+            triggerAt   = nextAlarmTime(hour, minute),
+        )
+        scheduleAlarm(
+            requestCode = REQUEST_CODE_STREAK_RISK,
+            action      = ACTION_STREAK_RISK,
+            triggerAt   = nextAlarmTime(streakRiskHour(hour), minute),
+        )
     }
 
-    /** Cancels the scheduled daily alarm, if any. */
+    /** Cancels both alarms. */
     fun cancel() {
-        alarmManager.cancel(buildPendingIntent())
+        alarmManager.cancel(buildPendingIntent(REQUEST_CODE_REMINDER, action = null))
+        alarmManager.cancel(buildPendingIntent(REQUEST_CODE_STREAK_RISK, ACTION_STREAK_RISK))
     }
 
     /**
@@ -97,38 +87,67 @@ class ReminderScheduler @Inject constructor(
             Triple(
                 preferences.isNotificationsEnabled().first(),
                 preferences.getReminderHour().first(),
-                preferences.getReminderMinute().first()
+                preferences.getReminderMinute().first(),
             )
         }
         if (enabled) schedule(hour, minute) else cancel()
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Internals ─────────────────────────────────────────────────────────────
+
+    private fun scheduleAlarm(requestCode: Int, action: String?, triggerAt: Long) {
+        val intent = buildPendingIntent(requestCode, action)
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, intent)
+                } else {
+                    alarmManager.setWindow(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerAt,
+                        10 * 60 * 1000L,  // 10-min window — fine for a reminder
+                        intent,
+                    )
+                }
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ->
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, intent)
+            else ->
+                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, triggerAt, AlarmManager.INTERVAL_DAY, intent)
+        }
+    }
 
     /**
-     * Returns the next timestamp (ms since epoch) for the given hour:minute.
+     * Returns the epoch-ms for the next occurrence of [hour]:[minute].
      * If that time has already passed today, returns tomorrow's occurrence.
      */
-    private fun nextAlarmTime(hour: Int, minute: Int): Long {
-        return Calendar.getInstance().apply {
+    private fun nextAlarmTime(hour: Int, minute: Int): Long =
+        Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-            // If we're already past this time today, push to tomorrow
             if (timeInMillis <= System.currentTimeMillis()) {
                 add(Calendar.DAY_OF_YEAR, 1)
             }
         }.timeInMillis
-    }
 
-    private fun buildPendingIntent(): PendingIntent {
-        val intent = Intent(context, ReminderReceiver::class.java)
+    /**
+     * Returns the hour for the streak-risk alarm:
+     * 2 hours before [reminderHour], floored at [MIN_STREAK_RISK_HOUR].
+     */
+    private fun streakRiskHour(reminderHour: Int): Int =
+        (reminderHour - 2).coerceAtLeast(MIN_STREAK_RISK_HOUR)
+
+    private fun buildPendingIntent(requestCode: Int, action: String?): PendingIntent {
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            if (action != null) this.action = action
+        }
         return PendingIntent.getBroadcast(
             context,
-            REQUEST_CODE,
+            requestCode,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
 }
