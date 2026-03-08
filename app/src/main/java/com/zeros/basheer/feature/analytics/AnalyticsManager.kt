@@ -2,6 +2,7 @@ package com.zeros.basheer.feature.analytics
 
 import android.util.Log
 import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
+import com.zeros.basheer.feature.analytics.domain.model.FeedEndReason
 import com.zeros.basheer.feature.analytics.domain.model.FeedInteraction
 import com.zeros.basheer.feature.analytics.domain.model.LessonSource
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
@@ -35,11 +36,9 @@ class AnalyticsManager @Inject constructor(
     private val repository: AnalyticsRepository,
     private val preferencesRepository: UserPreferencesRepository,
     private val achievementNotificationManager: AchievementNotificationManager,
-
-    ) {
+) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // Track session start time for AppSessionEnded duration calculation
     private var sessionStartMillis: Long = System.currentTimeMillis()
     private var sessionActivityCount: Int = 0
 
@@ -47,6 +46,11 @@ class AnalyticsManager @Inject constructor(
     // Session lifecycle
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * @param androidVersion  Build.VERSION.SDK_INT
+     * @param deviceModel     Build.MODEL
+     * @param networkType     "WIFI" | "MOBILE" | "NONE" — read from ConnectivityManager
+     */
     fun onAppForegrounded(
         streakDays: Int,
         totalXp: Int,
@@ -54,6 +58,9 @@ class AnalyticsManager @Inject constructor(
         studentPath: String,
         daysSinceLastOpen: Int,
         appVersion: String,
+        androidVersion: Int,
+        deviceModel: String,
+        networkType: String?,
     ) {
         sessionStartMillis = System.currentTimeMillis()
         sessionActivityCount = 0
@@ -64,15 +71,23 @@ class AnalyticsManager @Inject constructor(
             studentPath = studentPath,
             daysSinceLastOpen = daysSinceLastOpen,
             appVersion = appVersion,
+            androidVersion = androidVersion,
+            deviceModel = deviceModel,
+            networkType = networkType,
         ))
     }
 
-    fun onAppBackgrounded() {
+    /**
+     * Returns the session duration in seconds — useful for the caller
+     * to decide whether to trigger an early sync.
+     */
+    fun onAppBackgrounded(): Int {
         val durationSeconds = ((System.currentTimeMillis() - sessionStartMillis) / 1000).toInt()
         track(BasheerEvent.AppSessionEnded(
             durationSeconds = durationSeconds,
             activitiesCount = sessionActivityCount,
         ))
+        return durationSeconds
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -133,6 +148,31 @@ class AnalyticsManager @Inject constructor(
         timeSpentSeconds = timeSpentSeconds,
         isFirstCompletion = isFirstCompletion,
         sectionsCount = sectionsCount,
+    ))
+
+    /**
+     * Call this from [LessonReaderViewModel] when the user taps the exit/back
+     * button before reaching the final section. Do NOT call it when the lesson
+     * is complete — [lessonCompleted] covers that path.
+     */
+    fun lessonAbandoned(
+        lessonId: String,
+        subjectId: String,
+        unitId: String,
+        abandonedAtPartIndex: Int,
+        totalParts: Int,
+        progressPercent: Int,
+        timeSpentSeconds: Int,
+        source: LessonSource = LessonSource.MAIN_SCREEN,
+    ) = track(BasheerEvent.LessonAbandoned(
+        lessonId = lessonId,
+        subjectId = subjectId,
+        unitId = unitId,
+        abandonedAtPartIndex = abandonedAtPartIndex,
+        totalParts = totalParts,
+        progressPercent = progressPercent,
+        timeSpentSeconds = timeSpentSeconds,
+        source = source,
     ))
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -213,6 +253,32 @@ class AnalyticsManager @Inject constructor(
         wasCorrect = wasCorrect,
     ))
 
+    /**
+     * Call from [FeedsViewModel] when the user navigates away from the feed
+     * screen or all cards are exhausted. Captures the full session picture.
+     */
+    fun feedSessionSummary(
+        totalCards: Int,
+        cardsReviewed: Int,
+        cardsAnswered: Int,
+        correctAnswers: Int,
+        wrongAnswers: Int,
+        skippedCards: Int,
+        durationSeconds: Int,
+        subjectIds: List<String>,
+        endReason: FeedEndReason,
+    ) = track(BasheerEvent.FeedSessionSummary(
+        totalCards = totalCards,
+        cardsReviewed = cardsReviewed,
+        cardsAnswered = cardsAnswered,
+        correctAnswers = correctAnswers,
+        wrongAnswers = wrongAnswers,
+        skippedCards = skippedCards,
+        durationSeconds = durationSeconds,
+        subjectIds = subjectIds,
+        endReason = endReason,
+    ))
+
     // ─────────────────────────────────────────────────────────────────────────
     // Exams
     // ─────────────────────────────────────────────────────────────────────────
@@ -234,13 +300,29 @@ class AnalyticsManager @Inject constructor(
     ))
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Notifications
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Call from MainActivity.onCreate / onNewIntent when a notification intent
+     * extra is detected. See NotificationEngaged for setup instructions.
+     */
+    fun notificationEngaged(
+        notificationType: String,
+        daysSinceLastOpen: Int,
+        currentStreakDays: Int,
+    ) = track(BasheerEvent.NotificationEngaged(
+        notificationType = notificationType,
+        daysSinceLastOpen = daysSinceLastOpen,
+        currentStreakDays = currentStreakDays,
+    ))
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Gamification
     // ─────────────────────────────────────────────────────────────────────────
 
     fun xpLevelUp(newLevel: Int, totalXp: Int, xpSource: String) {
         track(BasheerEvent.XpLevelUp(newLevel = newLevel, totalXp = totalXp, xpSource = xpSource))
-        // Notify immediately — the user is in-app when this fires so it should celebrate
-        // as an in-moment reward, not as a background notification.
         achievementNotificationManager.showLevelUp(newLevel, totalXp)
     }
 
@@ -263,7 +345,7 @@ class AnalyticsManager @Inject constructor(
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun track(event: BasheerEvent) {
-        if (!preferencesRepository.getAnalyticsConsent().isEnabled) return  // ← consent gate
+        if (!preferencesRepository.getAnalyticsConsent().isEnabled) return
         sessionActivityCount++
         scope.launch {
             runCatching { repository.enqueue(event) }
