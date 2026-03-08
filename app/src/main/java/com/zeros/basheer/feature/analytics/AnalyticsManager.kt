@@ -6,7 +6,7 @@ import com.zeros.basheer.feature.analytics.domain.model.FeedInteraction
 import com.zeros.basheer.feature.analytics.domain.model.LessonSource
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
-import com.zeros.basheer.feature.user.notification.AchievementNotificationManager
+import com.zeros.basheer.feature.user.notifications.AchievementNotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

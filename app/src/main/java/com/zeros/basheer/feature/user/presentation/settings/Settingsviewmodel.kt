@@ -3,7 +3,7 @@ package com.zeros.basheer.feature.user.presentation.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
-import com.zeros.basheer.feature.user.notification.ReminderScheduler
+import com.zeros.basheer.feature.user.notifications.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

@@ -1,4 +1,4 @@
-package com.zeros.basheer.feature.user.notification
+package com.zeros.basheer.feature.user.notifications
 
 import android.app.AlarmManager
 import android.app.PendingIntent

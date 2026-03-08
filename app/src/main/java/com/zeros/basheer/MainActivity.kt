@@ -16,8 +16,8 @@ import androidx.navigation.compose.rememberNavController
 import com.zeros.basheer.core.data.DatabaseSeeder
 import com.zeros.basheer.core.ui.theme.BasheerTheme
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
-import com.zeros.basheer.feature.user.notification.ReminderNotificationManager
-import com.zeros.basheer.feature.user.notification.ReminderScheduler
+import com.zeros.basheer.feature.user.notifications.ReminderNotificationManager
+import com.zeros.basheer.feature.user.notifications.ReminderScheduler
 import com.zeros.basheer.ui.components.BasheerBottomBar
 import com.zeros.basheer.ui.navigation.BasheerNavHost
 import com.zeros.basheer.ui.navigation.Screen

@@ -1,9 +1,9 @@
 package com.zeros.basheer.feature.user.di
 
 import android.content.Context
-import com.zeros.basheer.feature.user.notification.AchievementNotificationManager
-import com.zeros.basheer.feature.user.notification.ReminderNotificationManager
-import com.zeros.basheer.feature.user.notification.ReminderScheduler
+import com.zeros.basheer.feature.user.notifications.AchievementNotificationManager
+import com.zeros.basheer.feature.user.notifications.ReminderNotificationManager
+import com.zeros.basheer.feature.user.notifications.ReminderScheduler
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import dagger.Module
 import dagger.Provides

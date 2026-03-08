@@ -1,4 +1,4 @@
-package com.zeros.basheer.feature.user.notification
+package com.zeros.basheer.feature.user.notifications
 
 import android.content.BroadcastReceiver
 import android.content.Context
