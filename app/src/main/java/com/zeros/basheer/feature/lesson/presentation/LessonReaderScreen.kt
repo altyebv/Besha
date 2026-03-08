@@ -87,7 +87,7 @@ fun LessonReaderScreen(
         ExitConfirmationDialog(
             context = ExitContext.LESSON,
             forwardPull = state.forwardPull,
-            onConfirm = { showExitDialog = false; viewModel.pauseTimeTracking(); onBackClick() },
+            onConfirm = { showExitDialog = false; viewModel.pauseTimeTracking(); viewModel.onExit(); onBackClick() },
             onDismiss = { showExitDialog = false }
         )
     }
