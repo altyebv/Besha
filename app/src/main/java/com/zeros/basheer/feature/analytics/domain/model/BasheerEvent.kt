@@ -10,6 +10,8 @@ package com.zeros.basheer.feature.analytics.domain.model
  *  - No string keys — the type IS the contract.
  *
  * Firestore write cost: all events for a day are batched into ONE document write.
+ * High-value session events (LessonCompleted, LessonAbandoned, PracticeSessionCompleted,
+ * ExamCompleted) are ALSO written individually to a flat cross-user queryable collection.
  */
 sealed class BasheerEvent {
 
@@ -20,6 +22,10 @@ sealed class BasheerEvent {
     /**
      * Fired once when the app becomes foreground.
      * Captures a lightweight context snapshot for cohort analysis.
+     *
+     * Device fields (androidVersion, deviceModel, networkType) are captured once
+     * per session — they're stable within a session and help triage rendering bugs
+     * and connectivity-related content decisions.
      */
     data class AppSessionStarted(
         val streakDays: Int,
@@ -28,6 +34,9 @@ sealed class BasheerEvent {
         val studentPath: String,            // "SCIENCE" | "LITERARY"
         val daysSinceLastOpen: Int,         // 0 = same day, 1 = yesterday, etc.
         val appVersion: String,
+        val androidVersion: Int,            // Build.VERSION.SDK_INT
+        val deviceModel: String,            // Build.MODEL
+        val networkType: String?,           // "WIFI" | "MOBILE" | "NONE" at session start
     ) : BasheerEvent()
 
     /**
@@ -95,6 +104,23 @@ sealed class BasheerEvent {
         val sectionsCount: Int,
     ) : BasheerEvent()
 
+    /**
+     * Fired when the user exits a lesson before completing it.
+     *
+     * Often more informative than LessonCompleted — tells you which lessons are
+     * losing students and at what part. abandonedAtPartIndex is 0-based.
+     */
+    data class LessonAbandoned(
+        val lessonId: String,
+        val subjectId: String,
+        val unitId: String,
+        val abandonedAtPartIndex: Int,      // Which part the user was on (0-based)
+        val totalParts: Int,
+        val progressPercent: Int,           // 0–100
+        val timeSpentSeconds: Int,
+        val source: LessonSource,
+    ) : BasheerEvent()
+
     // ─────────────────────────────────────────────────────────────────────────
     // Practice / Quiz
     // ─────────────────────────────────────────────────────────────────────────
@@ -156,6 +182,24 @@ sealed class BasheerEvent {
         val wasCorrect: Boolean?,           // null if non-answerable card
     ) : BasheerEvent()
 
+    /**
+     * Fired when a feed session ends (user leaves the feed screen or cards exhausted).
+     *
+     * Complements FeedCardInteracted events with a session-level summary —
+     * essential for evaluating the feed algorithm's effectiveness as a whole.
+     */
+    data class FeedSessionSummary(
+        val totalCards: Int,
+        val cardsReviewed: Int,
+        val cardsAnswered: Int,             // Cards that had an answerable question
+        val correctAnswers: Int,
+        val wrongAnswers: Int,
+        val skippedCards: Int,
+        val durationSeconds: Int,
+        val subjectIds: List<String>,       // Which subjects appeared in this session
+        val endReason: FeedEndReason,
+    ) : BasheerEvent()
+
     // ─────────────────────────────────────────────────────────────────────────
     // Exams
     // ─────────────────────────────────────────────────────────────────────────
@@ -170,6 +214,23 @@ sealed class BasheerEvent {
         val totalQuestions: Int,
         val score: Float,                   // 0.0–1.0
         val durationSeconds: Int,
+    ) : BasheerEvent()
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Notifications
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Fired when the user taps a notification and returns to the app.
+     *
+     * This is the key signal for evaluating reminder effectiveness.
+     * Call from MainActivity.onCreate / onNewIntent when a notification
+     * intent extra is detected (set the extra in ReminderReceiver).
+     */
+    data class NotificationEngaged(
+        val notificationType: String,       // "DAILY_REMINDER" | "STREAK_AT_RISK" | "LEVEL_UP"
+        val daysSinceLastOpen: Int,         // How long had they been away?
+        val currentStreakDays: Int,
     ) : BasheerEvent()
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -199,17 +260,22 @@ sealed class BasheerEvent {
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum class LessonSource {
-    MAIN_SCREEN,        // Tapped from subject/unit list
-    FEED_CARD,          // Tapped from a feed card CTA
-    SEARCH,             // Arrived via search
-    RECOMMENDATION,     // Arrived via smart recommendation
-    PROFILE_HISTORY,    // Re-opened from profile activity log
+    MAIN_SCREEN,
+    FEED_CARD,
+    SEARCH,
+    RECOMMENDATION,
+    PROFILE_HISTORY,
 }
 
 enum class FeedInteraction {
-    REVIEWED,           // Swiped through / marked as seen
+    REVIEWED,
     ANSWERED_CORRECT,
     ANSWERED_WRONG,
     SKIPPED,
     BOOKMARKED,
+}
+
+enum class FeedEndReason {
+    ALL_CARDS_EXHAUSTED,
+    USER_EXITED,
 }
