@@ -126,6 +126,15 @@ object LessonMapper {
                     )
                 }
 
+                BlockType.EXAMPLE -> {
+                    val interactive = json.optBoolean("interactive", false)
+                    val stepsArray = json.optJSONArray("steps")
+                    val steps = if (stepsArray != null) {
+                        (0 until stepsArray.length()).map { stepsArray.getString(it) }
+                    } else emptyList()
+                    BlockMetadata.Example(interactive = interactive, steps = steps)
+                }
+
                 else -> null
             }
         } catch (e: Exception) {
