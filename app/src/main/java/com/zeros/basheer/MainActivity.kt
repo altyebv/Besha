@@ -15,6 +15,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.zeros.basheer.core.data.DatabaseSeeder
 import com.zeros.basheer.core.ui.theme.BasheerTheme
+import com.zeros.basheer.feature.analytics.AnalyticsManager
+import com.zeros.basheer.feature.analytics.sync.AppLifecycleObserver
+import com.zeros.basheer.feature.streak.domain.usecase.GetStreakStatusUseCase
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import com.zeros.basheer.feature.user.notifications.ReminderNotificationManager
 import com.zeros.basheer.feature.user.notifications.ReminderScheduler
@@ -46,6 +49,8 @@ class MainActivity : ComponentActivity() {
     @javax.inject.Inject lateinit var userPreferences: UserPreferencesRepository
     @javax.inject.Inject lateinit var notificationManager: ReminderNotificationManager
     @javax.inject.Inject lateinit var scheduler: ReminderScheduler
+    @javax.inject.Inject lateinit var analyticsManager: AnalyticsManager
+    @javax.inject.Inject lateinit var getStreakStatus: GetStreakStatusUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +87,11 @@ class MainActivity : ComponentActivity() {
         // but we reschedule anyway to pick up any time changes that happened
         // while the alarm wasn't active (e.g. after a clear-data).
         scheduler.rescheduleIfEnabled()
+
+        // ── Notification re-engagement tracking ───────────────────────────────
+        // If this launch came from a notification tap, record the engagement event.
+        // Fires here (before setContent) so it runs exactly once on cold start.
+        handleNotificationIntent(intent)
 
         enableEdgeToEdge()
 
@@ -124,6 +134,49 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+    // ── Notification re-engagement ────────────────────────────────────────────
+
+    /**
+     * Handles warm launches from notification taps (singleTop back stack).
+     * Cold launches are handled in [onCreate] directly.
+     */
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleNotificationIntent(intent)
+    }
+
+    /**
+     * Records [BasheerEvent.NotificationEngaged] if [intent] carries the
+     * [ReminderScheduler.EXTRA_NOTIFICATION_TYPE] extra stamped by [ReminderScheduler].
+     *
+     * daysSinceLastOpen is computed from the epoch-ms written by
+     * [AppLifecycleObserver] on each foreground — same SharedPreferences file.
+     * This is the most accurate proxy available without a dedicated pref.
+     */
+    private fun handleNotificationIntent(intent: android.content.Intent?) {
+        val notificationType = intent
+            ?.getStringExtra(ReminderScheduler.EXTRA_NOTIFICATION_TYPE)
+            ?: return  // Not a notification-driven launch — nothing to record.
+
+        lifecycleScope.launch {
+            val streakDays = runCatching { getStreakStatus().currentStreak }.getOrDefault(0)
+
+            val lastOpenMillis = getSharedPreferences(
+                AppLifecycleObserver.PREFS_NAME, android.content.Context.MODE_PRIVATE,
+            ).getLong(AppLifecycleObserver.KEY_LAST_OPEN_MILLIS, 0L)
+
+            val daysSinceLastOpen = if (lastOpenMillis == 0L) 0 else {
+                val diffMs = System.currentTimeMillis() - lastOpenMillis
+                (diffMs / (1000L * 60 * 60 * 24)).toInt().coerceAtLeast(0)
+            }
+
+            analyticsManager.notificationEngaged(
+                notificationType   = notificationType,
+                daysSinceLastOpen  = daysSinceLastOpen,
+                currentStreakDays  = streakDays,
+            )
         }
     }
 }
