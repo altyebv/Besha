@@ -62,6 +62,19 @@ sealed class BlockMetadata {
     ) : BlockMetadata()
 
     data class Image(val aspectRatio: Float?) : BlockMetadata()
+
+    /**
+     * Example block metadata.
+     *
+     * Static mode  → [interactive] = false, [steps] is empty, content rendered as-is.
+     * Interactive mode → [interactive] = true, [steps] holds each step string.
+     *   Each tap reveals the next step; all steps accumulate on screen.
+     *
+     */
+    data class Example(
+        val interactive: Boolean,
+        val steps: kotlin.collections.List<String>
+    ) : BlockMetadata()
 }
 
 enum class ListStyle {
