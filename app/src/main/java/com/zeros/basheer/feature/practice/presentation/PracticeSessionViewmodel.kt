@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.analytics.AnalyticsManager
-import com.zeros.basheer.feature.analytics.ErrorTracker
+import com.zeros.basheer.feature.analytics.LearningSignalTracker
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.practice.domain.model.PracticeSession
 import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
@@ -71,7 +71,7 @@ class PracticeSessionViewModel @Inject constructor(
     private val practiceRepository: PracticeRepository,
     private val streakRepository: StreakRepository,
     private val awardXpUseCase: AwardXpAndCheckLevelUseCase,
-    private val errorTracker: ErrorTracker,
+    private val learningSignalTracker: LearningSignalTracker,
     private val analyticsManager: AnalyticsManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -214,7 +214,7 @@ class PracticeSessionViewModel @Inject constructor(
                 streakRepository.recordTimeSpent(timeSpent.toLong())
 
                 // 4. Error tracking — record outcome for weak-spot analysis
-                errorTracker.practiceQuestionAnswered(
+                learningSignalTracker.practiceQuestionAnswered(
                     questionId        = currentQuestion.id,
                     sessionId         = sessionId,
                     subjectId         = currentQuestion.subjectId,
@@ -281,7 +281,7 @@ class PracticeSessionViewModel @Inject constructor(
 
                 // Error tracking — skips are a meaningful weak-signal
                 val stats = quizBankRepository.getStatsForQuestion(currentQuestion.id)
-                errorTracker.practiceQuestionAnswered(
+                learningSignalTracker.practiceQuestionAnswered(
                     questionId        = currentQuestion.id,
                     sessionId         = sessionId,
                     subjectId         = currentQuestion.subjectId,
