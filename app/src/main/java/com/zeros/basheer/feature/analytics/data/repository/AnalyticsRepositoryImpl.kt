@@ -2,18 +2,20 @@ package com.zeros.basheer.feature.analytics.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.zeros.basheer.feature.analytics.data.dao.AnalyticsEventDao
 import com.zeros.basheer.feature.analytics.data.entity.AnalyticsEventEntity
 import com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
-import com.zeros.basheer.feature.analytics.domain.model.BasheerError
 import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
+import com.zeros.basheer.feature.analytics.domain.model.LearningSignal
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
+import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,7 +38,7 @@ class AnalyticsRepositoryImpl @Inject constructor(
         context.getSharedPreferences("basheer_analytics", Context.MODE_PRIVATE)
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Install identity — stable, no auth required
+    // Install identity
     // ─────────────────────────────────────────────────────────────────────────
 
     override val installId: String
@@ -45,7 +47,7 @@ class AnalyticsRepositoryImpl @Inject constructor(
         }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Session tracking (in-memory, rebuilt each foreground)
+    // Session tracking
     // ─────────────────────────────────────────────────────────────────────────
 
     private var _currentSessionId: String = buildSessionId()
@@ -72,10 +74,10 @@ class AnalyticsRepositoryImpl @Inject constructor(
         dao.insert(entity)
     }
 
-    override suspend fun enqueueError(error: BasheerError) {
+    override suspend fun enqueueSignal(signal: LearningSignal) {
         val entity = AnalyticsEventEntity(
-            eventType = error::class.simpleName ?: "Unknown",
-            payload = error.toJson(),
+            eventType = signal::class.simpleName ?: "Unknown",
+            payload = signal.toJson(),
             dateBucket = todayBucket(),
             sessionId = _currentSessionId,
         )
@@ -83,7 +85,7 @@ class AnalyticsRepositoryImpl @Inject constructor(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Upload — one Firestore document per day bucket
+    // Upload
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -95,24 +97,37 @@ class AnalyticsRepositoryImpl @Inject constructor(
      *     date: "2025-01-15",
      *     appVersion: "1.0.0",
      *     uploadedAt: <server timestamp>,
-     *     events: [
-     *       { type: "LessonCompleted", occurredAt: 1234567890, sessionId: "...", ...payload },
-     *       ...
-     *     ]
+     *     events: {
+     *       "42": { _type: "LessonCompleted", _occurredAt: 1234567890, ... },
+     *       "43": { _type: "QuestionAnswered", ... },
+     *     }
      *   }
      *
-     * Using SetOptions.merge() means a second upload for the same day *appends*
-     * new events rather than overwriting — safe for partial-day uploads.
+     * IMPORTANT: events is a MAP keyed by Room row ID, NOT an array.
+     * Firestore merges maps field-by-field, so a second upload on the same day
+     * adds new keys without overwriting earlier entries.
+     * (Arrays are atomic — a second set() call would replace, not append.)
      *
-     * Free-tier cost: 1 document write per bucket (day) per upload run.
-     * With daily batching: ~1 write/user/day. Very comfortable under the 20k/day limit.
+     * High-value events (LessonCompleted, LessonAbandoned, PracticeSessionCompleted,
+     * ExamCompleted) are ALSO written to flat cross-user queryable collections.
+     * This lets you query "give me all LessonCompleted for subjectId=PHYSICS_U3"
+     * without reading every user's subcollection.
+     *
+     * Lesson/daily aggregates use FieldValue.increment() for atomic counters —
+     * no read needed, safe for concurrent uploads from different devices.
+     *
+     * Free-tier write budget per day at 1,000 DAU:
+     *   - analytics/days documents:       ~1,000  (daily per-user batch)
+     *   - flat event documents:           ~3,000  (avg 3 high-value events/user)
+     *   - lesson aggregate writes:        ~2,000  (view + complete per lesson touched)
+     *   - daily aggregate write:          ~1,000  (1 per user per sync)
+     *   Total:                            ~7,000  (free tier = 20,000/day ✓)
      */
     override suspend fun uploadPendingBatches(): Result<Int> = runCatching {
         val consent = preferencesRepository.getAnalyticsConsent()
         val buckets = dao.getUnsyncedDateBuckets()
         var totalUploaded = 0
 
-        // Build profile snapshot once for FULL consent uploads
         val profileSnapshot: Map<String, Any?>? = if (consent == AnalyticsConsent.FULL) {
             userProfileRepository.getProfileOnce()?.let { p ->
                 mapOf(
@@ -130,12 +145,13 @@ class AnalyticsRepositoryImpl @Inject constructor(
             val rows = dao.getUnsyncedForDate(bucket)
             if (rows.isEmpty()) continue
 
-            val eventsArray = rows.map { row ->
-                val base = JSONObject(row.payload)
-                base.put("_type", row.eventType)
-                base.put("_occurredAt", row.occurredAt)
-                base.put("_sessionId", row.sessionId)
-                base
+            // ── 1. Per-user day document (events as map, not array) ───────────
+            //
+            // Key: row.id.toString() — stable Room primary key.
+            // Using merge() means a re-upload of the same day appends new event
+            // keys without touching ones already written.
+            val eventsMap: Map<String, Any> = rows.associate { row ->
+                row.id.toString() to buildEventMap(row)
             }
 
             val docData = hashMapOf<String, Any?>(
@@ -144,21 +160,95 @@ class AnalyticsRepositoryImpl @Inject constructor(
                 "consentTier" to consent.name,
                 "appVersion"  to appVersion(),
                 "uploadedAt"  to com.google.firebase.Timestamp.now(),
-                "events"      to eventsArray.map { it.toMap() },
+                "events"      to eventsMap,
             )
-
-            // Attach profile context only for FULL consent
             if (profileSnapshot != null) {
                 docData["userProfile"] = profileSnapshot
             }
 
             firestore
-                .collection("analytics")
+                .collection(COLLECTION_ANALYTICS)
                 .document(installId)
                 .collection("days")
                 .document(bucket)
                 .set(docData, SetOptions.merge())
                 .await()
+
+            // ── 2. Flat cross-user event documents (high-value events only) ───
+            //
+            // Written individually so they can be queried by subjectId, lessonId,
+            // date, studentPath, etc. across all users without subcollection scans.
+            for (row in rows) {
+                val eventJson = JSONObject(row.payload)
+                when (row.eventType) {
+                    "LessonCompleted", "LessonAbandoned",
+                    "PracticeSessionCompleted", "ExamCompleted" -> {
+                        val flatDoc = buildFlatEventDoc(row, eventJson, consent, profileSnapshot)
+                        firestore
+                            .collection(COLLECTION_EVENTS_FLAT)
+                            .document("${installId}_${row.id}")
+                            .set(flatDoc)
+                            .await()
+                    }
+                }
+            }
+
+            // ── 3. Lesson-level aggregates ────────────────────────────────────
+            //
+            // Atomic server-side counters using FieldValue.increment().
+            // No read needed. Safe for concurrent uploads.
+            for (row in rows) {
+                val eventJson = JSONObject(row.payload)
+                when (row.eventType) {
+                    "LessonViewed" -> {
+                        val lessonId = eventJson.optString("lessonId")
+                        if (lessonId.isNotBlank()) {
+                            firestore.collection(COLLECTION_AGGREGATES_LESSONS)
+                                .document(lessonId)
+                                .set(
+                                    mapOf("viewCount" to FieldValue.increment(1)),
+                                    SetOptions.merge(),
+                                ).await()
+                        }
+                    }
+                    "LessonCompleted" -> {
+                        val lessonId = eventJson.optString("lessonId")
+                        if (lessonId.isNotBlank()) {
+                            firestore.collection(COLLECTION_AGGREGATES_LESSONS)
+                                .document(lessonId)
+                                .set(
+                                    mapOf("completeCount" to FieldValue.increment(1)),
+                                    SetOptions.merge(),
+                                ).await()
+                        }
+                    }
+                    "LessonAbandoned" -> {
+                        val lessonId = eventJson.optString("lessonId")
+                        if (lessonId.isNotBlank()) {
+                            firestore.collection(COLLECTION_AGGREGATES_LESSONS)
+                                .document(lessonId)
+                                .set(
+                                    mapOf("abandonCount" to FieldValue.increment(1)),
+                                    SetOptions.merge(),
+                                ).await()
+                        }
+                    }
+                }
+            }
+
+            // ── 4. Daily aggregate ────────────────────────────────────────────
+            //
+            // One write per sync per user per day. Gives you DAU-ish counts
+            // and session totals without touching individual event records.
+            val sessionCount = rows.count { it.eventType == "AppSessionStarted" }
+            if (sessionCount > 0) {
+                firestore.collection(COLLECTION_AGGREGATES_DAILY)
+                    .document(bucket)
+                    .set(
+                        mapOf("sessionCount" to FieldValue.increment(sessionCount.toLong())),
+                        SetOptions.merge(),
+                    ).await()
+            }
 
             dao.markSynced(rows.map { it.id })
             totalUploaded += rows.size
@@ -176,6 +266,48 @@ class AnalyticsRepositoryImpl @Inject constructor(
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
+    /** Builds the map representation of a single Room row for the events map. */
+    private fun buildEventMap(row: AnalyticsEventEntity): Map<String, Any> {
+        val base = JSONObject(row.payload)
+        base.put("_type", row.eventType)
+        base.put("_occurredAt", row.occurredAt)
+        base.put("_sessionId", row.sessionId)
+        return base.toMap()
+    }
+
+    /**
+     * Builds a flat document for the cross-user queryable events collection.
+     * Only called for high-value session-level events.
+     */
+    private fun buildFlatEventDoc(
+        row: AnalyticsEventEntity,
+        eventJson: JSONObject,
+        consent: AnalyticsConsent,
+        profileSnapshot: Map<String, Any?>?,
+    ): Map<String, Any?> {
+        val doc = mutableMapOf<String, Any?>(
+            "installId"   to installId,
+            "eventType"   to row.eventType,
+            "occurredAt"  to row.occurredAt,
+            "date"        to row.dateBucket,
+            "sessionId"   to row.sessionId,
+            "consentTier" to consent.name,
+        )
+        // Flatten key fields to top level for Firestore queries
+        listOf("lessonId", "subjectId", "unitId", "examId", "examType",
+            "sessionId", "score", "durationSeconds", "wasAbandoned",
+            "abandonedAtPartIndex", "progressPercent", "isFirstCompletion"
+        ).forEach { key ->
+            if (eventJson.has(key)) doc[key] = eventJson.get(key)
+        }
+        // Attach path for cohort splits — only if consent allows
+        if (consent.includesProfile && profileSnapshot != null) {
+            doc["studentPath"] = profileSnapshot["studentPath"]
+            doc["state"] = profileSnapshot["state"]
+        }
+        return doc
+    }
+
     private fun todayBucket(): String =
         SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
@@ -185,13 +317,15 @@ class AnalyticsRepositoryImpl @Inject constructor(
 
     companion object {
         private const val KEY_INSTALL_ID = "install_id"
+        private const val COLLECTION_ANALYTICS          = "analytics"
+        private const val COLLECTION_EVENTS_FLAT        = "events_flat"
+        private const val COLLECTION_AGGREGATES_LESSONS = "aggregates_lessons"
+        private const val COLLECTION_AGGREGATES_DAILY   = "aggregates_daily"
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BasheerEvent → JSON serialization
-// Pure reflection-free manual mapping keeps the APK lean (no Gson/Moshi dep needed
-// beyond what Firebase already brings).
 // ─────────────────────────────────────────────────────────────────────────────
 
 private fun BasheerEvent.toJson(): String = when (this) {
@@ -202,6 +336,9 @@ private fun BasheerEvent.toJson(): String = when (this) {
         put("studentPath", studentPath)
         put("daysSinceLastOpen", daysSinceLastOpen)
         put("appVersion", appVersion)
+        put("androidVersion", androidVersion)
+        put("deviceModel", deviceModel)
+        networkType?.let { put("networkType", it) }
     }
     is BasheerEvent.AppSessionEnded -> JSONObject().apply {
         put("durationSeconds", durationSeconds)
@@ -238,6 +375,16 @@ private fun BasheerEvent.toJson(): String = when (this) {
         put("isFirstCompletion", isFirstCompletion)
         put("sectionsCount", sectionsCount)
     }
+    is BasheerEvent.LessonAbandoned -> JSONObject().apply {
+        put("lessonId", lessonId)
+        put("subjectId", subjectId)
+        put("unitId", unitId)
+        put("abandonedAtPartIndex", abandonedAtPartIndex)
+        put("totalParts", totalParts)
+        put("progressPercent", progressPercent)
+        put("timeSpentSeconds", timeSpentSeconds)
+        put("source", source.name)
+    }
     is BasheerEvent.PracticeSessionStarted -> JSONObject().apply {
         put("sessionId", sessionId)
         put("subjectId", subjectId)
@@ -273,6 +420,17 @@ private fun BasheerEvent.toJson(): String = when (this) {
         put("interaction", interaction.name)
         wasCorrect?.let { put("wasCorrect", it) }
     }
+    is BasheerEvent.FeedSessionSummary -> JSONObject().apply {
+        put("totalCards", totalCards)
+        put("cardsReviewed", cardsReviewed)
+        put("cardsAnswered", cardsAnswered)
+        put("correctAnswers", correctAnswers)
+        put("wrongAnswers", wrongAnswers)
+        put("skippedCards", skippedCards)
+        put("durationSeconds", durationSeconds)
+        put("subjectIds", JSONArray(subjectIds))
+        put("endReason", endReason.name)
+    }
     is BasheerEvent.ExamCompleted -> JSONObject().apply {
         put("examId", examId)
         put("subjectId", subjectId)
@@ -280,6 +438,11 @@ private fun BasheerEvent.toJson(): String = when (this) {
         put("totalQuestions", totalQuestions)
         put("score", score)
         put("durationSeconds", durationSeconds)
+    }
+    is BasheerEvent.NotificationEngaged -> JSONObject().apply {
+        put("notificationType", notificationType)
+        put("daysSinceLastOpen", daysSinceLastOpen)
+        put("currentStreakDays", currentStreakDays)
     }
     is BasheerEvent.XpLevelUp -> JSONObject().apply {
         put("newLevel", newLevel)
@@ -292,16 +455,12 @@ private fun BasheerEvent.toJson(): String = when (this) {
     }
 }.toString()
 
-
 // ─────────────────────────────────────────────────────────────────────────────
-// BasheerError → JSON serialization
-// Mirrors BasheerEvent.toJson() directly below. Same rules: manual mapping,
-// no reflection, no extra deps. Nullable fields use ?.let { put(...) }.
+// LearningSignal → JSON serialization
 // ─────────────────────────────────────────────────────────────────────────────
 
-private fun BasheerError.toJson(): String = when (this) {
-
-    is BasheerError.CheckpointAttempted -> JSONObject().apply {
+private fun LearningSignal.toJson(): String = when (this) {
+    is LearningSignal.CheckpointAttempted -> JSONObject().apply {
         put("questionId", questionId)
         put("lessonId", lessonId)
         put("sectionId", sectionId)
@@ -314,8 +473,7 @@ private fun BasheerError.toJson(): String = when (this) {
         put("isCorrect", isCorrect)
         put("timeSpentSeconds", timeSpentSeconds)
     }
-
-    is BasheerError.FeedQuestionAnswered -> JSONObject().apply {
+    is LearningSignal.FeedQuestionAnswered -> JSONObject().apply {
         put("questionId", questionId)
         put("feedCardId", feedCardId)
         put("subjectId", subjectId)
@@ -328,8 +486,7 @@ private fun BasheerError.toJson(): String = when (this) {
         put("cardPositionInSession", cardPositionInSession)
         put("srIntervalDaysBefore", srIntervalDaysBefore)
     }
-
-    is BasheerError.PracticeQuestionAnswered -> JSONObject().apply {
+    is LearningSignal.PracticeQuestionAnswered -> JSONObject().apply {
         put("questionId", questionId)
         put("sessionId", sessionId)
         put("subjectId", subjectId)
@@ -347,8 +504,7 @@ private fun BasheerError.toJson(): String = when (this) {
         put("difficulty", difficulty)
         put("cognitiveLevel", cognitiveLevel)
     }
-
-    is BasheerError.ExamQuestionEvaluated -> JSONObject().apply {
+    is LearningSignal.ExamQuestionEvaluated -> JSONObject().apply {
         put("questionId", questionId)
         put("attemptId", attemptId)
         put("examId", examId)
@@ -369,7 +525,6 @@ private fun BasheerError.toJson(): String = when (this) {
         put("source", source)
         sourceYear?.let { put("sourceYear", it) }
     }
-
 }.toString()
 
 /** JSONObject → Map<String, Any> for Firestore. */
