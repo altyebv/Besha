@@ -1,13 +1,16 @@
 package com.zeros.basheer.feature.analytics.domain.model
 
 /**
- * The complete catalog of trackable wrong answers in Basheer.
+ * The complete catalog of per-answer learning signals in Basheer.
+ *
+ * Previously named BasheerError — renamed because these records track ALL
+ * answers (correct and wrong), not just failures. A student answering correctly
+ * is still a meaningful learning signal for the SR algorithm.
  *
  * Design mirrors [BasheerEvent]:
  *  - Each subclass carries only the data it needs — no nullable bags.
- *  - Names describe the surface + what was attempted ("CheckpointAttempted",
- *    "FeedQuestionAnswered", etc.), not generic "Error".
- *  - Every error is self-describing: reading it tells you exactly where the
+ *  - Names describe the surface + what was attempted ("CheckpointAttempted", etc.)
+ *  - Every signal is self-describing: reading it tells you exactly where the
  *    student was, what they answered, and what was correct.
  *  - No string keys — the type IS the contract.
  *
@@ -18,10 +21,10 @@ package com.zeros.basheer.feature.analytics.domain.model
  *   - Practice suggestion filters (prioritise wrong/skipped questions)
  *   - Exam score breakdown (section-level and cognitive-level breakdowns)
  *
- * Storage: piped through [ErrorTracker] → [AnalyticsRepository.enqueue] →
- * same Room table and Firestore upload path as events. Zero extra infra.
+ * Storage: piped through [LearningSignalTracker] → [AnalyticsRepository.enqueueSignal]
+ * → same Room table and Firestore upload path as events. Zero extra infra.
  */
-sealed class BasheerError {
+sealed class LearningSignal {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Lesson Checkpoints
@@ -47,7 +50,7 @@ sealed class BasheerError {
         val correctAnswer: String,
         val isCorrect: Boolean,
         val timeSpentSeconds: Int,      // Seconds from card render to submit tap
-    ) : BasheerError()
+    ) : LearningSignal()
 
     // ─────────────────────────────────────────────────────────────────────────
     // Feed Mini-games (Spaced Repetition)
@@ -73,7 +76,7 @@ sealed class BasheerError {
         val timeSpentSeconds: Int,
         val cardPositionInSession: Int, // 0-indexed position in today's feed deck
         val srIntervalDaysBefore: Int,  // SR interval before this answer
-    ) : BasheerError()
+    ) : LearningSignal()
 
     // ─────────────────────────────────────────────────────────────────────────
     // Practice Sessions
@@ -104,7 +107,7 @@ sealed class BasheerError {
         val attemptNumber: Int,         // Cumulative attempts on THIS question across all sessions
         val difficulty: Int,            // Question.difficulty — 1–5
         val cognitiveLevel: String,     // CognitiveLevel.name
-    ) : BasheerError()
+    ) : LearningSignal()
 
     // ─────────────────────────────────────────────────────────────────────────
     // Exams
@@ -115,11 +118,9 @@ sealed class BasheerError {
      * Unlike practice, exam answers are only evaluated at submission time —
      * the student doesn't see feedback mid-session.
      *
-     * @param wasUnanswered True if the question was left blank. When true,
-     *                      [userAnswer] is empty and [isCorrect] is false.
+     * @param wasUnanswered True if the question was left blank.
      * @param wasFlagged    Whether the student flagged this question for review
-     *                      during the exam (useful signal: flagged+wrong is very
-     *                      different from unflagged+wrong).
+     *                      during the exam (flagged+wrong ≠ unflagged+wrong).
      */
     data class ExamQuestionEvaluated(
         val questionId: String,
@@ -141,19 +142,19 @@ sealed class BasheerError {
         val cognitiveLevel: String,     // CognitiveLevel.name
         val source: String,             // QuestionSource.name — MINISTRY_FINAL | SCHOOL_EXAM | …
         val sourceYear: Int?,
-    ) : BasheerError()
+    ) : LearningSignal()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Supporting enum — where did the error surface?
-// Used by the recommendation engine to weight error signals differently.
+// Supporting enum — where did the signal surface?
+// Used by the recommendation engine to weight signals differently.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Surfaces where a student can make an error, ordered roughly by
- * signal strength (exam errors are the highest-stakes signal).
+ * Surfaces where a student can produce a learning signal, ordered roughly by
+ * signal strength (exam signals are the highest-stakes).
  */
-enum class ErrorSurface {
+enum class SignalSurface {
     LESSON_CHECKPOINT,   // Inline gate inside a lesson part
     FEED_CARD,           // Spaced repetition mini-game in the feed
     PRACTICE_SESSION,    // Deliberate practice drill
