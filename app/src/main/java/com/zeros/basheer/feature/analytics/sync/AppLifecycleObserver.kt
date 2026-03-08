@@ -65,6 +65,13 @@ class AppLifecycleObserver @Inject constructor(
             )
 
             lastOpenMillis = System.currentTimeMillis()
+
+            // Persist so MainActivity can compute daysSinceLastOpen for NotificationEngaged
+            // without needing a separate repository or extra infrastructure.
+            context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+                .edit()
+                .putLong(KEY_LAST_OPEN_MILLIS, lastOpenMillis)
+                .apply()
         }
     }
 
@@ -93,4 +100,10 @@ class AppLifecycleObserver @Inject constructor(
             else -> "OTHER"
         }
     }.getOrNull()
+
+    companion object {
+        /** Shared with MainActivity for NotificationEngaged.daysSinceLastOpen. */
+        const val PREFS_NAME           = "basheer_analytics"
+        const val KEY_LAST_OPEN_MILLIS = "last_open_millis"
+    }
 }
