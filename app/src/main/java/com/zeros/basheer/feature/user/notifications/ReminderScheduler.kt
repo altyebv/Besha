@@ -41,6 +41,14 @@ class ReminderScheduler @Inject constructor(
         /** Action string that distinguishes streak-risk alarm from the daily reminder. */
         const val ACTION_STREAK_RISK = "com.zeros.basheer.STREAK_RISK_CHECK"
 
+        /**
+         * Intent extra key that identifies which notification type fired.
+         * Read in [MainActivity] to populate [BasheerEvent.NotificationEngaged].
+         */
+        const val EXTRA_NOTIFICATION_TYPE  = "notification_type"
+        const val TYPE_DAILY_REMINDER      = "DAILY_REMINDER"
+        const val TYPE_STREAK_AT_RISK      = "STREAK_AT_RISK"
+
         /** Earliest hour the streak-risk notification fires (6 PM). */
         private const val MIN_STREAK_RISK_HOUR = 18
     }
@@ -142,6 +150,12 @@ class ReminderScheduler @Inject constructor(
     private fun buildPendingIntent(requestCode: Int, action: String?): PendingIntent {
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             if (action != null) this.action = action
+            // Stamp the notification type so MainActivity can record NotificationEngaged
+            // without needing to re-derive which alarm fired from the action string.
+            putExtra(
+                EXTRA_NOTIFICATION_TYPE,
+                if (action == ACTION_STREAK_RISK) TYPE_STREAK_AT_RISK else TYPE_DAILY_REMINDER,
+            )
         }
         return PendingIntent.getBroadcast(
             context,
