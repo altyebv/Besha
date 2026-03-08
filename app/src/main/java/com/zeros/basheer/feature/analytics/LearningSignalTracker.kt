@@ -1,7 +1,7 @@
 package com.zeros.basheer.feature.analytics
 
 import android.util.Log
-import com.zeros.basheer.feature.analytics.domain.model.BasheerError
+import com.zeros.basheer.feature.analytics.domain.model.LearningSignal
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.CoroutineScope
@@ -82,7 +82,7 @@ class LearningSignalTracker @Inject constructor(
         isCorrect: Boolean,
         timeSpentSeconds: Int,
     ) = record(
-        BasheerError.CheckpointAttempted(
+        LearningSignal.CheckpointAttempted(
             questionId = questionId,
             lessonId = lessonId,
             sectionId = sectionId,
@@ -120,7 +120,7 @@ class LearningSignalTracker @Inject constructor(
         cardPositionInSession: Int,
         srIntervalDaysBefore: Int,
     ) = record(
-        BasheerError.FeedQuestionAnswered(
+        LearningSignal.FeedQuestionAnswered(
             questionId = questionId,
             feedCardId = feedCardId,
             subjectId = subjectId,
@@ -165,7 +165,7 @@ class LearningSignalTracker @Inject constructor(
         difficulty: Int,
         cognitiveLevel: String,
     ) = record(
-        BasheerError.PracticeQuestionAnswered(
+        LearningSignal.PracticeQuestionAnswered(
             questionId = questionId,
             sessionId = sessionId,
             subjectId = subjectId,
@@ -217,7 +217,7 @@ class LearningSignalTracker @Inject constructor(
         source: String,
         sourceYear: Int?,
     ) = record(
-        BasheerError.ExamQuestionEvaluated(
+        LearningSignal.ExamQuestionEvaluated(
             questionId = questionId,
             attemptId = attemptId,
             examId = examId,
@@ -244,12 +244,12 @@ class LearningSignalTracker @Inject constructor(
     // Core dispatch
     // ─────────────────────────────────────────────────────────────────────────
 
-    private fun record(error: BasheerError) {
+    private fun record(error: LearningSignal) {
         // Reuse the same consent gate as AnalyticsManager.
         // Error records are behavioural data — same consent tier applies.
         if (!preferencesRepository.getAnalyticsConsent().isEnabled) return
         scope.launch {
-            runCatching { repository.enqueueError(error) }
+            runCatching { repository.enqueueSignal(error) }
                 .onFailure { Log.w(TAG, "Failed to enqueue ${error::class.simpleName}", it) }
         }
     }
