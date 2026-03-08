@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.analytics.AnalyticsManager
 import com.zeros.basheer.feature.analytics.LearningSignalTracker
+import com.zeros.basheer.feature.analytics.domain.model.FeedEndReason
 import com.zeros.basheer.feature.analytics.domain.model.FeedInteraction
 import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
@@ -57,6 +58,10 @@ class FeedsViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(FeedsState())
     val state: StateFlow<FeedsState> = _state.asStateFlow()
+
+    // Epoch millis when the current feed session began — used for FeedSessionSummary duration.
+    // Reset in restartSession() so repeated sessions each get their own duration.
+    private var sessionStartMs: Long = System.currentTimeMillis()
 
     init {
         loadFeedSession()
@@ -224,6 +229,7 @@ class FeedsViewModel @Inject constructor(
 
         if (currentIndex >= totalCards - 1) {
             _state.update { it.copy(sessionComplete = true) }
+            fireFeedSessionSummary(FeedEndReason.ALL_CARDS_EXHAUSTED)
             return false
         }
 
@@ -242,6 +248,7 @@ class FeedsViewModel @Inject constructor(
     }
 
     fun restartSession() {
+        sessionStartMs = System.currentTimeMillis()
         _state.update {
             it.copy(
                 currentIndex         = 0,
@@ -258,6 +265,48 @@ class FeedsViewModel @Inject constructor(
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Fires [AnalyticsManager.feedSessionSummary] for the current session state.
+     *
+     * Guards on [FeedsState.cardsViewed] > 0 so loading failures or
+     * zero-card empty states don't produce noise events.
+     *
+     * Safe to call from [onCleared] — [AnalyticsManager.track] dispatches on its
+     * own SupervisorJob scope, not viewModelScope, so it survives VM teardown.
+     */
+    private fun fireFeedSessionSummary(endReason: FeedEndReason) {
+        val s = _state.value
+        if (s.cardsViewed == 0) return
+
+        val durationSeconds = ((System.currentTimeMillis() - sessionStartMs) / 1000).toInt()
+        val cardsAnswered   = s.correctAnswers + s.wrongAnswers
+        // Cards the user swiped through without answering are counted as reviewed-not-answered.
+        val skippedCards    = (s.cardsViewed - cardsAnswered).coerceAtLeast(0)
+        val subjectIds      = s.feedCards.map { it.subjectId }.distinct()
+
+        analyticsManager.feedSessionSummary(
+            totalCards      = s.feedCards.size,
+            cardsReviewed   = s.cardsViewed,
+            cardsAnswered   = cardsAnswered,
+            correctAnswers  = s.correctAnswers,
+            wrongAnswers    = s.wrongAnswers,
+            skippedCards    = skippedCards,
+            durationSeconds = durationSeconds,
+            subjectIds      = subjectIds,
+            endReason       = endReason,
+        )
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Fire USER_EXITED summary if the user navigated away mid-session.
+        // ALL_CARDS_EXHAUSTED is already fired inside onContinue() before this runs.
+        val s = _state.value
+        if (!s.sessionComplete && s.cardsViewed > 0) {
+            fireFeedSessionSummary(FeedEndReason.USER_EXITED)
+        }
+    }
 
     /**
      * Updates [QuestionStats.lastShownInFeed] and [QuestionStats.feedShowCount]
