@@ -2,7 +2,6 @@ package com.zeros.basheer.feature.analytics
 
 import android.util.Log
 import com.zeros.basheer.feature.analytics.domain.model.BasheerError
-import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
 import com.zeros.basheer.feature.analytics.domain.repository.AnalyticsRepository
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +19,7 @@ import javax.inject.Singleton
  *
  * ── Why a separate tracker? ──────────────────────────────────────────────────
  * [AnalyticsManager] handles behavioural events (what the user did).
- * [ErrorTracker] handles learning-quality signals (what the student got wrong).
+ * [LearningSignalTracker] handles learning-quality signals (what the student got wrong).
  * Keeping them separate means:
  *   - The recommendation engine, feed algo, and practice filters can query
  *     error records without combing through the full events table.
@@ -55,7 +54,7 @@ import javax.inject.Singleton
  *  Done — no other files need changing.
  */
 @Singleton
-class ErrorTracker @Inject constructor(
+class LearningSignalTracker @Inject constructor(
     private val repository: AnalyticsRepository,
     private val preferencesRepository: UserPreferencesRepository,
 ) {
