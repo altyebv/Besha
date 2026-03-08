@@ -3,7 +3,7 @@ package com.zeros.basheer.feature.feed.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.analytics.AnalyticsManager
-import com.zeros.basheer.feature.analytics.ErrorTracker
+import com.zeros.basheer.feature.analytics.LearningSignalTracker
 import com.zeros.basheer.feature.analytics.domain.model.FeedInteraction
 import com.zeros.basheer.feature.feed.domain.model.CardInteractionState
 import com.zeros.basheer.feature.feed.domain.model.FeedCard
@@ -52,7 +52,7 @@ class FeedsViewModel @Inject constructor(
     private val recordCardsReviewedUseCase: RecordCardsReviewedUseCase,
     private val awardXpUseCase: AwardXpUseCase,
     private val analyticsManager: AnalyticsManager,
-    private val errorTracker: ErrorTracker,
+    private val errorTracker: LearningSignalTracker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedsState())

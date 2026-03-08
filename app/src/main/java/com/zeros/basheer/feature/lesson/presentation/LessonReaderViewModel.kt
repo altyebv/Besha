@@ -7,7 +7,7 @@ import com.zeros.basheer.core.domain.model.Result
 import com.zeros.basheer.core.math.KatexRenderer
 import com.zeros.basheer.domain.model.LessonContent
 import com.zeros.basheer.domain.model.SectionUiModel
-import com.zeros.basheer.feature.analytics.ErrorTracker
+import com.zeros.basheer.feature.analytics.LearningSignalTracker
 import com.zeros.basheer.feature.concept.domain.model.Concept
 import com.zeros.basheer.feature.concept.domain.repository.ConceptRepository
 import com.zeros.basheer.feature.lesson.domain.repository.LessonRepository
@@ -123,7 +123,7 @@ class LessonReaderViewModel @Inject constructor(
     private val awardXpUseCase: AwardXpAndCheckLevelUseCase,
     private val checkStreakMilestoneUseCase: CheckStreakMilestoneUseCase,
     private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
-    private val errorTracker: ErrorTracker,
+    private val learningSignalTracker: LearningSignalTracker,
     private val analyticsManager: AnalyticsManager,
     val katexRenderer: KatexRenderer,
     savedStateHandle: SavedStateHandle
@@ -341,7 +341,7 @@ class LessonReaderViewModel @Inject constructor(
             .coerceAtLeast(0)
 
         val content = _state.value.lessonContent
-        errorTracker.checkpointAttempted(
+        learningSignalTracker.checkpointAttempted(
             questionId       = cpState.question.id,
             lessonId         = lessonId,
             sectionId        = sectionId,

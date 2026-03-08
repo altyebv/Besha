@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.analytics.AnalyticsManager
-import com.zeros.basheer.feature.analytics.ErrorTracker
+import com.zeros.basheer.feature.analytics.LearningSignalTracker
 import com.zeros.basheer.feature.practice.presentation.components.QuestionInteractionState
 import com.zeros.basheer.feature.quizbank.domain.model.*
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
@@ -108,7 +108,7 @@ class ExamSessionViewModel @Inject constructor(
     private val checkStreakMilestoneUseCase: CheckStreakMilestoneUseCase,
     private val recordQuestionResponseUseCase: RecordQuestionResponseUseCase,
     private val streakRepository: StreakRepository,
-    private val errorTracker: ErrorTracker,
+    private val learningSignalTracker: LearningSignalTracker,
     private val analyticsManager: AnalyticsManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -487,7 +487,7 @@ class ExamSessionViewModel @Inject constructor(
     }
 
     /**
-     * Iterates every question in the exam and records its outcome to [ErrorTracker].
+     * Iterates every question in the exam and records its outcome to [LearningSignalTracker].
      * Called from both [submitExam] and [autoSubmitExam] so no surface is missed.
      *
      * Questions with no answer in [state.answers] are recorded as [wasUnanswered]=true.
@@ -516,7 +516,7 @@ class ExamSessionViewModel @Inject constructor(
                 .firstOrNull { it.questionIds.contains(question.id) }
                 ?.title
 
-            errorTracker.examQuestionEvaluated(
+            learningSignalTracker.examQuestionEvaluated(
                 questionId      = question.id,
                 attemptId       = attemptId,
                 examId          = exam.id,
