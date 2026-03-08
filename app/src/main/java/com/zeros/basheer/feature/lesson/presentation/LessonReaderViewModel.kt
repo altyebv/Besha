@@ -123,7 +123,7 @@ class LessonReaderViewModel @Inject constructor(
     private val awardXpUseCase: AwardXpAndCheckLevelUseCase,
     private val checkStreakMilestoneUseCase: CheckStreakMilestoneUseCase,
     private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
-    private val learningSignalTracker: LearningSignalTracker,
+    private val errorTracker: LearningSignalTracker,
     private val analyticsManager: AnalyticsManager,
     val katexRenderer: KatexRenderer,
     savedStateHandle: SavedStateHandle
@@ -341,7 +341,7 @@ class LessonReaderViewModel @Inject constructor(
             .coerceAtLeast(0)
 
         val content = _state.value.lessonContent
-        learningSignalTracker.checkpointAttempted(
+        errorTracker.checkpointAttempted(
             questionId       = cpState.question.id,
             lessonId         = lessonId,
             sectionId        = sectionId,
@@ -444,6 +444,40 @@ class LessonReaderViewModel @Inject constructor(
 
     fun dismissCompletionModal() {
         _state.update { it.copy(showCompletionModal = false) }
+    }
+
+    // ── Exit / Abandonment ────────────────────────────────────────────────────
+
+    /**
+     * Call this from [LessonReaderScreen] when the user confirms exit via the
+     * [ExitConfirmationDialog] WITHOUT having completed the lesson.
+     *
+     * Already-complete lessons are skipped — revisiting a done lesson and
+     * leaving mid-way is not an abandonment signal worth tracking.
+     *
+     * Safe to call from a composable BackHandler or the dialog confirm action.
+     * The analytics call is fire-and-forget so it won't block navigation.
+     */
+    fun onExit() {
+        val s = _state.value
+        val content = s.lessonContent ?: return  // lesson not loaded yet — nothing to record
+        if (s.isLessonComplete) return           // revisit exit, not an abandonment
+
+        val subjectId = content.unitId.substringBefore("_U", content.unitId)
+        val progressPercent = if (s.totalParts > 0)
+            (s.completedPartIndices.size * 100) / s.totalParts
+        else 0
+
+        analyticsManager.lessonAbandoned(
+            lessonId             = lessonId,
+            subjectId            = subjectId,
+            unitId               = content.unitId,
+            abandonedAtPartIndex = s.currentPartIndex,
+            totalParts           = s.totalParts,
+            progressPercent      = progressPercent,
+            timeSpentSeconds     = s.readingTimeSeconds.toInt(),
+            source               = LessonSource.MAIN_SCREEN,
+        )
     }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
