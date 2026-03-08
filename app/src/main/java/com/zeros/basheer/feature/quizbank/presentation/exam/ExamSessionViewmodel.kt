@@ -13,7 +13,8 @@ import com.zeros.basheer.feature.quizbank.domain.usecase.RecordQuestionResponseU
 import com.zeros.basheer.feature.quizbank.domain.usecase.StartQuizAttemptUseCase
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import com.zeros.basheer.feature.user.domain.model.XpSource
-import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
+import com.zeros.basheer.feature.streak.domain.usecase.CheckStreakMilestoneUseCase
+import com.zeros.basheer.feature.user.domain.usecase.AwardXpAndCheckLevelUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -103,7 +104,8 @@ class ExamSessionViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
     private val startQuizAttemptUseCase: StartQuizAttemptUseCase,
     private val completeQuizAttemptUseCase: CompleteQuizAttemptUseCase,
-    private val awardXpUseCase: AwardXpUseCase,
+    private val awardXpUseCase: AwardXpAndCheckLevelUseCase,
+    private val checkStreakMilestoneUseCase: CheckStreakMilestoneUseCase,
     private val recordQuestionResponseUseCase: RecordQuestionResponseUseCase,
     private val streakRepository: StreakRepository,
     private val errorTracker: ErrorTracker,
@@ -413,7 +415,10 @@ class ExamSessionViewModel @Inject constructor(
 
                 // Record exam completion for streak
                 streakRepository.recordExamCompleted()
+                // Award XP — level-up notification fires inside if boundary crossed
                 awardXpUseCase(XpSource.EXAM_COMPLETE, attemptId.toString())
+                // Check streak milestone now that today's exam activity is recorded
+                checkStreakMilestoneUseCase()
 
                 // ── BasheerEvent: ExamCompleted ───────────────────────────────
                 analyticsManager.examCompleted(

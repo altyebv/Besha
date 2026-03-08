@@ -25,7 +25,8 @@ import com.zeros.basheer.feature.streak.domain.usecase.RecordTimeSpentUseCase
 import com.zeros.basheer.feature.user.domain.model.XpSource
 import com.zeros.basheer.feature.analytics.AnalyticsManager
 import com.zeros.basheer.feature.analytics.domain.model.LessonSource
-import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
+import com.zeros.basheer.feature.streak.domain.usecase.CheckStreakMilestoneUseCase
+import com.zeros.basheer.feature.user.domain.usecase.AwardXpAndCheckLevelUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -119,7 +120,8 @@ class LessonReaderViewModel @Inject constructor(
     private val conceptRepository: ConceptRepository,
     private val quizBankRepository: QuizBankRepository,
     private val recordLessonCompletedUseCase: RecordLessonCompletedUseCase,
-    private val awardXpUseCase: AwardXpUseCase,
+    private val awardXpUseCase: AwardXpAndCheckLevelUseCase,
+    private val checkStreakMilestoneUseCase: CheckStreakMilestoneUseCase,
     private val recordTimeSpentUseCase: RecordTimeSpentUseCase,
     private val errorTracker: ErrorTracker,
     private val analyticsManager: AnalyticsManager,
@@ -391,8 +393,11 @@ class LessonReaderViewModel @Inject constructor(
                 allPartsComplete && !isRepeat -> {
                     markLessonCompleteUseCase(lessonId)
                     recordLessonCompletedUseCase()
+                    // Award XP — level-up notification fires inside if boundary crossed
                     val tx = awardXpUseCase(XpSource.LESSON_COMPLETE, lessonId)
                     xpAwarded = tx?.amount ?: 0
+                    // Check streak milestone now that today's activity is recorded
+                    checkStreakMilestoneUseCase()
                     // Analytics: fire lessonCompleted for the first-time finish
                     val content = _state.value.lessonContent
                     if (content != null) {
@@ -408,11 +413,13 @@ class LessonReaderViewModel @Inject constructor(
                     }
                 }
                 allPartsComplete && isRepeat -> {
+                    // Award XP — level-up notification fires inside if boundary crossed
                     val tx = awardXpUseCase(XpSource.LESSON_REPEAT, lessonId)
                     xpAwarded = tx?.amount ?: 0
                 }
                 !isLastPart -> {
                     val partRef = "${lessonId}_part_$initialPartIndex"
+                    // Award XP — level-up notification fires inside if boundary crossed
                     val tx = awardXpUseCase(XpSource.LESSON_PART_COMPLETE, partRef)
                     xpAwarded = tx?.amount ?: 0
                 }

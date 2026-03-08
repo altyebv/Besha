@@ -15,7 +15,7 @@ import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import com.zeros.basheer.feature.quizbank.domain.repository.QuizBankRepository
 import com.zeros.basheer.feature.streak.domain.repository.StreakRepository
 import com.zeros.basheer.feature.user.domain.model.XpSource
-import com.zeros.basheer.feature.user.domain.usecase.AwardXpUseCase
+import com.zeros.basheer.feature.user.domain.usecase.AwardXpAndCheckLevelUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -70,7 +70,7 @@ class PracticeSessionViewModel @Inject constructor(
     private val quizBankRepository: QuizBankRepository,
     private val practiceRepository: PracticeRepository,
     private val streakRepository: StreakRepository,
-    private val awardXpUseCase: AwardXpUseCase,
+    private val awardXpUseCase: AwardXpAndCheckLevelUseCase,
     private val errorTracker: ErrorTracker,
     private val analyticsManager: AnalyticsManager,
     savedStateHandle: SavedStateHandle
@@ -318,6 +318,7 @@ class PracticeSessionViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 practiceRepository.completeSession(sessionId)
+                // Award XP — level-up notification fires inside if boundary crossed
                 awardXpUseCase(XpSource.PRACTICE_COMPLETE, sessionId.toString())
 
                 val s = _state.value
