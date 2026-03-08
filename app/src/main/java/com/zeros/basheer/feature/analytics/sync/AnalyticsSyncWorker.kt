@@ -7,7 +7,9 @@ import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -62,6 +64,7 @@ class AnalyticsSyncWorker @AssistedInject constructor(
     companion object {
         private const val TAG = "AnalyticsSyncWorker"
         private const val WORK_NAME = "analytics_daily_sync"
+        private const val WORK_NAME_IMMEDIATE = "analytics_immediate_sync"
         private const val MAX_RETRIES = 3
 
         /**
@@ -95,5 +98,43 @@ class AnalyticsSyncWorker @AssistedInject constructor(
 
             Log.d(TAG, "Daily analytics sync scheduled")
         }
+
+        /**
+         * Schedule a one-time immediate sync.
+         *
+         * Called from [AppLifecycleObserver.onStop] when a meaningful session ends
+         * (>= [MIN_SESSION_SECONDS_FOR_EARLY_SYNC] seconds).
+         *
+         * This ensures events from an active study session reach Firestore within
+         * minutes rather than waiting for the next daily window — critical for
+         * detecting churned users and triggering timely re-engagement.
+         *
+         * [ExistingWorkPolicy.KEEP] prevents resetting a queued sync if the user
+         * rapidly opens and closes the app multiple times.
+         */
+        fun scheduleImmediate(context: Context) {
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            val request = OneTimeWorkRequestBuilder<AnalyticsSyncWorker>()
+                .setConstraints(constraints)
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    15, TimeUnit.MINUTES,
+                )
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WORK_NAME_IMMEDIATE,
+                ExistingWorkPolicy.KEEP,
+                request,
+            )
+
+            Log.d(TAG, "Immediate analytics sync scheduled")
+        }
+
+        /** Sessions shorter than this are noise (e.g. accidental opens). */
+        const val MIN_SESSION_SECONDS_FOR_EARLY_SYNC = 120
     }
 }
