@@ -8,6 +8,7 @@ import com.zeros.basheer.feature.subject.data.entity.StudentPath
 import com.zeros.basheer.feature.user.domain.model.UserProfile
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
+import com.zeros.basheer.feature.user.notifications.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,7 @@ data class OnboardingUiState(
     val schoolName: String = "",
     // PATH
     val selectedPath: StudentPath? = null,
-    val academicTrack: String? = null,  // 7th subject: BIOLOGY/ARCHITECTURE/COMPUTER or MILITARY/ISLAMIC
+    val academicTrack: String? = null,
     // GOALS
     val major: String? = null,
     // PREFERENCES
@@ -53,7 +54,10 @@ sealed interface OnboardingEvent {
 class OnboardingViewModel @Inject constructor(
     private val profileRepository: UserProfileRepository,
     private val preferencesRepository: UserPreferencesRepository,
-    private val analytics: AnalyticsManager
+    private val analytics: AnalyticsManager,
+    // Injected so we can schedule the alarm immediately after onboarding completes,
+    // rather than waiting for the next MainActivity.onCreate() call.
+    private val scheduler: ReminderScheduler,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OnboardingUiState())
@@ -62,7 +66,6 @@ class OnboardingViewModel @Inject constructor(
     private val _events = MutableSharedFlow<OnboardingEvent>()
     val events = _events.asSharedFlow()
 
-    // Track how long onboarding takes for analytics
     private val onboardingStartMs = System.currentTimeMillis()
 
     // ── Field updates ─────────────────────────────────────────────────────────
@@ -88,7 +91,6 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onPathSelected(path: StudentPath) {
-        // Clear track when path changes — previous selection no longer valid
         _state.update { it.copy(selectedPath = path, academicTrack = null) }
     }
 
@@ -114,31 +116,20 @@ class OnboardingViewModel @Inject constructor(
 
     // ── Navigation ────────────────────────────────────────────────────────────
 
-    fun onNextFromWelcome() {
-        _state.update { it.copy(step = OnboardingStep.IDENTITY) }
-    }
+    fun onNextFromWelcome()      { _state.update { it.copy(step = OnboardingStep.IDENTITY) } }
 
     fun onNextFromIdentity() {
         val name = _state.value.name.trim()
-        if (name.isBlank()) {
-            _state.update { it.copy(nameError = "الرجاء إدخال اسمك") }
-            return
-        }
-        if (name.length < 2) {
-            _state.update { it.copy(nameError = "الاسم قصير جداً") }
-            return
-        }
+        if (name.isBlank()) { _state.update { it.copy(nameError = "الرجاء إدخال اسمك") }; return }
+        if (name.length < 2) { _state.update { it.copy(nameError = "الاسم قصير جداً") }; return }
         val email = _state.value.email.trim()
         if (email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _state.update { it.copy(emailError = "البريد الإلكتروني غير صحيح") }
-            return
+            _state.update { it.copy(emailError = "البريد الإلكتروني غير صحيح") }; return
         }
         _state.update { it.copy(step = OnboardingStep.LOCATION) }
     }
 
-    fun onNextFromLocation() {
-        _state.update { it.copy(step = OnboardingStep.PATH) }
-    }
+    fun onNextFromLocation()     { _state.update { it.copy(step = OnboardingStep.PATH) } }
 
     fun onNextFromPath() {
         val s = _state.value
@@ -146,13 +137,8 @@ class OnboardingViewModel @Inject constructor(
         _state.update { it.copy(step = OnboardingStep.GOALS) }
     }
 
-    fun onNextFromGoals() {
-        _state.update { it.copy(step = OnboardingStep.PREFERENCES) }
-    }
-
-    fun onNextFromPreferences() {
-        _state.update { it.copy(step = OnboardingStep.CONSENT) }
-    }
+    fun onNextFromGoals()        { _state.update { it.copy(step = OnboardingStep.PREFERENCES) } }
+    fun onNextFromPreferences()  { _state.update { it.copy(step = OnboardingStep.CONSENT) } }
 
     fun onConsentChosen(consent: AnalyticsConsent) {
         viewModelScope.launch {
@@ -179,7 +165,6 @@ class OnboardingViewModel @Inject constructor(
 
     // ── Completion ────────────────────────────────────────────────────────────
 
-    /** Called after consent is chosen — saves profile + prefs then fires nav event. */
     private fun completeOnboarding(consent: AnalyticsConsent) {
         val s = _state.value
         val path = s.selectedPath ?: return
@@ -188,40 +173,47 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             profileRepository.saveProfile(
                 UserProfile(
-                    name = s.name.trim(),
-                    studentPath = path,
-                    schoolName = s.schoolName.trim().ifBlank { null },
-                    email = s.email.trim().ifBlank { null },
-                    state = s.state,
-                    city = s.city.trim().ifBlank { null },
-                    major = s.major,
-                    academicTrack = s.academicTrack,
+                    name             = s.name.trim(),
+                    studentPath      = path,
+                    schoolName       = s.schoolName.trim().ifBlank { null },
+                    email            = s.email.trim().ifBlank { null },
+                    state            = s.state,
+                    city             = s.city.trim().ifBlank { null },
+                    major            = s.major,
+                    academicTrack    = s.academicTrack,
                     dailyStudyMinutes = s.dailyStudyMinutes
                 )
             )
             preferencesRepository.setDailyGoalMinutes(s.dailyStudyMinutes)
+
             if (s.reminderEnabled) {
                 preferencesRepository.setNotificationsEnabled(true)
                 preferencesRepository.setReminderHour(s.reminderHour)
                 preferencesRepository.setReminderMinute(s.reminderMinute)
+                // ── Schedule the alarm NOW so it fires without requiring an app restart ──
+                // Without this call, the alarm only activates on the next cold launch
+                // (MainActivity.rescheduleIfEnabled), meaning first-time users would
+                // miss their first reminder if they don't restart the app.
+                scheduler.schedule(s.reminderHour, s.reminderMinute)
             } else {
                 preferencesRepository.setNotificationsEnabled(false)
             }
+
             preferencesRepository.setOnboardingComplete(true)
             _state.update { it.copy(isSaving = false) }
             _events.emit(OnboardingEvent.NavigateToMain)
         }
-        // at the end of completeOnboarding(), before emitting the event:
+
         analytics.onboardingCompleted(
-            studentPath = path.name,
-            hasSchoolName = s.schoolName.isNotBlank(),
-            hasEmail = s.email.isNotBlank(),
-            state = s.state,
-            major = s.major,
+            studentPath       = path.name,
+            hasSchoolName     = s.schoolName.isNotBlank(),
+            hasEmail          = s.email.isNotBlank(),
+            state             = s.state,
+            major             = s.major,
             dailyStudyMinutes = s.dailyStudyMinutes,
-            reminderEnabled = s.reminderEnabled,
-            consentTier = consent.name,
-            durationSeconds = ((System.currentTimeMillis() - onboardingStartMs) / 1000).toInt()
+            reminderEnabled   = s.reminderEnabled,
+            consentTier       = consent.name,
+            durationSeconds   = ((System.currentTimeMillis() - onboardingStartMs) / 1000).toInt()
         )
     }
 }

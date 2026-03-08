@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zeros.basheer.feature.user.notifications.rememberNotificationPermission
 import com.zeros.basheer.feature.user.presentation.onboarding.components.ConsentStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.GoalsStep
 import com.zeros.basheer.feature.user.presentation.onboarding.components.IdentityStep
@@ -36,13 +37,23 @@ fun OnboardingScreen(
         viewModel.onBack()
     }
 
+    // ── Notification permission ───────────────────────────────────────────────
+    // Wires the POST_NOTIFICATIONS system dialog to the reminder toggle in
+    // PreferencesStep. When the user flips the switch on:
+    //   API 33+ → request permission dialog → if granted, enable in ViewModel
+    //   API < 33 → no dialog needed → enable directly
+    // Denial is handled gracefully: the toggle reverts to OFF via the ViewModel.
+    val notifPermission = rememberNotificationPermission(
+        onGranted = { viewModel.onReminderEnabledChanged(true) },
+        onDenied  = { viewModel.onReminderEnabledChanged(false) },
+    )
+
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Progress bar — shown for all steps except WELCOME and CONSENT
             val progressSteps = listOf(
                 OnboardingStep.IDENTITY, OnboardingStep.LOCATION,
                 OnboardingStep.PATH, OnboardingStep.GOALS, OnboardingStep.PREFERENCES
@@ -50,8 +61,8 @@ fun OnboardingScreen(
             if (state.step in progressSteps) {
                 StepIndicator(
                     currentStep = state.step,
-                    steps = progressSteps,
-                    modifier = Modifier
+                    steps       = progressSteps,
+                    modifier    = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp, vertical = 16.dp)
                 )
@@ -76,54 +87,63 @@ fun OnboardingScreen(
                         onNext = viewModel::onNextFromWelcome
                     )
                     OnboardingStep.IDENTITY -> IdentityStep(
-                        name = state.name,
-                        nameError = state.nameError,
-                        email = state.email,
-                        emailError = state.emailError,
-                        onNameChange = viewModel::onNameChange,
+                        name          = state.name,
+                        nameError     = state.nameError,
+                        email         = state.email,
+                        emailError    = state.emailError,
+                        onNameChange  = viewModel::onNameChange,
                         onEmailChange = viewModel::onEmailChange,
-                        onNext = viewModel::onNextFromIdentity,
-                        onBack = viewModel::onBack
+                        onNext        = viewModel::onNextFromIdentity,
+                        onBack        = viewModel::onBack
                     )
                     OnboardingStep.LOCATION -> LocationStep(
-                        selectedState = state.state,
-                        city = state.city,
-                        schoolName = state.schoolName,
-                        onStateSelected = viewModel::onStateSelected,
-                        onCityChange = viewModel::onCityChange,
+                        selectedState    = state.state,
+                        city             = state.city,
+                        schoolName       = state.schoolName,
+                        onStateSelected  = viewModel::onStateSelected,
+                        onCityChange     = viewModel::onCityChange,
                         onSchoolNameChange = viewModel::onSchoolNameChange,
-                        onNext = viewModel::onNextFromLocation,
-                        onBack = viewModel::onBack
+                        onNext           = viewModel::onNextFromLocation,
+                        onBack           = viewModel::onBack
                     )
                     OnboardingStep.PATH -> PathStep(
-                        name = state.name,
-                        selectedPath = state.selectedPath,
-                        selectedTrack = state.academicTrack,
-                        isSaving = false,
-                        onPathSelected = viewModel::onPathSelected,
+                        name            = state.name,
+                        selectedPath    = state.selectedPath,
+                        selectedTrack   = state.academicTrack,
+                        isSaving        = false,
+                        onPathSelected  = viewModel::onPathSelected,
                         onTrackSelected = viewModel::onAcademicTrackSelected,
-                        onComplete = viewModel::onNextFromPath,
-                        onBack = viewModel::onBack
+                        onComplete      = viewModel::onNextFromPath,
+                        onBack          = viewModel::onBack
                     )
                     OnboardingStep.GOALS -> GoalsStep(
-                        selectedMajor = state.major,
+                        selectedMajor  = state.major,
                         onMajorSelected = viewModel::onMajorSelected,
-                        onNext = viewModel::onNextFromGoals,
-                        onBack = viewModel::onBack
+                        onNext         = viewModel::onNextFromGoals,
+                        onBack         = viewModel::onBack
                     )
                     OnboardingStep.PREFERENCES -> PreferencesStep(
-                        dailyStudyMinutes = state.dailyStudyMinutes,
-                        reminderEnabled = state.reminderEnabled,
-                        reminderHour = state.reminderHour,
-                        reminderMinute = state.reminderMinute,
+                        dailyStudyMinutes        = state.dailyStudyMinutes,
+                        reminderEnabled          = state.reminderEnabled,
+                        reminderHour             = state.reminderHour,
+                        reminderMinute           = state.reminderMinute,
                         onDailyStudyMinutesChanged = viewModel::onDailyStudyMinutesChanged,
-                        onReminderEnabledChanged = viewModel::onReminderEnabledChanged,
-                        onReminderTimeChanged = viewModel::onReminderTimeChanged,
-                        onNext = viewModel::onNextFromPreferences,
-                        onBack = viewModel::onBack
+                        onReminderEnabledChanged = { enabled ->
+                            if (enabled) {
+                                // Always go through permission helper when enabling:
+                                // it requests POST_NOTIFICATIONS on API 33+ or calls
+                                // onGranted directly on lower API levels.
+                                notifPermission.request()
+                            } else {
+                                viewModel.onReminderEnabledChanged(false)
+                            }
+                        },
+                        onReminderTimeChanged    = viewModel::onReminderTimeChanged,
+                        onNext                   = viewModel::onNextFromPreferences,
+                        onBack                   = viewModel::onBack
                     )
                     OnboardingStep.CONSENT -> ConsentStep(
-                        isSaving = state.isSaving,
+                        isSaving       = state.isSaving,
                         onConsentChosen = viewModel::onConsentChosen
                     )
                 }
@@ -149,7 +169,7 @@ private fun StepIndicator(
                 modifier = Modifier
                     .weight(1f)
                     .height(4.dp),
-                color = if (isActive) MaterialTheme.colorScheme.primary
+                color      = if (isActive) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.surfaceVariant,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
