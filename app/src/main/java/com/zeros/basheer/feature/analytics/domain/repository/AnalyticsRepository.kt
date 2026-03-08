@@ -1,7 +1,7 @@
 package com.zeros.basheer.feature.analytics.domain.repository
 
-import com.zeros.basheer.feature.analytics.domain.model.BasheerError
 import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
+import com.zeros.basheer.feature.analytics.domain.model.LearningSignal
 
 interface AnalyticsRepository {
 
@@ -19,14 +19,14 @@ interface AnalyticsRepository {
     suspend fun enqueue(event: BasheerEvent)
 
     /**
-     * Enqueue a single learning-quality error record to the local Room queue.
-     * Errors (wrong answers, skips, unanswered exam questions) share the same
-     * Room table and Firestore sync path as events — only the [eventType]
+     * Enqueue a single learning-quality signal to the local Room queue.
+     * Signals (correct and wrong answers, skips, unanswered exam questions) share the
+     * same Room table and Firestore sync path as events — only the [eventType]
      * discriminator differs (e.g. "CheckpointAttempted", "PracticeQuestionAnswered").
      *
      * Fire-and-forget — same contract as [enqueue].
      */
-    suspend fun enqueueError(error: BasheerError)
+    suspend fun enqueueSignal(signal: LearningSignal)
 
     /**
      * Upload all unsynced events to Firestore, grouped into one document per day.
