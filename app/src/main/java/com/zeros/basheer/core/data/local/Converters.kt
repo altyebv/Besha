@@ -16,6 +16,8 @@ import com.zeros.basheer.feature.quizbank.domain.model.CognitiveLevel
 import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionSource
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
+import com.zeros.basheer.feature.user.domain.model.Gender
+import com.zeros.basheer.feature.user.domain.model.StudentGrade
 import com.zeros.basheer.feature.user.domain.model.XpSource
 
 class Converters {
@@ -130,4 +132,18 @@ class Converters {
 
     @TypeConverter
     fun toXpSource(value: String): XpSource = XpSource.valueOf(value)
+
+    // Gender
+    @TypeConverter
+    fun fromGender(value: Gender?): String? = value?.name
+
+    @TypeConverter
+    fun toGender(value: String?): Gender? = value?.let { Gender.valueOf(it) }
+
+    // StudentGrade
+    @TypeConverter
+    fun fromStudentGrade(value: StudentGrade?): String? = value?.name
+
+    @TypeConverter
+    fun toStudentGrade(value: String?): StudentGrade? = value?.let { StudentGrade.valueOf(it) }
 }
