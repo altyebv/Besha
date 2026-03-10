@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.zeros.basheer.feature.analytics.AnalyticsManager
 import com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
 import com.zeros.basheer.feature.subject.data.entity.StudentPath
+import com.zeros.basheer.feature.user.domain.model.Gender
+import com.zeros.basheer.feature.user.domain.model.StudentGrade
 import com.zeros.basheer.feature.user.domain.model.UserProfile
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import com.zeros.basheer.feature.user.domain.repository.UserProfileRepository
@@ -28,10 +30,15 @@ data class OnboardingUiState(
     val nameError: String? = null,
     val email: String = "",
     val emailError: String? = null,
+    val age: Int? = null,
+    val gender: Gender? = null,
     // LOCATION
     val state: String? = null,
     val city: String = "",
     val schoolName: String = "",
+    val schoolNameError: String? = null,
+    val isHomeSchooled: Boolean = false,
+    val grade: StudentGrade? = null,
     // PATH
     val selectedPath: StudentPath? = null,
     val academicTrack: String? = null,
@@ -78,6 +85,14 @@ class OnboardingViewModel @Inject constructor(
         _state.update { it.copy(email = value, emailError = null) }
     }
 
+    fun onAgeSelected(value: Int) {
+        _state.update { it.copy(age = value) }
+    }
+
+    fun onGenderSelected(value: Gender) {
+        _state.update { it.copy(gender = value) }
+    }
+
     fun onStateSelected(value: String) {
         _state.update { it.copy(state = value) }
     }
@@ -87,7 +102,15 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onSchoolNameChange(value: String) {
-        _state.update { it.copy(schoolName = value) }
+        _state.update { it.copy(schoolName = value, schoolNameError = null) }
+    }
+
+    fun onHomeSchooledChanged(value: Boolean) {
+        _state.update { it.copy(isHomeSchooled = value, schoolNameError = null) }
+    }
+
+    fun onGradeSelected(value: StudentGrade) {
+        _state.update { it.copy(grade = value) }
     }
 
     fun onPathSelected(path: StudentPath) {
@@ -126,10 +149,20 @@ class OnboardingViewModel @Inject constructor(
         if (email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             _state.update { it.copy(emailError = "البريد الإلكتروني غير صحيح") }; return
         }
+        if (_state.value.age == null) { _state.update { it.copy(nameError = "الرجاء اختيار عمرك") }; return }
+        if (_state.value.gender == null) { _state.update { it.copy(nameError = "الرجاء اختيار الجنس") }; return }
         _state.update { it.copy(step = OnboardingStep.LOCATION) }
     }
 
-    fun onNextFromLocation()     { _state.update { it.copy(step = OnboardingStep.PATH) } }
+    fun onNextFromLocation() {
+        val s = _state.value
+        if (!s.isHomeSchooled && s.schoolName.isBlank()) {
+            _state.update { it.copy(schoolNameError = "الرجاء إدخال اسم المدرسة") }
+            return
+        }
+        if (s.grade == null) return
+        _state.update { it.copy(step = OnboardingStep.PATH) }
+    }
 
     fun onNextFromPath() {
         val s = _state.value
@@ -175,13 +208,16 @@ class OnboardingViewModel @Inject constructor(
                 UserProfile(
                     name             = s.name.trim(),
                     studentPath      = path,
-                    schoolName       = s.schoolName.trim().ifBlank { null },
+                    schoolName       = if (s.isHomeSchooled) "تعليم منزلي" else s.schoolName.trim().ifBlank { null },
                     email            = s.email.trim().ifBlank { null },
                     state            = s.state,
                     city             = s.city.trim().ifBlank { null },
                     major            = s.major,
                     academicTrack    = s.academicTrack,
-                    dailyStudyMinutes = s.dailyStudyMinutes
+                    dailyStudyMinutes = s.dailyStudyMinutes,
+                    age              = s.age,
+                    gender           = s.gender,
+                    grade            = s.grade,
                 )
             )
             preferencesRepository.setDailyGoalMinutes(s.dailyStudyMinutes)

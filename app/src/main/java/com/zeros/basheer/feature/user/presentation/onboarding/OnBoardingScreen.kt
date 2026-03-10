@@ -87,24 +87,33 @@ fun OnboardingScreen(
                         onNext = viewModel::onNextFromWelcome
                     )
                     OnboardingStep.IDENTITY -> IdentityStep(
-                        name          = state.name,
-                        nameError     = state.nameError,
-                        email         = state.email,
-                        emailError    = state.emailError,
-                        onNameChange  = viewModel::onNameChange,
-                        onEmailChange = viewModel::onEmailChange,
-                        onNext        = viewModel::onNextFromIdentity,
-                        onBack        = viewModel::onBack
+                        name            = state.name,
+                        nameError       = state.nameError,
+                        email           = state.email,
+                        emailError      = state.emailError,
+                        age             = state.age,
+                        gender          = state.gender,
+                        onNameChange    = viewModel::onNameChange,
+                        onEmailChange   = viewModel::onEmailChange,
+                        onAgeSelected   = viewModel::onAgeSelected,
+                        onGenderSelected = viewModel::onGenderSelected,
+                        onNext          = viewModel::onNextFromIdentity,
+                        onBack          = viewModel::onBack
                     )
                     OnboardingStep.LOCATION -> LocationStep(
-                        selectedState    = state.state,
-                        city             = state.city,
-                        schoolName       = state.schoolName,
-                        onStateSelected  = viewModel::onStateSelected,
-                        onCityChange     = viewModel::onCityChange,
-                        onSchoolNameChange = viewModel::onSchoolNameChange,
-                        onNext           = viewModel::onNextFromLocation,
-                        onBack           = viewModel::onBack
+                        selectedState       = state.state,
+                        city                = state.city,
+                        schoolName          = state.schoolName,
+                        schoolNameError     = state.schoolNameError,
+                        isHomeSchooled      = state.isHomeSchooled,
+                        selectedGrade       = state.grade,
+                        onStateSelected     = viewModel::onStateSelected,
+                        onCityChange        = viewModel::onCityChange,
+                        onSchoolNameChange  = viewModel::onSchoolNameChange,
+                        onHomeSchooledChanged = viewModel::onHomeSchooledChanged,
+                        onGradeSelected     = viewModel::onGradeSelected,
+                        onNext              = viewModel::onNextFromLocation,
+                        onBack              = viewModel::onBack
                     )
                     OnboardingStep.PATH -> PathStep(
                         name            = state.name,
