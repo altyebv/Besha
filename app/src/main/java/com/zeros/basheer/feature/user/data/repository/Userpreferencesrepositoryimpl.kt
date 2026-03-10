@@ -1,6 +1,7 @@
 package com.zeros.basheer.feature.user.data.repository
 
 import android.content.SharedPreferences
+import com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent
 import com.zeros.basheer.feature.user.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -37,9 +38,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETE, complete).apply()
     }
 
-    override fun getAnalyticsConsent(): com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent =
-        com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent.fromString(
-            prefs.getString(KEY_ANALYTICS_CONSENT, null)
+    override fun getAnalyticsConsent(): AnalyticsConsent =
+        AnalyticsConsent.fromString(
+            prefs.getString(KEY_ANALYTICS_CONSENT, AnalyticsConsent.ANONYMOUS.name)
         )
 
     override suspend fun setAnalyticsConsent(consent: com.zeros.basheer.feature.analytics.domain.model.AnalyticsConsent) {
