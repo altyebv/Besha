@@ -127,7 +127,7 @@ class AnalyticsSyncWorker @AssistedInject constructor(
 
             WorkManager.getInstance(context).enqueueUniqueWork(
                 WORK_NAME_IMMEDIATE,
-                ExistingWorkPolicy.KEEP,
+                ExistingWorkPolicy.REPLACE,
                 request,
             )
 
@@ -135,6 +135,6 @@ class AnalyticsSyncWorker @AssistedInject constructor(
         }
 
         /** Sessions shorter than this are noise (e.g. accidental opens). */
-        const val MIN_SESSION_SECONDS_FOR_EARLY_SYNC = 120
+        const val MIN_SESSION_SECONDS_FOR_EARLY_SYNC = 30
     }
 }
