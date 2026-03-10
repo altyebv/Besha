@@ -1,7 +1,10 @@
 package com.zeros.basheer.feature.analytics
 
+import android.content.Context
 import android.util.Log
 import com.zeros.basheer.feature.analytics.domain.model.BasheerEvent
+import com.zeros.basheer.feature.analytics.sync.AnalyticsSyncWorker
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.zeros.basheer.feature.analytics.domain.model.FeedEndReason
 import com.zeros.basheer.feature.analytics.domain.model.FeedInteraction
 import com.zeros.basheer.feature.analytics.domain.model.LessonSource
@@ -33,6 +36,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AnalyticsManager @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: AnalyticsRepository,
     private val preferencesRepository: UserPreferencesRepository,
     private val achievementNotificationManager: AchievementNotificationManager,
@@ -141,14 +145,17 @@ class AnalyticsManager @Inject constructor(
         timeSpentSeconds: Int,
         isFirstCompletion: Boolean,
         sectionsCount: Int,
-    ) = track(BasheerEvent.LessonCompleted(
-        lessonId = lessonId,
-        subjectId = subjectId,
-        unitId = unitId,
-        timeSpentSeconds = timeSpentSeconds,
-        isFirstCompletion = isFirstCompletion,
-        sectionsCount = sectionsCount,
-    ))
+    ) {
+        track(BasheerEvent.LessonCompleted(
+            lessonId = lessonId,
+            subjectId = subjectId,
+            unitId = unitId,
+            timeSpentSeconds = timeSpentSeconds,
+            isFirstCompletion = isFirstCompletion,
+            sectionsCount = sectionsCount,
+        ))
+        AnalyticsSyncWorker.scheduleImmediate(context)
+    }
 
     /**
      * Call this from [LessonReaderViewModel] when the user taps the exit/back
@@ -204,18 +211,21 @@ class AnalyticsManager @Inject constructor(
         score: Float,
         durationSeconds: Int,
         wasAbandoned: Boolean = false,
-    ) = track(BasheerEvent.PracticeSessionCompleted(
-        sessionId = sessionId,
-        subjectId = subjectId,
-        generationType = generationType,
-        questionCount = questionCount,
-        correctCount = correctCount,
-        wrongCount = wrongCount,
-        skippedCount = skippedCount,
-        score = score,
-        durationSeconds = durationSeconds,
-        wasAbandoned = wasAbandoned,
-    ))
+    ) {
+        track(BasheerEvent.PracticeSessionCompleted(
+            sessionId = sessionId,
+            subjectId = subjectId,
+            generationType = generationType,
+            questionCount = questionCount,
+            correctCount = correctCount,
+            wrongCount = wrongCount,
+            skippedCount = skippedCount,
+            score = score,
+            durationSeconds = durationSeconds,
+            wasAbandoned = wasAbandoned,
+        ))
+        AnalyticsSyncWorker.scheduleImmediate(context)
+    }
 
     fun questionAnswered(
         questionId: String,
@@ -290,14 +300,17 @@ class AnalyticsManager @Inject constructor(
         totalQuestions: Int,
         score: Float,
         durationSeconds: Int,
-    ) = track(BasheerEvent.ExamCompleted(
-        examId = examId,
-        subjectId = subjectId,
-        examType = examType,
-        totalQuestions = totalQuestions,
-        score = score,
-        durationSeconds = durationSeconds,
-    ))
+    ) {
+        track(BasheerEvent.ExamCompleted(
+            examId = examId,
+            subjectId = subjectId,
+            examType = examType,
+            totalQuestions = totalQuestions,
+            score = score,
+            durationSeconds = durationSeconds,
+        ))
+        AnalyticsSyncWorker.scheduleImmediate(context)
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Notifications
