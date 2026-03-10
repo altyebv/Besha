@@ -2,6 +2,8 @@ package com.zeros.basheer.feature.user.domain.model
 
 
 import com.zeros.basheer.feature.subject.data.entity.StudentPath
+import com.zeros.basheer.feature.user.domain.model.Gender
+import com.zeros.basheer.feature.user.domain.model.StudentGrade
 
 data class UserProfile(
     val name: String,
@@ -15,6 +17,9 @@ data class UserProfile(
     val major: String? = null,
     val academicTrack: String? = null,
     val dailyStudyMinutes: Int = 60,
+    val age: Int? = null,
+    val gender: Gender? = null,
+    val grade: StudentGrade? = null,
 
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

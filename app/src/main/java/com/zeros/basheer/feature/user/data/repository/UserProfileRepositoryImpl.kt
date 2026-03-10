@@ -52,6 +52,9 @@ class UserProfileRepositoryImpl @Inject constructor(
         major = major,
         academicTrack = academicTrack,
         dailyStudyMinutes = dailyStudyMinutes,
+        age = age,
+        gender = gender,
+        grade = grade,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -68,6 +71,9 @@ class UserProfileRepositoryImpl @Inject constructor(
         major = major,
         academicTrack = academicTrack,
         dailyStudyMinutes = dailyStudyMinutes,
+        age = age,
+        gender = gender,
+        grade = grade,
         createdAt = createdAt,
         updatedAt = System.currentTimeMillis()
     )
