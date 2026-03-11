@@ -29,12 +29,17 @@ import com.zeros.basheer.feature.lesson.presentation.components.foundation.Lesso
 import com.zeros.basheer.feature.lesson.presentation.components.states.EmptyState
 import com.zeros.basheer.feature.lesson.presentation.components.states.LoadingState
 import com.zeros.basheer.feature.lesson.presentation.components.topbar.LessonsTopBar
+import com.zeros.basheer.feature.subject.domain.model.Subject
 import com.zeros.basheer.feature.subject.domain.model.Units
+import com.zeros.basheer.ui.components.common.SubjectSwitcherStrip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LessonsScreen(
-    subjectId: String,
+    // Now nullable — when coming from bottom nav with no prior selection,
+    // the strip lets the user pick inline rather than hitting a gate screen.
+    initialSubjectId: String?,
+    allSubjects: List<Subject>,
     onLessonClick: (String, Int) -> Unit,
     onBack: () -> Unit,
     viewModel: LessonsViewModel = hiltViewModel()
@@ -44,7 +49,21 @@ fun LessonsScreen(
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
 
-    LaunchedEffect(subjectId) { viewModel.loadLessons(subjectId) }
+    // ── Active subject — starts from nav arg, switches via the strip ──────────
+    var activeSubjectId by remember(initialSubjectId) {
+        mutableStateOf(initialSubjectId ?: allSubjects.firstOrNull()?.id)
+    }
+
+    // Load whenever the active subject changes
+    LaunchedEffect(activeSubjectId) {
+        activeSubjectId?.let { viewModel.loadLessons(it) }
+    }
+
+    // Clear search when switching subjects so stale results don't flash
+    LaunchedEffect(activeSubjectId) {
+        searchQuery = ""
+        isSearchActive = false
+    }
 
     // Build filtered units
     val filteredUnits = remember(state.units, searchQuery) {
@@ -78,18 +97,37 @@ fun LessonsScreen(
 
     Scaffold(
         topBar = {
-            LessonsTopBar(
-                subjectName = state.subjectName,
-                totalLessons = state.units.sumOf { it.second.size },
-                searchQuery = searchQuery,
-                isSearchActive = isSearchActive,
-                onSearchQueryChange = { searchQuery = it },
-                onSearchToggle = {
-                    isSearchActive = !isSearchActive
-                    if (!isSearchActive) searchQuery = ""
-                },
-                onBack = onBack
-            )
+            Column {
+                LessonsTopBar(
+                    subjectName = state.subjectName,
+                    totalLessons = state.units.sumOf { it.second.size },
+                    searchQuery = searchQuery,
+                    isSearchActive = isSearchActive,
+                    onSearchQueryChange = { searchQuery = it },
+                    onSearchToggle = {
+                        isSearchActive = !isSearchActive
+                        if (!isSearchActive) searchQuery = ""
+                    },
+                    onBack = onBack
+                )
+
+                // ── Subject switcher — only shown when there are multiple subjects ──
+                if (allSubjects.size > 1) {
+                    SubjectSwitcherStrip(
+                        subjects = allSubjects,
+                        activeSubjectId = activeSubjectId,
+                        onSubjectSelect = { newId ->
+                            if (newId != activeSubjectId) {
+                                activeSubjectId = newId
+                            }
+                        }
+                    )
+                    HorizontalDivider(
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                    )
+                }
+            }
         }
     ) { padding ->
         when {
@@ -237,7 +275,7 @@ private fun LazyListScope.unitSection(
                         isNext = lesson.id == nextLessonId,
                         onClick = {
                             val targetPart = if (completedLessonIds.contains(lesson.id)) {
-                                0 // re-read
+                                0 // re-read from beginning
                             } else {
                                 nextPartByLesson[lesson.id] ?: 0
                             }
@@ -281,7 +319,7 @@ private fun SubjectProgressStrip(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Progress bar + percent
+        // Progress bar + count
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(5.dp)
