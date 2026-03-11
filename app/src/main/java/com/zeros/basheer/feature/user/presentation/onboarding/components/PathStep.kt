@@ -138,7 +138,7 @@ fun PathStep(
                 else Color(0xFF388E3C)
 
                 Text(
-                    text = "اختار مادتك السابعة",
+                    text = "إختر مادة التخصص",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth()
@@ -147,7 +147,7 @@ fun PathStep(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "المادة الاختيارية التي تدرسها",
+                    text = "مواد التخصص",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
