@@ -54,21 +54,45 @@ class RecommendationEngine @Inject constructor(
 
     /**
      * Generate top recommendations scoped to the student's academic path.
+     *
+     * Shared DB results (completedLessons, recentLessons, todayStart) are fetched
+     * ONCE here and threaded through to every per-subject call, eliminating the
+     * O(N × M) duplicate queries that were the primary cause of main-screen lag.
      */
     suspend fun getTopRecommendations(limit: Int = 3): List<ScoredRecommendation> {
-        // Resolve path filter from profile — fall back to COMMON only if no profile yet
         val profile = userProfileRepository.getProfileOnce()
         val pathFilter = profile?.subjectsFilter ?: listOf(StudentPath.COMMON)
-
-        // Only recommend subjects that belong to this student's path
         val subjects = contentRepository.getSubjectsByPathFilter(pathFilter).first()
+
+        // ── Hoist shared queries — fetched once for all subjects ──────────────
+        val completedLessons   = contentRepository.getCompletedLessons().first()
+        val completedLessonIds = completedLessons.map { it.lessonId }.toSet()
+        val recentLessons5     = contentRepository.getRecentlyAccessedLessons(5).first()
+        val recentLessons50    = contentRepository.getRecentlyAccessedLessons(50).first()
+        val todayStart         = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+        }.timeInMillis
+        val sessionsToday = recentLessons50.count { it.lastAccessedAt >= todayStart }
+        // ─────────────────────────────────────────────────────────────────────
 
         val allRecommendations = mutableListOf<ScoredRecommendation>()
 
         for (subject in subjects) {
-            val context = buildSubjectContext(subject.id)
-            val subjectRecs = generateSubjectRecommendations(subject, context)
-                .take(config.maxRecommendationsPerSubject)
+            val context = buildSubjectContext(
+                subjectId          = subject.id,
+                completedLessons   = completedLessons,
+                completedLessonIds = completedLessonIds,
+                recentLessons5     = recentLessons5,
+                sessionsToday      = sessionsToday
+            )
+            val subjectRecs = generateSubjectRecommendations(
+                subject            = subject,
+                context            = context,
+                completedLessonIds = completedLessonIds,
+                recentLessons5     = recentLessons5
+            ).take(config.maxRecommendationsPerSubject)
             allRecommendations.addAll(subjectRecs)
         }
 
@@ -78,16 +102,19 @@ class RecommendationEngine @Inject constructor(
     }
 
     /**
-     * Generate recommendations for a specific subject
+     * Generate recommendations for a specific subject.
+     * Receives pre-fetched shared collections to avoid redundant DB round-trips.
      */
     private suspend fun generateSubjectRecommendations(
         subject: Subject,
-        context: SubjectContext
+        context: SubjectContext,
+        completedLessonIds: Set<String>,
+        recentLessons5: List<com.zeros.basheer.feature.progress.domain.model.UserProgress>
     ): List<ScoredRecommendation> {
         val candidates = mutableListOf<ScoredRecommendation>()
 
         // 1. Continue in-progress lesson
-        val continueLesson = generateContinueLessonRec(subject, context)
+        val continueLesson = generateContinueLessonRec(subject, context, completedLessonIds, recentLessons5)
         if (continueLesson != null) candidates.add(continueLesson)
 
         // 2. Review weak concepts
@@ -95,7 +122,7 @@ class RecommendationEngine @Inject constructor(
         if (weakConceptRec != null) candidates.add(weakConceptRec)
 
         // 3. Complete almost-done unit
-        val completeUnitRec = generateCompleteUnitRec(subject, context)
+        val completeUnitRec = generateCompleteUnitRec(subject, context, completedLessonIds)
         if (completeUnitRec != null) candidates.add(completeUnitRec)
 
         // 4. Quick review
@@ -106,7 +133,7 @@ class RecommendationEngine @Inject constructor(
 
         // 5. Start new unit (if nothing else)
         if (candidates.isEmpty() && context.percentComplete < 1.0f) {
-            val newUnitRec = generateStartNewUnitRec(subject, context)
+            val newUnitRec = generateStartNewUnitRec(subject, context, completedLessonIds)
             if (newUnitRec != null) candidates.add(newUnitRec)
         }
 
@@ -114,30 +141,30 @@ class RecommendationEngine @Inject constructor(
     }
 
     /**
-     * Build subject context from data
+     * Build subject context from pre-fetched shared data.
+     * Only queries that are subject-specific (questionCounts, avgScore, weakConcepts)
+     * are run here — the heavy shared reads are done once in [getTopRecommendations].
      */
-    private suspend fun buildSubjectContext(subjectId: String): SubjectContext {
+    private suspend fun buildSubjectContext(
+        subjectId: String,
+        completedLessons: List<com.zeros.basheer.feature.progress.domain.model.UserProgress>,
+        completedLessonIds: Set<String>,
+        recentLessons5: List<com.zeros.basheer.feature.progress.domain.model.UserProgress>,
+        sessionsToday: Int
+    ): SubjectContext {
         val lessons = contentRepository.getLessonsBySubject(subjectId).first()
-        val completedLessons = contentRepository.getCompletedLessons().first()
-        val completedCount = completedLessons.count { progress ->
-            lessons.any { it.id == progress.lessonId }
-        }
+        val subjectLessonIds = lessons.map { it.id }.toSet()
+
+        val completedCount = completedLessons.count { it.lessonId in subjectLessonIds }
 
         val questionCounts = quizBankRepository.getQuestionCounts(subjectId)
         val avgScore = practiceRepository.getAverageScore(subjectId).first()
         val weakConcepts = getWeakConcepts(subjectId)
 
-        val recentLessons = contentRepository.getRecentlyAccessedLessons(1).first()
-        val lastStudied = recentLessons.firstOrNull()?.lastAccessedAt
-
-        val todayStart = java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-        }.timeInMillis
-
-        val sessionsToday = contentRepository.getRecentlyAccessedLessons(50).first()
-            .count { it.lastAccessedAt >= todayStart }
+        val lastStudied = recentLessons5
+            .filter { it.lessonId in subjectLessonIds }
+            .maxByOrNull { it.lastAccessedAt }
+            ?.lastAccessedAt
 
         return SubjectContext(
             subjectId = subjectId,
@@ -182,18 +209,16 @@ class RecommendationEngine @Inject constructor(
 
     private suspend fun generateContinueLessonRec(
         subject: Subject,
-        context: SubjectContext
+        context: SubjectContext,
+        completedLessonIds: Set<String>,
+        recentLessons5: List<com.zeros.basheer.feature.progress.domain.model.UserProgress>
     ): ScoredRecommendation? {
-        val recentLessons = contentRepository.getRecentlyAccessedLessons(5).first()
-        val completedLessonIds = contentRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
-
-        // Only consider lessons that belong to this subject
         val subjectLessonIds = contentRepository.getLessonsBySubject(subject.id).first()
             .map { it.id }.toSet()
 
-        val inProgressLesson = recentLessons
-            .filter { subjectLessonIds.contains(it.lessonId) }
-            .firstOrNull { !completedLessonIds.contains(it.lessonId) }
+        val inProgressLesson = recentLessons5
+            .filter { it.lessonId in subjectLessonIds }
+            .firstOrNull { it.lessonId !in completedLessonIds }
             ?: return null
 
         val lesson = contentRepository.getLessonById(inProgressLesson.lessonId) ?: return null
@@ -252,16 +277,14 @@ class RecommendationEngine @Inject constructor(
 
     private suspend fun generateCompleteUnitRec(
         subject: Subject,
-        context: SubjectContext
+        context: SubjectContext,
+        completedLessonIds: Set<String>
     ): ScoredRecommendation? {
         val units = contentRepository.getUnitsBySubject(subject.id).first()
 
         for (unit in units) {
             val lessons = contentRepository.getLessonsByUnit(unit.id).first()
-            val completedLessons = contentRepository.getCompletedLessons().first()
-            val completedCount = completedLessons.count { progress ->
-                lessons.any { it.id == progress.lessonId }
-            }
+            val completedCount = lessons.count { it.id in completedLessonIds }
 
             val percentComplete = if (lessons.isNotEmpty()) {
                 completedCount.toFloat() / lessons.size
@@ -309,14 +332,14 @@ class RecommendationEngine @Inject constructor(
 
     private suspend fun generateStartNewUnitRec(
         subject: Subject,
-        context: SubjectContext
+        context: SubjectContext,
+        completedLessonIds: Set<String>
     ): ScoredRecommendation? {
         val units = contentRepository.getUnitsBySubject(subject.id).first()
-        val completedLessons = contentRepository.getCompletedLessons().first().map { it.lessonId }.toSet()
 
         for (unit in units) {
             val lessons = contentRepository.getLessonsByUnit(unit.id).first()
-            val hasIncomplete = lessons.any { !completedLessons.contains(it.id) }
+            val hasIncomplete = lessons.any { it.id !in completedLessonIds }
 
             if (hasIncomplete) {
                 val recommendation = Recommendation.StartNewUnit(
