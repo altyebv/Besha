@@ -2,6 +2,7 @@ package com.zeros.basheer.ui.screens.main
 
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -56,6 +57,7 @@ fun MainScreen(
     ) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.background,
         ) { padding ->
             when {
                 state.isLoading && !isRefreshing -> {
