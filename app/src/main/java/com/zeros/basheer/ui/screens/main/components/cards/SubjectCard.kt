@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zeros.basheer.core.ui.theme.StreakFlame
+import com.zeros.basheer.core.ui.theme.Success
 import com.zeros.basheer.ui.screens.main.SubjectWithProgress
 import com.zeros.basheer.ui.screens.main.components.foundation.MainAnimations
 import com.zeros.basheer.ui.screens.main.components.foundation.MainColors
@@ -208,7 +209,7 @@ private fun StatusIndicator(
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = Color(0xFF10B981),
+                tint = Success,
                 modifier = Modifier.size(16.dp)
             )
         }
