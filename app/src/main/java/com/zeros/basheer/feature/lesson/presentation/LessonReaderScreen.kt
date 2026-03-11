@@ -159,34 +159,15 @@ fun LessonReaderScreen(
         else               viewModel.onScrolledAwayFromEnd()
     }
 
+    // ── Top bar reserved height (fixed — never changes so content never shifts) ─
+    // statusBars inset + 56 dp nav row + (44 dp part-tabs row if multi-part).
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val topBarReservedHeight = statusBarHeight + 56.dp + if (state.totalParts > 1) 44.dp else 0.dp
+
     // ── Scaffold ──────────────────────────────────────────────────────────────
-    Scaffold(
-        contentWindowInsets = WindowInsets(0),
-        topBar = {
-            // Slides up + fades when the reader scrolls down; returns on scroll-up.
-            AnimatedVisibility(
-                visible       = isTopBarVisible,
-                enter         = slideInVertically(initialOffsetY = { -it }) + fadeIn(tween(200)),
-                exit          = slideOutVertically(targetOffsetY  = { -it }) + fadeOut(tween(200))
-            ) {
-                LessonTopBar(
-                    title                = state.lessonContent?.title ?: "جاري التحميل...",
-                    currentPartIndex     = state.currentPartIndex,
-                    totalParts           = state.totalParts,
-                    completedPartIndices = state.completedPartIndices,
-                    onBack = {
-                        if (state.isPartAlreadyComplete || state.isLessonComplete) {
-                            viewModel.pauseTimeTracking(); onBackClick()
-                        } else {
-                            showExitDialog = true
-                        }
-                    }
-                )
-            }
-        }
-        // PartFinishBar is rendered as a Box overlay below so it never
-        // resizes the LazyColumn viewport (which was the root cause of flashing).
-    ) { padding ->
+    // topBar slot is intentionally empty — the bar is a floating overlay below
+    // so the Scaffold content area never changes size during show/hide.
+    Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -242,12 +223,7 @@ fun LessonReaderScreen(
                             onCheckpointContinue = viewModel::onCheckpointContinue,
                             listState            = listState,
                             katexRenderer        = viewModel.katexRenderer,
-                            // When the top bar is hidden the LazyColumn grows into
-                            // the freed space. We add a status-bar top guard so
-                            // content never slides behind the system bar.
-                            extraTopPadding      = if (!isTopBarVisible)
-                                WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-                            else 0.dp
+                            topBarReservedHeight = topBarReservedHeight
                         )
                     }
 
@@ -327,6 +303,56 @@ fun LessonReaderScreen(
                             onFinish              = { viewModel.markPartComplete() }
                         )
                     }
+
+                    // ── Layer 5: floating top bar overlay ─────────────────────
+                    // Lives here as an overlay — not in the Scaffold topBar slot —
+                    // so the LazyColumn viewport never resizes when it hides/shows.
+                    // The contentPadding already reserves the same fixed height so
+                    // the top of the article text never moves at all.
+                    AnimatedVisibility(
+                        visible  = isTopBarVisible,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        enter    = slideInVertically(initialOffsetY = { -it }) + fadeIn(tween(220)),
+                        exit     = slideOutVertically(targetOffsetY  = { -it }) + fadeOut(tween(220))
+                    ) {
+                        LessonTopBar(
+                            title                = state.lessonContent!!.title,
+                            currentPartIndex     = state.currentPartIndex,
+                            totalParts           = state.totalParts,
+                            completedPartIndices = state.completedPartIndices,
+                            onBack = {
+                                if (state.isPartAlreadyComplete || state.isLessonComplete) {
+                                    viewModel.pauseTimeTracking(); onBackClick()
+                                } else {
+                                    showExitDialog = true
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Top bar overlay for loading / error states ──────────────────────
+            if (state.isLoading || state.error != null) {
+                AnimatedVisibility(
+                    visible  = isTopBarVisible,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    enter    = slideInVertically(initialOffsetY = { -it }) + fadeIn(tween(220)),
+                    exit     = slideOutVertically(targetOffsetY  = { -it }) + fadeOut(tween(220))
+                ) {
+                    LessonTopBar(
+                        title                = state.lessonContent?.title ?: "جاري التحميل...",
+                        currentPartIndex     = state.currentPartIndex,
+                        totalParts           = state.totalParts,
+                        completedPartIndices = state.completedPartIndices,
+                        onBack = {
+                            if (state.isPartAlreadyComplete || state.isLessonComplete) {
+                                viewModel.pauseTimeTracking(); onBackClick()
+                            } else {
+                                showExitDialog = true
+                            }
+                        }
+                    )
                 }
             }
 
@@ -542,12 +568,15 @@ private fun LessonBody(
     onCheckpointContinue: (sectionId: String) -> Unit,
     listState: LazyListState,
     katexRenderer: KatexRenderer,
-    extraTopPadding: androidx.compose.ui.unit.Dp = 0.dp
+    // Fixed top padding that always reserves space for the floating top bar.
+    // Because this value never changes the LazyColumn never shifts — the bar
+    // just slides over the reserved space when it hides/shows.
+    topBarReservedHeight: androidx.compose.ui.unit.Dp
 ) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = extraTopPadding, bottom = 120.dp)  // space for sticky bar
+        contentPadding = PaddingValues(top = topBarReservedHeight, bottom = 120.dp)
     ) {
         // ── Hook / Orientation card (scoped to part) ──────────────────────────
         item(key = "hook_orientation") {
