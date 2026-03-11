@@ -70,14 +70,14 @@ import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
 
         // Progress tracking
         UserProgressEntity::class,
-        LessonPartProgressEntity::class,    // ← NEW: per-part completion
+        LessonPartProgressEntity::class,  
         ConceptReviewEntity::class,
         QuizAttemptEntity::class,
         QuestionResponseEntity::class,
         SectionProgressEntity::class,
         DailyActivityEntity::class,
     ],
-    version = 4,                            // ← BUMPED from 3
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
