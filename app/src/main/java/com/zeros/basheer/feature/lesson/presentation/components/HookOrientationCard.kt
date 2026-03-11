@@ -26,12 +26,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zeros.basheer.core.ui.theme.Amber
+import com.zeros.basheer.core.ui.theme.AmberContainer
+import com.zeros.basheer.core.ui.theme.AmberDeep
+import com.zeros.basheer.core.ui.theme.Success
 import com.zeros.basheer.feature.lesson.domain.model.LessonMetadata
 
-// Brand amber — consistent with the app palette
-private val Amber = Color(0xFFF59E0B)
-private val AmberContainer = Color(0xFFFEF3C7)
-private val AmberDeep = Color(0xFF78350F)
+// Brand amber — sourced from the app's central Color.kt, not redeclared locally
 
 /**
  * Replaces the flat LessonSummaryCard with a two-zone entry experience.
@@ -186,7 +187,7 @@ private fun OrientationZone(
                         Icon(
                             imageVector = Icons.Outlined.CheckCircle,
                             contentDescription = null,
-                            tint = Color(0xFF10B981),
+                            tint = Success,
                             modifier = Modifier
                                 .size(16.dp)
                                 .padding(top = 2.dp)
