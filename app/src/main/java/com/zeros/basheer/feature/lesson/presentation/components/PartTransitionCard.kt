@@ -21,11 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val Amber = Color(0xFFF59E0B)
-private val AmberContainer = Color(0xFFFEF3C7)
-private val AmberDeep = Color(0xFF78350F)
-private val Coral = Color(0xFFF43F5E)
+import com.zeros.basheer.core.ui.theme.Amber
+import com.zeros.basheer.core.ui.theme.AmberContainer
+import com.zeros.basheer.core.ui.theme.AmberDeep
+import com.zeros.basheer.core.ui.theme.Coral
 
 /**
  * Mini celebration card rendered between two lesson parts.
