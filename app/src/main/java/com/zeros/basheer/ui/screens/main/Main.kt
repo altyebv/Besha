@@ -1,5 +1,6 @@
 package com.zeros.basheer.ui.screens.main
 
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +39,9 @@ fun MainScreen(
     val state by viewModel.state.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    // Hoisted here so the LazyColumn scroll position survives recompositions
+    // triggered by state updates (recommendations loading, XP ticking, etc.)
+    val listState = rememberLazyListState()
 
     SwipeRefresh(
         state = rememberSwipeRefreshState(isRefreshing),
@@ -61,6 +65,7 @@ fun MainScreen(
                 else -> {
                     MainDashboardContent(
                         state = state,
+                        listState = listState,
                         onSubjectClick = onSubjectClick,
                         onRecommendationAction = { rec ->
                             handleRecommendationAction(rec, navController, onSubjectClick)
