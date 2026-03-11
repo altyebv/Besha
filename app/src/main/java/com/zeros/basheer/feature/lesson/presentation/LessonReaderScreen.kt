@@ -387,8 +387,13 @@ private fun LessonTopBar(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-            // The Scaffold already positions this slot flush against the
-            // status bar, so no extra inset padding is needed here.
+                // This bar is a floating Box overlay — NOT in a Scaffold topBar slot —
+                // so it must claim status-bar insets itself.
+                // Without this the Surface is only 56 dp tall while
+                // topBarReservedHeight reserves statusBarHeight + 56 dp,
+                // producing a gap equal to the status-bar height between
+                // the bar's bottom edge and the first content item.
+                .windowInsetsPadding(WindowInsets.statusBars)
         ) {
             // ── Navigation + title row ────────────────────────────────────────
             Row(
