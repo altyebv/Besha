@@ -159,7 +159,7 @@ class AnalyticsRepositoryImpl @Inject constructor(
                 "date"        to bucket,
                 "consentTier" to consent.name,
                 "appVersion"  to appVersion(),
-                "uploadedAt"  to com.google.firebase.Timestamp.now(),
+                "uploadedAt" to FieldValue.serverTimestamp(),
                 "events"      to eventsMap,
             )
             if (profileSnapshot != null) {
