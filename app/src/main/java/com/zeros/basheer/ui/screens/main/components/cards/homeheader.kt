@@ -40,6 +40,12 @@ fun HomeHeader(
         animationSpec = MainAnimations.progressAnimationSpec,
         label = "header_progress"
     )
+    // Memoised by the current hour — recalculates at most once per hour,
+    // never on every recomposition triggered by XP/streak flow updates.
+    val currentHour = remember {
+        java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    }
+    val greeting = remember(currentHour) { greetingByHour(currentHour) }
 
     Box(
         modifier = modifier
@@ -77,7 +83,7 @@ fun HomeHeader(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = greetingByTime(),
+                        text = greeting,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.85f)
                     )
@@ -121,13 +127,22 @@ fun HeaderStreakChip(
     level: StreakLevel,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "streak_pulse")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = if (shouldPulseStreak(days, level)) 1.06f else 1f,
-        animationSpec = MainAnimations.streakPulseSpec,
-        label = "streak_scale"
-    )
+    val shouldPulse = shouldPulseStreak(days, level)
+    // Only create the infinite transition when it will actually animate.
+    // When shouldPulse is false the transition object is never allocated and
+    // the composition skips the animation entirely — saves a measurable amount
+    // of work per frame when the streak is cold or zero.
+    val scale = if (shouldPulse) {
+        val infiniteTransition = rememberInfiniteTransition(label = "streak_pulse")
+        infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue  = 1.06f,
+            animationSpec = MainAnimations.streakPulseSpec,
+            label = "streak_scale"
+        ).value
+    } else {
+        1f
+    }
 
     Surface(
         modifier = modifier.scale(scale),
@@ -195,12 +210,9 @@ private fun HeaderXpChip(xpSummary: XpSummary) {
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
-private fun greetingByTime(): String {
-    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-    return when (hour) {
-        in 5..11  -> "صباح الخير،"
-        in 12..16 -> "مرحباً،"
-        in 17..20 -> "مساء الخير،"
-        else      -> "أهلاً بك،"
-    }
+private fun greetingByHour(hour: Int): String = when (hour) {
+    in 5..11  -> "صباح الخير،"
+    in 12..16 -> "مرحباً،"
+    in 17..20 -> "مساء الخير،"
+    else      -> "أهلاً بك،"
 }
