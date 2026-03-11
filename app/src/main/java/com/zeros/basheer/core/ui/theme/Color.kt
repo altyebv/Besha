@@ -48,7 +48,7 @@ val OnBackground = Color(0xFF1C1917)           // Warm near-black
 val OnSurface = Color(0xFF1C1917)
 val OnSurfaceVariant = Color(0xFF6B6560)       // Warm medium gray
 val OnSurfaceMuted = Color(0xFF9B9390)         // Muted text
-val Outline = Color(0xFFE7E0D8)               // Warm outline
+val Outline = Color(0xFFE7E0D8)                // Warm outline
 val OutlineStrong = Color(0xFFCDC5BB)
 
 // ============================================================================
@@ -113,6 +113,29 @@ val XpGold = Color(0xFFF59E0B)
 val XpSilver = Color(0xFF94A3B8)
 val XpBronze = Color(0xFFD97706)
 val XpPlatinum = Color(0xFF7C3AED)
+
+// ============================================================================
+// LESSON / READER UI — Semantic aliases
+//
+// These are NOT new colors. They are named aliases for existing brand tokens,
+// added here so lesson components can use expressive names (Amber, AmberDeep)
+// without re-declaring private vals in every file.
+//
+// Before: each file had `private val Amber = Color(0xFFF59E0B)` — now they
+// just import from this file. One source of truth, zero duplication.
+//
+// Mapping:
+//   Amber          → Primary            (#F59E0B)
+//   AmberDeep      → OnPrimaryContainer (#78350F)  dark text on amber bg
+//   AmberLight     → PrimaryContainer   (#FEF3C7)  light amber tint
+//   AmberContainer → PrimaryContainer   (#FEF3C7)  same as AmberLight
+//   Coral          → Secondary          (#F43F5E)  accent, finish button
+// ============================================================================
+val Amber          = Primary             // lesson progress, part tabs, CTA buttons
+val AmberDeep      = OnPrimaryContainer  // dark text/icon on amber backgrounds
+val AmberLight     = PrimaryContainer    // subtle amber fill
+val AmberContainer = PrimaryContainer    // card container tint (same as AmberLight)
+val Coral          = Secondary           // finish bar, gamification accents
 
 // ============================================================================
 // LEGACY ALIASES (for backward compatibility)
