@@ -56,8 +56,9 @@ fun MainScreen(
         }
     ) {
         Scaffold(
-            containerColor = MaterialTheme.colorScheme.background
             containerColor = MaterialTheme.colorScheme.background,
+            // Remove the default system-bar insets from the content window. handle inside the floating HomeHeader,
+            contentWindowInsets = WindowInsets(0)
         ) { padding ->
             when {
                 state.isLoading && !isRefreshing -> {
