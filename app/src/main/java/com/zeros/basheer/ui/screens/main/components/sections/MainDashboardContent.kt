@@ -3,6 +3,7 @@ package com.zeros.basheer.ui.screens.main.components.sections
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,13 +31,14 @@ import com.zeros.basheer.ui.screens.main.components.foundation.MainMetrics
 @Composable
 fun MainDashboardContent(
     state: MainScreenState,
+    listState: LazyListState,
     onSubjectClick: (String) -> Unit,
     onRecommendationAction: (ScoredRecommendation) -> Unit,
     onDismissFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        state = rememberLazyListState(),
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             horizontal = MainMetrics.contentPadding,
