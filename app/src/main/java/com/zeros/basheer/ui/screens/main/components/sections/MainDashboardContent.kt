@@ -7,10 +7,14 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import com.zeros.basheer.domain.model.ScoredRecommendation
 import com.zeros.basheer.ui.screens.main.MainScreenState
 import com.zeros.basheer.ui.screens.main.SubjectWithProgress
@@ -37,61 +41,90 @@ fun MainDashboardContent(
     onDismissFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            horizontal = MainMetrics.contentPadding,
-            vertical = MainMetrics.verticalPadding
-        ),
-        verticalArrangement = Arrangement.spacedBy(MainMetrics.cardSpacing)
-    ) {
-        // ── Zone 1: Compact header ────────────────────────────────────────
-        item(key = "home_header") {
-            HomeHeader(
-                userName = state.userName,
-                streakDays = state.streakStatus.currentStreak,
-                streakLevel = state.streakStatus.todayLevel,
-                overallProgress = state.overallProgress,
-                completedLessons = state.completedLessonsCount,
-                totalLessons = state.totalLessonsCount,
-                xpSummary = state.xpSummary
+    val density = LocalDensity.current
+
+    // Measured height of the floating header in pixels — updated via onSizeChanged.
+    // Initialised to 0; the LazyColumn will recompose once with the real value
+    // after the first layout pass (typically one frame).
+    var headerHeightPx by remember { mutableIntStateOf(0) }
+    val headerHeightDp by remember(headerHeightPx) {
+        derivedStateOf { with(density) { headerHeightPx.toDp() } }
+    }
+
+    // True as soon as the user has scrolled any content under the header —
+    // drives the shadow animation in HomeHeader.
+    val hasScrolled by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+
+        // ── Scrollable content — top padding reserves space for the header ──
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                // Use the measured header height; fall back to a safe estimate
+                // (status bar + ~72 dp) on the very first frame before measurement.
+                top    = max(headerHeightDp, MainMetrics.verticalPadding),
+                bottom = MainMetrics.verticalPadding,
+                start  = MainMetrics.contentPadding,
+                end    = MainMetrics.contentPadding
+            ),
+            verticalArrangement = Arrangement.spacedBy(MainMetrics.cardSpacing)
+        ) {
+            // ── Zone 2: Daily goal bar ──────────────────────────────────────
+            // (Zone 1 / HomeHeader is now the floating overlay below)
+            if (state.isDailyActivityLoaded) {
+                item(key = "daily_goal") {
+                    DailyGoalBar(
+                        todayActivity = state.todayActivity,
+                        dailyGoal = 3
+                    )
+                }
+            }
+
+            // ── Zone 3: Mission card ────────────────────────────────────────
+            if (state.isRecommendationLoaded && !state.focusCardDismissed) {
+                item(key = "mission_card") {
+                    MissionCard(
+                        recommendation = state.topRecommendation,
+                        onActionClick = onRecommendationAction,
+                        onDismiss = onDismissFocus
+                    )
+                }
+            }
+
+            // ── Zone 4: Subject cards ───────────────────────────────────────
+            subjectsSection(
+                subjects = state.subjects,
+                onSubjectClick = onSubjectClick
             )
+
+            // Bottom breathing room for nav bar
+            item { Spacer(Modifier.height(24.dp)) }
         }
 
-        // ── Zone 2: Daily goal bar ────────────────────────────────────────
-        // Only rendered after the first todayActivity emission — prevents a flash
-        // of the "no activity" state on launch before the DB query completes.
-        if (state.isDailyActivityLoaded) {
-            item(key = "daily_goal") {
-                DailyGoalBar(
-                    todayActivity = state.todayActivity,
-                    dailyGoal = 3
-                )
-            }
-        }
-
-        // ── Zone 3: Mission card (only after recommendation engine has resolved) ─
-        if (state.isRecommendationLoaded && !state.focusCardDismissed) {
-            item(key = "mission_card") {
-                MissionCard(
-                    recommendation = state.topRecommendation,
-                    onActionClick = onRecommendationAction,
-                    onDismiss = onDismissFocus
-                )
-            }
-        }
-
-        // ── Zone 4: Subject cards ─────────────────────────────────────────
-        subjectsSection(
-            subjects = state.subjects,
-            onSubjectClick = onSubjectClick
+        // ── Floating sticky header overlay ───────────────────────────────────
+        // Lives outside the LazyColumn so the list viewport never changes size
+        // when it appears. onSizeChanged feeds back the rendered height so the
+        // LazyColumn's top contentPadding always matches precisely.
+        HomeHeader(
+            userName         = state.userName,
+            streakDays       = state.streakStatus.currentStreak,
+            streakLevel      = state.streakStatus.todayLevel,
+            overallProgress  = state.overallProgress,
+            completedLessons = state.completedLessonsCount,
+            totalLessons     = state.totalLessonsCount,
+            xpSummary        = state.xpSummary,
+            hasScrolled      = hasScrolled,
+            modifier         = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .onSizeChanged { headerHeightPx = it.height }
         )
-
-        // Bottom breathing room for nav bar
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-        }
     }
 }
 
