@@ -74,6 +74,38 @@ fun LessonReaderScreen(
 
     var showExitDialog by remember { mutableStateOf(false) }
 
+    // ── Top bar auto-hide (scroll direction) ──────────────────────────────────
+    var isTopBarVisible by remember { mutableStateOf(true) }
+    var prevScrollIndex  by remember { mutableStateOf(0) }
+    var prevScrollOffset by remember { mutableStateOf(0) }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                when {
+                    // Always show at very top
+                    index == 0 && offset < 30 -> isTopBarVisible = true
+                    // Scrolling down → hide
+                    index > prevScrollIndex ||
+                            (index == prevScrollIndex && offset > prevScrollOffset + 30) ->
+                        isTopBarVisible = false
+                    // Scrolling up → reveal
+                    index < prevScrollIndex ||
+                            (index == prevScrollIndex && offset < prevScrollOffset - 30) ->
+                        isTopBarVisible = true
+                }
+                prevScrollIndex  = index
+                prevScrollOffset = offset
+            }
+    }
+
+    // ── All checkpoints answered? (gates the finish bar) ─────────────────────
+    val allCheckpointsDone by remember {
+        derivedStateOf {
+            state.checkpoints.isEmpty() || state.checkpoints.values.all { it.submitted }
+        }
+    }
+
     // ── Back handler ─────────────────────────────────────────────────────────
     BackHandler(enabled = true) {
         if (state.isPartAlreadyComplete || state.isLessonComplete) {
@@ -106,54 +138,54 @@ fun LessonReaderScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // ── Detect end-of-list (and scroll-back) ─────────────────────────────────
-    val layoutInfo = listState.layoutInfo
-    LaunchedEffect(layoutInfo) {
-        val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@LaunchedEffect
-        val totalItems = layoutInfo.totalItemsCount
-        if (totalItems > 0 && lastVisibleIndex >= totalItems - 1) {
-            viewModel.onReachedEnd()
-        } else {
-            // User has scrolled back up — hide the finish bar
-            viewModel.onScrolledAwayFromEnd()
+    // ── Detect end-of-list (stable — not sensitive to viewport size changes) ──
+    // Using derivedStateOf means this boolean only changes when the value
+    // actually flips, not on every scroll frame.  Crucially, because
+    // PartFinishBar is now a Box overlay (not a Scaffold bottomBar) the
+    // viewport height never changes when the bar appears, so there is no
+    // feedback loop that would cause the bar to flash.
+    val isAtScrollEnd by remember {
+        derivedStateOf {
+            val info        = listState.layoutInfo
+            val lastVisible = info.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf false
+            val totalItems  = info.totalItemsCount
+            totalItems > 0 &&
+                    lastVisible.index >= totalItems - 1 &&
+                    (lastVisible.offset + lastVisible.size) <= info.viewportEndOffset + 2
         }
+    }
+    LaunchedEffect(isAtScrollEnd) {
+        if (isAtScrollEnd) viewModel.onReachedEnd()
+        else               viewModel.onScrolledAwayFromEnd()
     }
 
     // ── Scaffold ──────────────────────────────────────────────────────────────
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         topBar = {
-            LessonTopBar(
-                title = state.lessonContent?.title ?: "جاري التحميل...",
-                currentPartIndex = state.currentPartIndex,
-                totalParts = state.totalParts,
-                completedPartIndices = state.completedPartIndices,
-                onBack = {
-                    if (state.isPartAlreadyComplete || state.isLessonComplete) {
-                        viewModel.pauseTimeTracking(); onBackClick()
-                    } else {
-                        showExitDialog = true
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            // Sticky finish bar — hidden once completion screen is showing
+            // Slides up + fades when the reader scrolls down; returns on scroll-up.
             AnimatedVisibility(
-                visible = state.hasScrolledToEnd && !state.showCompletionModal,
-                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                visible       = isTopBarVisible,
+                enter         = slideInVertically(initialOffsetY = { -it }) + fadeIn(tween(200)),
+                exit          = slideOutVertically(targetOffsetY  = { -it }) + fadeOut(tween(200))
             ) {
-                PartFinishBar(
-                    currentPartIndex = state.currentPartIndex,
-                    totalParts = state.totalParts,
-                    isPartAlreadyComplete = state.isPartAlreadyComplete,
-                    forwardPull = state.forwardPull,
-                    nextLessonTitle = state.nextLessonTitle,
-                    onFinish = { viewModel.markPartComplete() }
+                LessonTopBar(
+                    title                = state.lessonContent?.title ?: "جاري التحميل...",
+                    currentPartIndex     = state.currentPartIndex,
+                    totalParts           = state.totalParts,
+                    completedPartIndices = state.completedPartIndices,
+                    onBack = {
+                        if (state.isPartAlreadyComplete || state.isLessonComplete) {
+                            viewModel.pauseTimeTracking(); onBackClick()
+                        } else {
+                            showExitDialog = true
+                        }
+                    }
                 )
             }
         }
+        // PartFinishBar is rendered as a Box overlay below so it never
+        // resizes the LazyColumn viewport (which was the root cause of flashing).
     ) { padding ->
         Box(
             modifier = Modifier
@@ -185,6 +217,7 @@ fun LessonReaderScreen(
                     )
 
                     // ── Layer 1: lesson content (always present) ──────────────
+                    // ── Layer 1: lesson content (always present) ──────────────
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -208,7 +241,13 @@ fun LessonReaderScreen(
                             onCheckpointSubmit   = viewModel::onCheckpointSubmit,
                             onCheckpointContinue = viewModel::onCheckpointContinue,
                             listState            = listState,
-                            katexRenderer        = viewModel.katexRenderer
+                            katexRenderer        = viewModel.katexRenderer,
+                            // When the top bar is hidden the LazyColumn grows into
+                            // the freed space. We add a status-bar top guard so
+                            // content never slides behind the system bar.
+                            extraTopPadding      = if (!isTopBarVisible)
+                                WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                            else 0.dp
                         )
                     }
 
@@ -264,6 +303,30 @@ fun LessonReaderScreen(
                             )
                         }
                     }
+
+                    // ── Layer 4: finish bar overlay ───────────────────────────
+                    // Rendered inside the Box so it floats over content without
+                    // affecting the LazyColumn viewport. This eliminates the
+                    // feedback loop that caused the checkpoint block to flash.
+                    // Also gated on allCheckpointsDone so the user must answer
+                    // the checkpoint before being offered the finish action.
+                    AnimatedVisibility(
+                        visible  = state.hasScrolledToEnd &&
+                                !state.showCompletionModal &&
+                                allCheckpointsDone,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        enter    = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                        exit     = slideOutVertically(targetOffsetY  = { it }) + fadeOut()
+                    ) {
+                        PartFinishBar(
+                            currentPartIndex      = state.currentPartIndex,
+                            totalParts            = state.totalParts,
+                            isPartAlreadyComplete = state.isPartAlreadyComplete,
+                            forwardPull           = state.forwardPull,
+                            nextLessonTitle       = state.nextLessonTitle,
+                            onFinish              = { viewModel.markPartComplete() }
+                        )
+                    }
                 }
             }
 
@@ -298,9 +361,8 @@ private fun LessonTopBar(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // Extend behind the status bar — the top padding below will push
-                // content below it, so nothing is obscured.
-                .windowInsetsPadding(WindowInsets.statusBars)
+            // The Scaffold already positions this slot flush against the
+            // status bar, so no extra inset padding is needed here.
         ) {
             // ── Navigation + title row ────────────────────────────────────────
             Row(
@@ -479,12 +541,13 @@ private fun LessonBody(
     onCheckpointSubmit: (sectionId: String) -> Unit,
     onCheckpointContinue: (sectionId: String) -> Unit,
     listState: LazyListState,
-    katexRenderer: KatexRenderer
+    katexRenderer: KatexRenderer,
+    extraTopPadding: androidx.compose.ui.unit.Dp = 0.dp
 ) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 120.dp)  // space for sticky bar
+        contentPadding = PaddingValues(top = extraTopPadding, bottom = 120.dp)  // space for sticky bar
     ) {
         // ── Hook / Orientation card (scoped to part) ──────────────────────────
         item(key = "hook_orientation") {
