@@ -1,11 +1,14 @@
 package com.zeros.basheer.ui.screens.main.components.cards
 
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.outlined.LocalFireDepartment
@@ -15,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +37,8 @@ fun HomeHeader(
     completedLessons: Int,
     totalLessons: Int,
     xpSummary: XpSummary? = null,
+    // Passed from the parent once the list has scrolled — drives the shadow.
+    hasScrolled: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val animatedProgress by animateFloatAsState(
@@ -40,36 +46,55 @@ fun HomeHeader(
         animationSpec = MainAnimations.progressAnimationSpec,
         label = "header_progress"
     )
-    // Memoised by the current hour — recalculates at most once per hour,
-    // never on every recomposition triggered by XP/streak flow updates.
     val currentHour = remember {
         java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
     }
     val greeting = remember(currentHour) { greetingByHour(currentHour) }
 
+    // Shadow grows in as soon as any content scrolls under the header.
+    val shadowElevation by animateDpAsState(
+        targetValue = if (hasScrolled) 16.dp else 0.dp,
+        animationSpec = tween(250),
+        label = "header_shadow"
+    )
+
+    // Shape: square at the top (flushes against the screen edge / status bar),
+    // rounded at the bottom for a floating-card feel.
+    val headerShape = RoundedCornerShape(
+        topStart = 20.dp, topEnd = 20.dp,
+        bottomStart = 20.dp, bottomEnd = 20.dp
+    )
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.extraLarge)
-            .background(Brush.linearGradient(
-                colors = listOf(Color(0xFFF59E0B), Color(0xFFF97316))
-            ))
+            .padding(16.dp,0.dp)
+            // Shadow drawn before clip so it renders outside the shape boundary.
+            .shadow(elevation = shadowElevation, shape = headerShape, clip = false)
+            .clip(headerShape)
+            .background(
+                Brush.linearGradient(colors = listOf(Color(0xFFF59E0B), Color(0xFFF97316)))
+            )
     ) {
-        // Decorative circle
+        // Decorative circle — unchanged
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(80.dp)
                 .align(Alignment.CenterEnd)
-                .offset(x = 35.dp)
+                .offset(x = 28.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.07f))
+                .background(Color.White.copy(alpha = 0.09f))
         )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                // Push content below the status bar so system icons don't
+                // overlap the greeting text. The gradient background still
+                // extends all the way to the top of the screen.
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 18.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // ── Single row: greeting + chips ──────────────────────────────
             Row(
@@ -105,16 +130,18 @@ fun HomeHeader(
                 }
             }
 
-            // ── Hairline progress bar — no labels ────────────────────────
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .clip(MaterialTheme.shapes.small),
-                color = Color.White,
-                trackColor = Color.White.copy(alpha = 0.25f)
-            )
+            // ── Progress bar — only shown once study has started ─────────
+            if (overallProgress > 0f) {
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .clip(MaterialTheme.shapes.small),
+                    color = Color.White,
+                    trackColor = Color.White.copy(alpha = 0.25f)
+                )
+            }
         }
     }
 }
