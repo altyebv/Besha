@@ -70,7 +70,7 @@ import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
 
         // Progress tracking
         UserProgressEntity::class,
-        LessonPartProgressEntity::class,  
+        LessonPartProgressEntity::class,
         ConceptReviewEntity::class,
         QuizAttemptEntity::class,
         QuestionResponseEntity::class,
