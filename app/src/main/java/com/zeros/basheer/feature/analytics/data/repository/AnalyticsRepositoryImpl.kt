@@ -125,7 +125,10 @@ class AnalyticsRepositoryImpl @Inject constructor(
      */
     override suspend fun uploadPendingBatches(): Result<Int> = runCatching {
         val consent = preferencesRepository.getAnalyticsConsent()
+        if (!consent.isEnabled) return@runCatching 0
+
         val buckets = dao.getUnsyncedDateBuckets()
+
         var totalUploaded = 0
 
         val profileSnapshot: Map<String, Any?>? = if (consent == AnalyticsConsent.FULL) {
