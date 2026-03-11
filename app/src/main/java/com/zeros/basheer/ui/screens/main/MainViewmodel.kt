@@ -24,6 +24,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -88,13 +89,19 @@ class MainViewModel @Inject constructor(
 
     companion object {
         private const val PREF_FOCUS_DISMISSED_DATE = "focus_card_dismissed_date"
+        /** Recommendations are reused if re-requested within this window. */
+        private const val REC_CACHE_TTL_MS = 5 * 60 * 1000L  // 5 minutes
+        /** Debounce window for the combine() flow — absorbs burst DB writes. */
+        private const val FLOW_DEBOUNCE_MS = 300L
     }
 
     private val _state = MutableStateFlow(MainScreenState())
     val state: StateFlow<MainScreenState> = _state.asStateFlow()
 
-    // Held so refreshData() can cancel before relaunching — prevents duplicate collectors.
     private var dataJob: Job? = null
+    // Recommendation cache — avoids re-running the engine on every pull-to-refresh
+    private var cachedRecommendations: List<ScoredRecommendation>? = null
+    private var recCacheTimestamp: Long = 0L
 
     init {
         val dismissedDate = prefs.getString(PREF_FOCUS_DISMISSED_DATE, null)
