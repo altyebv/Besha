@@ -1,11 +1,14 @@
 package com.zeros.basheer.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -18,8 +21,8 @@ import com.zeros.basheer.feature.quizbank.presentation.exam.ExamSessionScreen
 import com.zeros.basheer.feature.quizbank.presentation.exam.ExamResultScreen
 import com.zeros.basheer.feature.lesson.presentation.LessonsScreen
 import com.zeros.basheer.feature.user.presentation.settings.SettingsScreen
-import com.zeros.basheer.ui.components.common.LessonsSubjectPicker
 import com.zeros.basheer.ui.screens.main.MainScreen
+import com.zeros.basheer.ui.screens.main.MainViewModel
 import com.zeros.basheer.feature.practice.presentation.PracticeSessionScreen
 import com.zeros.basheer.feature.quizbank.presentation.builder.PracticeBuilderScreen
 import com.zeros.basheer.ui.screens.profile.ProfileScreen
@@ -33,6 +36,18 @@ fun BasheerNavHost(
     startDestination: String,
     modifier: Modifier = Modifier
 ) {
+    // ── Shared subjects list ──────────────────────────────────────────────────
+    // MainViewModel is activity-scoped via Hilt, so this is the same instance
+    // already used by MainScreen — no double loading.
+    // `allSubjects` is used to populate the SubjectSwitcherStrip in Lessons
+    // and QuizBank without requiring a dedicated subject-fetch in those screens.
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val mainState by mainViewModel.state.collectAsStateWithLifecycle()
+    val allSubjects = mainState.subjects.map { it.subject }
+
+    // ── Last-visited subject — persists across bottom-nav taps ───────────────
+    // When the user goes Home → Lessons → Home → Lessons, they land back on
+    // the same subject they were looking at, not a blank state.
     var lastSubjectId by remember { mutableStateOf<String?>(null) }
 
     NavHost(
@@ -63,6 +78,10 @@ fun BasheerNavHost(
         }
 
         // ── Lessons ───────────────────────────────────────────────────────────
+        // The old picker-gate (LessonsSubjectPicker) is gone. Navigating here
+        // always shows the lessons list. If no subjectId is provided (bottom nav
+        // tap), we fall back to lastSubjectId, or the first available subject.
+        // The SubjectSwitcherStrip inside LessonsScreen handles inline switching.
         composable(
             route = Screen.Lessons.route,
             arguments = listOf(
@@ -73,29 +92,22 @@ fun BasheerNavHost(
                 }
             )
         ) { backStackEntry ->
-            val subjectId = backStackEntry.arguments?.getString("subjectId") ?: lastSubjectId
+            val subjectIdArg = backStackEntry.arguments?.getString("subjectId")
+            val resolvedSubjectId = subjectIdArg ?: lastSubjectId
 
-            if (subjectId == null) {
-                LessonsSubjectPicker(
-                    onSubjectSelected = { selectedId ->
-                        lastSubjectId = selectedId
-                        navController.navigate(Screen.Lessons.createRoute(selectedId)) {
-                            popUpTo(Screen.Lessons.baseRoute) { inclusive = true }
-                        }
-                    },
-                    onBack = { navController.popBackStack() }
-                )
-            } else {
-                lastSubjectId = subjectId
-                LessonsScreen(
-                    subjectId = subjectId,
-                    // Now receives lessonId + nextIncompletePart from the ViewModel
-                    onLessonClick = { lessonId, partIndex ->
-                        navController.navigate(Screen.LessonReader.createRoute(lessonId, partIndex))
-                    },
-                    onBack = { navController.popBackStack() }
-                )
+            // Remember the last viewed subject for future bottom-nav re-entries
+            LaunchedEffect(resolvedSubjectId) {
+                if (resolvedSubjectId != null) lastSubjectId = resolvedSubjectId
             }
+
+            LessonsScreen(
+                initialSubjectId = resolvedSubjectId,
+                allSubjects = allSubjects,
+                onLessonClick = { lessonId, partIndex ->
+                    navController.navigate(Screen.LessonReader.createRoute(lessonId, partIndex))
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         // ── Lesson Reader ─────────────────────────────────────────────────────
@@ -116,7 +128,6 @@ fun BasheerNavHost(
                 initialPartIndex = partIndex,
                 onBackClick = { navController.popBackStack() },
                 onNavigateToNextPart = { nextPartIndex ->
-                    // Pop current part, push next part — clean back stack
                     navController.navigate(Screen.LessonReader.createRoute(lessonId, nextPartIndex)) {
                         popUpTo(Screen.LessonReader.route) { inclusive = true }
                     }
@@ -130,9 +141,9 @@ fun BasheerNavHost(
         }
 
         // ── Quiz Bank ─────────────────────────────────────────────────────────
-        // One route, optional subjectId.
-        // - Bottom nav → no subjectId → show subject picker first.
-        // - Recommendation card / direct link → subjectId supplied → go straight to QuizBank.
+        // Same as Lessons — no picker gate. The SubjectSwitcherStrip in
+        // QuizBankScreen handles inline switching. The optional subjectId arg
+        // is still supported for deep links from recommendation cards.
         composable(
             route = Screen.QuizBank.route,
             arguments = listOf(
@@ -143,23 +154,15 @@ fun BasheerNavHost(
                 }
             )
         ) { backStackEntry ->
-            val subjectId = backStackEntry.arguments?.getString("subjectId")
+            val subjectIdArg = backStackEntry.arguments?.getString("subjectId")
                 ?.takeIf { it.isNotBlank() && it != "{subjectId}" }
 
-            if (subjectId == null) {
-                LessonsSubjectPicker(
-                    onSubjectSelected = { selectedId ->
-                        navController.navigate(Screen.QuizBank.createRoute(selectedId)) {
-                            popUpTo(Screen.QuizBank.baseRoute) { inclusive = true }
-                        }
-                    },
-                    onBack = { navController.popBackStack() }
-                )
-            } else {
-                QuizBankScreen(navController = navController)
-            }
+            QuizBankScreen(
+                navController = navController,
+                allSubjects = allSubjects,
+                initialSubjectId = subjectIdArg ?: lastSubjectId
+            )
         }
-
 
         // ── Profile ───────────────────────────────────────────────────────────
         composable(Screen.Profile.route) {
@@ -217,7 +220,6 @@ fun BasheerNavHost(
                 onNavigateBack = { navController.popBackStack() },
                 onSessionCreated = { sessionId ->
                     navController.navigate(Screen.Practice.createRoute(sessionId)) {
-                        // Pop the builder off the back stack so back from Practice goes to QuizBank
                         popUpTo(Screen.PracticeBuilder.baseRoute) { inclusive = true }
                     }
                 }
