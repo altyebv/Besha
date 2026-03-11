@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,10 +63,14 @@ fun SubjectCard(
         label = "subject_progress"
     )
 
-    val subjectColor = MainColors.subjectColorByName(
-        subjectWithProgress.subject.nameAr, subjectIndex
-    )
-    val subjectEmoji = MainColors.subjectEmoji(subjectWithProgress.subject.nameAr)
+    // Memoised by subject id — the name-based pattern matching only re-runs
+    // when the subject itself changes, not on every recomposition.
+    val subjectColor = remember(subjectWithProgress.subject.id) {
+        MainColors.subjectColorByName(subjectWithProgress.subject.nameAr, subjectIndex)
+    }
+    val subjectEmoji = remember(subjectWithProgress.subject.id) {
+        MainColors.subjectEmoji(subjectWithProgress.subject.nameAr)
+    }
 
     Surface(
         modifier = modifier
