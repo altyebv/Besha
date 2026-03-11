@@ -23,6 +23,6 @@ enum class AnalyticsConsent {
     companion object {
         /** Safe fallback when the stored string doesn't match any value. */
         fun fromString(value: String?): AnalyticsConsent =
-            entries.firstOrNull { it.name == value } ?: NONE
+            entries.firstOrNull { it.name == value } ?: ANONYMOUS
     }
 }
