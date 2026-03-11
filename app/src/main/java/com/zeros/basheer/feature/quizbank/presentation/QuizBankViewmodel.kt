@@ -245,6 +245,11 @@ class QuizBankViewModel @Inject constructor(
         } ?: _state.update { it.copy(isLoading = false) }
     }
 
+    fun switchSubject(subjectId: String) {
+        savedStateHandle["subjectId"] = subjectId
+        loadData()
+    }
+
     /**
      * Fetches the last completed attempt score for each exam in [examIds] and
      * merges the results into [QuizBankState.examScores].
