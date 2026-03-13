@@ -77,7 +77,7 @@ import com.zeros.basheer.feature.user.data.entity.XpTransactionEntity
         SectionProgressEntity::class,
         DailyActivityEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -118,7 +118,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     // Progress tracking
     abstract fun progressDao(): ProgressDao
-    abstract fun lessonPartProgressDao(): LessonPartProgressDao   // ← NEW
+    abstract fun lessonPartProgressDao(): LessonPartProgressDao
     abstract fun conceptReviewDao(): ConceptReviewDao
     abstract fun quizAttemptDao(): QuizAttemptDao
     abstract fun questionResponseDao(): QuestionResponseDao
