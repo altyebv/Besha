@@ -53,14 +53,6 @@ class ProgressRepositoryImpl @Inject constructor(
         progressDao.markLessonCompleted(lessonId)
     }
 
-    override suspend fun markSectionCompleted(lessonId: String, sectionId: String) {
-        progressDao.markSectionCompleted(lessonId, sectionId)
-    }
-
-    override suspend fun updateProgressFromSections(lessonId: String, totalSections: Int) {
-        progressDao.updateProgressFromSections(lessonId, totalSections)
-    }
-
     // ==================== Deletes ====================
 
     override suspend fun deleteProgress(lessonId: String) {
@@ -81,10 +73,8 @@ class ProgressRepositoryImpl @Inject constructor(
         completed = completed,
         lastAccessedAt = lastAccessedAt,
         completedAt = completedAt,
-        completedSections = completedSections,
         timeSpentSeconds = timeSpentSeconds,
-        notes = notes,
-        progress = progress
+        notes = notes
     )
 
     /**
@@ -95,9 +85,7 @@ class ProgressRepositoryImpl @Inject constructor(
         completed = completed,
         lastAccessedAt = lastAccessedAt,
         completedAt = completedAt,
-        completedSections = completedSections,
         timeSpentSeconds = timeSpentSeconds,
-        notes = notes,
-        progress = progress
+        notes = notes
     )
 }

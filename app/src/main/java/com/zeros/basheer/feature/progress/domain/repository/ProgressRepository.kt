@@ -54,16 +54,6 @@ interface ProgressRepository {
      */
     suspend fun markLessonCompleted(lessonId: String)
 
-    /**
-     * Marks a section as completed within a lesson.
-     */
-    suspend fun markSectionCompleted(lessonId: String, sectionId: String)
-
-    /**
-     * Updates progress percentage based on completed sections.
-     */
-    suspend fun updateProgressFromSections(lessonId: String, totalSections: Int)
-
     // ==================== Deletes ====================
 
     /**
