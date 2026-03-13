@@ -13,7 +13,9 @@ import com.zeros.basheer.feature.feed.domain.model.InteractionType
 import com.zeros.basheer.feature.practice.domain.model.PracticeGenerationType
 import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
 import com.zeros.basheer.feature.quizbank.domain.model.CognitiveLevel
+import com.zeros.basheer.feature.quizbank.domain.model.ExamAttemptStatus
 import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
+import com.zeros.basheer.feature.quizbank.domain.model.ExamType
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionSource
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import com.zeros.basheer.feature.user.domain.model.Gender
@@ -83,6 +85,20 @@ class Converters {
 
     @TypeConverter
     fun toExamSource(value: String): ExamSource = ExamSource.valueOf(value)
+
+    // ExamType
+    @TypeConverter
+    fun fromExamType(value: ExamType?): String? = value?.name
+
+    @TypeConverter
+    fun toExamType(value: String?): ExamType? = value?.let { ExamType.valueOf(it) }
+
+    // ExamAttemptStatus
+    @TypeConverter
+    fun fromExamAttemptStatus(value: ExamAttemptStatus): String = value.name
+
+    @TypeConverter
+    fun toExamAttemptStatus(value: String): ExamAttemptStatus = ExamAttemptStatus.valueOf(value)
 
     // Rating
     @TypeConverter
