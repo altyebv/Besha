@@ -232,9 +232,8 @@ class RecommendationEngine @Inject constructor(
             estimatedMinutes = lesson.estimatedMinutes
         )
 
-        val score = scoreContinueLesson(context, inProgressLesson.progress)
+        val score = scoreContinueLesson(context, 0.5f)
         val badge = when {
-            inProgressLesson.progress > 0.5f -> RecommendationBadge.ALMOST_DONE
             context.studySessionsToday == 0 -> RecommendationBadge.HOT_STREAK
             else -> RecommendationBadge.QUICK_WIN
         }
@@ -244,10 +243,7 @@ class RecommendationEngine @Inject constructor(
             recommendation = recommendation,
             score = score,
             badge = badge,
-            reason = when {
-                inProgressLesson.progress > 0.7f -> "أكمل ${((1 - inProgressLesson.progress) * 100).toInt()}% المتبقية"
-                else -> "واصل من حيث توقفت"
-            }
+            reason = "واصل من حيث توقفت"
         )
     }
 
