@@ -18,14 +18,13 @@ import com.zeros.basheer.feature.subject.data.entity.UnitEntity
     ],
     indices = [Index("unitId")]
 )
-data class LessonEntity(  // Renamed from Lesson
+data class LessonEntity(
     @PrimaryKey val id: String,
     val unitId: String,
     val title: String,
     val order: Int,
     val estimatedMinutes: Int = 15,
     val summary: String? = null,
-    val content: String = "",
     /**
      * JSON blob for optional lesson-level metadata.
      * Parsed into [LessonMetadata] by LessonMapper.
