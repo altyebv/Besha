@@ -26,6 +26,7 @@ data class ConceptReviewEntity(
     val conceptId: String,
     val firstSeenAt: Long = System.currentTimeMillis(),
     val lastReviewedAt: Long? = null,
+    /** Must be set explicitly — no default. SRS interval logic owns this value. */
     val nextReviewAt: Long,
     val reviewCount: Int = 0,
     val correctCount: Int = 0,
