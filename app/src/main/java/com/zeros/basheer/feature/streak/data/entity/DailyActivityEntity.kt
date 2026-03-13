@@ -23,7 +23,7 @@ data class DailyActivityEntity(
     val feedCardsReviewed: Int = 0,
     val quizQuestionsAnswered: Int = 0,
     val examsCompleted: Int = 0,
-    val timeSpentSeconds: Long = 0,
+    val timeSpentSeconds: Int = 0,
 
     // Computed streak level (cached for quick queries)
     val streakLevel: StreakLevel = StreakLevel.COLD,
