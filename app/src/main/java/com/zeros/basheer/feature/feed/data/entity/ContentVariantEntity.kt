@@ -5,6 +5,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
+import com.zeros.basheer.feature.feed.domain.model.ContentSource
+import com.zeros.basheer.feature.feed.domain.model.VariantType
 
 @Entity(
     tableName = "content_variants",
@@ -26,8 +28,8 @@ data class ContentVariantEntity(
     @PrimaryKey
     val id: String,
     val conceptId: String,
-    val type: String,  // Maps to VariantType enum
-    val source: String,  // Maps to ContentSource enum
+    val type: VariantType,
+    val source: ContentSource,
     val contentAr: String,
     val contentEn: String? = null,
     val imageUrl: String? = null,

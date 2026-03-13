@@ -198,7 +198,7 @@ class ConceptRepositoryImpl @Inject constructor(
     private fun conceptEntityToDomain(entity: ConceptEntity): Concept = Concept(
         id = entity.id,
         subjectId = entity.subjectId,
-        type = ConceptType.valueOf(entity.type),
+        type = entity.type,
         titleAr = entity.titleAr,
         titleEn = entity.titleEn,
         definition = entity.definition,
@@ -212,7 +212,7 @@ class ConceptRepositoryImpl @Inject constructor(
     private fun conceptDomainToEntity(concept: Concept): ConceptEntity = ConceptEntity(
         id = concept.id,
         subjectId = concept.subjectId,
-        type = concept.type.name,
+        type = concept.type,
         titleAr = concept.titleAr,
         titleEn = concept.titleEn,
         definition = concept.definition,

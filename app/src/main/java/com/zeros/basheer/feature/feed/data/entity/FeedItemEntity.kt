@@ -6,6 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
+import com.zeros.basheer.feature.feed.domain.model.FeedItemType
+import com.zeros.basheer.feature.feed.domain.model.InteractionType
 import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
 
 @Entity(
@@ -36,12 +38,12 @@ data class FeedItemEntity(
     val id: String,
     val conceptId: String,
     val subjectId: String,
-    val type: String,  // Maps to FeedItemType enum
+    val type: FeedItemType,
     val contentAr: String,
     val back: String? = null,
     val contentEn: String? = null,
     val imageUrl: String? = null,
-    val interactionType: String? = null,  // Maps to InteractionType enum
+    val interactionType: InteractionType? = null,
     val correctAnswer: String? = null,
     val options: String? = null,
     val explanation: String? = null,

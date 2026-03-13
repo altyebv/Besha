@@ -4,7 +4,6 @@ import com.zeros.basheer.feature.quizbank.data.entity.QuestionConceptEntity
 import com.zeros.basheer.feature.quizbank.data.entity.QuestionResponseEntity
 import com.zeros.basheer.feature.quizbank.data.entity.QuestionStatsEntity
 import com.zeros.basheer.feature.quizbank.data.entity.QuizAttemptEntity
-import com.zeros.basheer.feature.quizbank.domain.model.ExamAttemptStatus
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionConcept
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionResponse
 import com.zeros.basheer.feature.quizbank.domain.model.QuestionStats
@@ -21,11 +20,7 @@ fun QuizAttemptEntity.toDomain(): QuizAttempt = QuizAttempt(
     totalPoints = totalPoints,
     percentage = percentage,
     timeSpentSeconds = timeSpentSeconds,
-    status = try {
-        ExamAttemptStatus.valueOf(status)
-    } catch (e: Exception) {
-        ExamAttemptStatus.IN_PROGRESS
-    },
+    status = status,
     flaggedQuestions = flaggedQuestions
 )
 
@@ -38,7 +33,7 @@ fun QuizAttempt.toEntity(): QuizAttemptEntity = QuizAttemptEntity(
     totalPoints = totalPoints,
     percentage = percentage,
     timeSpentSeconds = timeSpentSeconds,
-    status = status.name,
+    status = status,
     flaggedQuestions = flaggedQuestions
 )
 

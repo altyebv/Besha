@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.zeros.basheer.feature.concept.domain.model.ConceptType
 import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
 
 @Entity(
@@ -26,7 +27,7 @@ data class ConceptEntity(
     @PrimaryKey
     val id: String,
     val subjectId: String,
-    val type: String,  // Will map to ConceptType enum
+    val type: ConceptType,
     val titleAr: String,
     val titleEn: String? = null,
     val definition: String,

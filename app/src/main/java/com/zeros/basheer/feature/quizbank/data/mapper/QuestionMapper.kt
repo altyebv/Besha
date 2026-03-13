@@ -1,10 +1,7 @@
 package com.zeros.basheer.feature.quizbank.data.mapper
 
 import com.zeros.basheer.feature.quizbank.data.entity.QuestionEntity
-import com.zeros.basheer.feature.quizbank.domain.model.CognitiveLevel
 import com.zeros.basheer.feature.quizbank.domain.model.Question
-import com.zeros.basheer.feature.quizbank.domain.model.QuestionSource
-import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -16,7 +13,7 @@ fun QuestionEntity.toDomain(): Question = Question(
     unitId = unitId,
     lessonId = lessonId,
     sectionId = sectionId,
-    type = QuestionType.valueOf(type),
+    type = type,
     textAr = textAr,
     textEn = textEn,
     correctAnswer = correctAnswer,
@@ -24,12 +21,12 @@ fun QuestionEntity.toDomain(): Question = Question(
     explanation = explanation,
     imageUrl = imageUrl,
     tableData = tableData,
-    source = QuestionSource.valueOf(source),
+    source = source,
     sourceExamId = sourceExamId,
     sourceDetails = sourceDetails,
     sourceYear = sourceYear,
     difficulty = difficulty,
-    cognitiveLevel = CognitiveLevel.valueOf(cognitiveLevel),
+    cognitiveLevel = cognitiveLevel,
     points = points,
     estimatedSeconds = estimatedSeconds,
     feedEligible = feedEligible,
@@ -46,7 +43,7 @@ fun Question.toEntity(): QuestionEntity = QuestionEntity(
     unitId = unitId,
     lessonId = lessonId,
     sectionId = sectionId,
-    type = type.name,
+    type = type,
     textAr = textAr,
     textEn = textEn,
     correctAnswer = correctAnswer,
@@ -54,12 +51,12 @@ fun Question.toEntity(): QuestionEntity = QuestionEntity(
     explanation = explanation,
     imageUrl = imageUrl,
     tableData = tableData,
-    source = source.name,
+    source = source,
     sourceExamId = sourceExamId,
     sourceDetails = sourceDetails,
     sourceYear = sourceYear,
     difficulty = difficulty,
-    cognitiveLevel = cognitiveLevel.name,
+    cognitiveLevel = cognitiveLevel,
     points = points,
     estimatedSeconds = estimatedSeconds,
     feedEligible = feedEligible,

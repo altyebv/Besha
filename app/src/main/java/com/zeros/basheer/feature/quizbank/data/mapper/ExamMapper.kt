@@ -4,8 +4,6 @@ import com.zeros.basheer.feature.quizbank.data.entity.ExamEntity
 import com.zeros.basheer.feature.quizbank.data.entity.ExamQuestionEntity
 import com.zeros.basheer.feature.quizbank.domain.model.Exam
 import com.zeros.basheer.feature.quizbank.domain.model.ExamQuestion
-import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
-import com.zeros.basheer.feature.quizbank.domain.model.ExamType
 
 // ── Exam ──────────────────────────────────────────────────────────────────────
 
@@ -14,13 +12,13 @@ fun ExamEntity.toDomain(): Exam = Exam(
     subjectId = subjectId,
     titleAr = titleAr,
     titleEn = titleEn,
-    source = ExamSource.valueOf(source),
+    source = source,
     year = year,
     schoolName = schoolName,
     duration = duration,
     totalPoints = totalPoints,
     description = description,
-    examType = examType?.let { ExamType.valueOf(it) },
+    examType = examType,
     sectionsJson = sectionsJson
 )
 
@@ -29,13 +27,13 @@ fun Exam.toEntity(): ExamEntity = ExamEntity(
     subjectId = subjectId,
     titleAr = titleAr,
     titleEn = titleEn,
-    source = source.name,
+    source = source,
     year = year,
     schoolName = schoolName,
     duration = duration,
     totalPoints = totalPoints,
     description = description,
-    examType = examType?.name,
+    examType = examType,
     sectionsJson = sectionsJson
 )
 
