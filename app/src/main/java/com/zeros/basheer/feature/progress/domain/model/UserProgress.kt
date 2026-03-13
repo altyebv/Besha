@@ -10,8 +10,7 @@ data class UserProgress(
     val completed: Boolean = false,
     val lastAccessedAt: Long = System.currentTimeMillis(),
     val completedAt: Long? = null,
-    val completedSections: String = "",
     val timeSpentSeconds: Int = 0,
-    val notes: String = "",
-    val progress: Float = 0f
+    val notes: String = ""
+    // Section-level progress lives in SectionProgressEntity / SectionProgressDao.
 )

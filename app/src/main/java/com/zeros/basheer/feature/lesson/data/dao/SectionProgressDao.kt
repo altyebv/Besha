@@ -77,6 +77,18 @@ interface SectionProgressDao {
 
     // ==================== Time Tracking ====================
 
+    /**
+     * Derives lesson progress (0.0–1.0) from the section_progress table.
+     * Avoids the removed UserProgressEntity.progress float field.
+     */
+    @Query("""
+        SELECT CAST(
+            (SELECT COUNT(*) FROM section_progress WHERE lessonId = :lessonId AND completed = 1)
+            AS FLOAT
+        ) / MAX(1, (SELECT COUNT(*) FROM sections WHERE lessonId = :lessonId))
+    """)
+    fun getLessonProgressFloat(lessonId: String): Flow<Float>
+
     @Query("SELECT SUM(timeSpentSeconds) FROM section_progress WHERE lessonId = :lessonId")
     fun getTotalTimeSpentOnLesson(lessonId: String): Flow<Int?>
 

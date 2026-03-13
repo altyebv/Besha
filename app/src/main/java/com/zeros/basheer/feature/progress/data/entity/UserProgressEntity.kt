@@ -29,8 +29,8 @@ data class UserProgressEntity(
     val completed: Boolean = false,
     val lastAccessedAt: Long = System.currentTimeMillis(),
     val completedAt: Long? = null,
-    val completedSections: String = "",     // Comma-separated section IDs
     val timeSpentSeconds: Int = 0,          // Total time spent on this lesson
-    val notes: String = "",                  // User's personal notes
-    val progress: Float = 0f
+    val notes: String = ""                   // User's personal notes
+    // Section completion is tracked in section_progress table (SectionProgressEntity).
+    // Lesson-level progress % is derived by querying SectionProgressDao.isLessonFullyCompleted().
 )
