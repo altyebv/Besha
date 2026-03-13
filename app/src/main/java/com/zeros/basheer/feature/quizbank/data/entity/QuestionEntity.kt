@@ -7,6 +7,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.zeros.basheer.feature.lesson.data.entity.LessonEntity
 import com.zeros.basheer.feature.lesson.data.entity.SectionEntity
+import com.zeros.basheer.feature.quizbank.domain.model.CognitiveLevel
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionSource
+import com.zeros.basheer.feature.quizbank.domain.model.QuestionType
 import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
 import com.zeros.basheer.feature.subject.data.entity.UnitEntity
 
@@ -62,7 +65,7 @@ data class QuestionEntity(
      * FK → sections(id) ON DELETE SET NULL.
      */
     val sectionId: String? = null,
-    val type: String,
+    val type: QuestionType,
     val textAr: String,
     val textEn: String? = null,
     val correctAnswer: String,
@@ -70,12 +73,12 @@ data class QuestionEntity(
     val explanation: String? = null,
     val imageUrl: String? = null,
     val tableData: String? = null,
-    val source: String,
+    val source: QuestionSource,
     val sourceExamId: String? = null,
     val sourceDetails: String? = null,
     val sourceYear: Int? = null,
     val difficulty: Int = 1,
-    val cognitiveLevel: String,
+    val cognitiveLevel: CognitiveLevel,
     val points: Int = 1,
     val estimatedSeconds: Int = 60,
     val feedEligible: Boolean = true,

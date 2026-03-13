@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.zeros.basheer.feature.concept.data.entity.ConceptEntity
+import com.zeros.basheer.feature.quizbank.domain.model.ExamAttemptStatus
+import com.zeros.basheer.feature.quizbank.domain.model.ExamSource
+import com.zeros.basheer.feature.quizbank.domain.model.ExamType
 import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
 
 @Entity(
@@ -29,13 +31,13 @@ data class ExamEntity(
     val subjectId: String,
     val titleAr: String,
     val titleEn: String? = null,
-    val source: String,
+    val source: ExamSource,
     val year: Int? = null,
     val schoolName: String? = null,
     val duration: Int? = null,
     val totalPoints: Int? = null,
     val description: String? = null,
-    val examType: String? = null,
+    val examType: ExamType? = null,
     val sectionsJson: String? = null
 )
 
@@ -94,7 +96,7 @@ data class QuizAttemptEntity(
     val totalPoints: Int? = null,
     val percentage: Float? = null,
     val timeSpentSeconds: Int? = null,
-    val status: String = "IN_PROGRESS",      // ExamAttemptStatus enum name
+    val status: ExamAttemptStatus = ExamAttemptStatus.IN_PROGRESS,      // Exam lifecycle state
     val flaggedQuestions: String? = null      // Comma-separated question IDs
 )
 
