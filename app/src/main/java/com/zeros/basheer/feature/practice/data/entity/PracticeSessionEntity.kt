@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.zeros.basheer.feature.practice.domain.model.PracticeSessionStatus
 import com.zeros.basheer.feature.subject.data.entity.SubjectEntity
 
 @Entity(
@@ -36,7 +37,7 @@ data class PracticeSessionEntity(
     val questionCount: Int,
     val timeLimitSeconds: Int? = null,
     val shuffled: Boolean = true,
-    val status: String = "IN_PROGRESS",
+    val status: PracticeSessionStatus = PracticeSessionStatus.IN_PROGRESS,
     val currentQuestionIndex: Int = 0,
     val correctCount: Int = 0,
     val wrongCount: Int = 0,
