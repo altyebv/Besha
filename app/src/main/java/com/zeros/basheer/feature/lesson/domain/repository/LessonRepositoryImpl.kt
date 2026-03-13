@@ -79,20 +79,14 @@ class LessonRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateProgress(lessonId: String, progress: Float): Result<Unit> {
-        return try {
-            val existing = progressDao.getProgressByLessonOnce(lessonId)
-            if (existing != null) {
-                progressDao.updateProgress(existing.copy(progress = progress))
-            }
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Error(e.message ?: "Unknown error", e)
-        }
+        // No-op: the progress float is no longer stored on user_progress.
+        // Lesson progress is now derived on demand from section_progress via
+        // SectionProgressDao.getLessonProgressFloat() / isLessonFullyCompleted().
+        return Result.Success(Unit)
     }
 
     override fun observeLessonProgress(lessonId: String): Flow<Float> =
-        progressDao.getProgressByLesson(lessonId)
-            .map { it?.progress ?: 0f }
+        sectionProgressDao.getLessonProgressFloat(lessonId)
 
     override suspend fun getPartCountsForLessons(lessonIds: List<String>): Map<String, Int> {
         if (lessonIds.isEmpty()) return emptyMap()
